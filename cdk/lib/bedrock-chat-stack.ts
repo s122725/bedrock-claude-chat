@@ -47,7 +47,11 @@ export class BedrockChatStack extends cdk.Stack {
     });
     const cronSchedule = createCronSchedule(props.rdsSchedules);
 
-    const vpc = new ec2.Vpc(this, "VPC", {});
+    // const vpc = new ec2.Vpc(this, "VPC", {});
+    const vpc = ec2.Vpc.fromLookup(this, "VPC", {
+      vpcName: 'ai-platfrom-vpc-dev'
+    });
+
     vpc.publicSubnets.forEach((subnet) => {
       (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
     });
