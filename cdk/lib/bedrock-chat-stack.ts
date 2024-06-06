@@ -41,11 +41,6 @@ export interface BedrockChatStackProps extends StackProps {
 
 export class BedrockChatStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: BedrockChatStackProps) {
-    props.env = {
-      account: process.env.CDK_DEFAULT_ACCOUNT, 
-      region: process.env.CDK_DEFAULT_REGION 
-    };
-
     super(scope, id, {
       description: "Bedrock Chat Stack (uksb-1tupboc46)",
       ...props,

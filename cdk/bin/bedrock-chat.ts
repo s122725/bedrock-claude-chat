@@ -56,7 +56,7 @@ const waf = new FrontendWafStack(app, `FrontendWafStack`, {
 
 const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   env: {
-    // account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
   },
   crossRegionReferences: true,
