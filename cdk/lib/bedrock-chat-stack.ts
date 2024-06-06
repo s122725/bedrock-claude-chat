@@ -54,9 +54,9 @@ export class BedrockChatStack extends cdk.Stack {
       region: process.env.CDK_DEFAULT_REGION,
     });
 
-    vpc.publicSubnets.forEach((subnet) => {
-      (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
-    });
+    // vpc.publicSubnets.forEach((subnet) => {
+    //   (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
+    // });
 
     const vectorStore = new VectorStore(this, "VectorStore", {
       vpc: vpc,
