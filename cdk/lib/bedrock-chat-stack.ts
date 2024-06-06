@@ -43,10 +43,8 @@ export class BedrockChatStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: BedrockChatStackProps) {
     super(scope, id, {
       description: "Bedrock Chat Stack (uksb-1tupboc46)",
-      env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT, 
-        region: process.env.CDK_DEFAULT_REGION 
-      },
+      account: process.env.CDK_DEFAULT_ACCOUNT, 
+      region: process.env.CDK_DEFAULT_REGION,
       ...props,
     });
     const cronSchedule = createCronSchedule(props.rdsSchedules);
