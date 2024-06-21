@@ -15,8 +15,8 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: {
         name: 'Chat RSG',
-        short_name: 'Bedrock Chat',
-        description: 'AWS-native chatbot using Bedrock + Claude',
+        short_name: 'Chat RSG',
+        description: 'Chat RSG',
         start_url: '/index.html',
         display: 'standalone',
         theme_color: '#232F3E',
