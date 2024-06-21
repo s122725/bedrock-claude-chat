@@ -15,8 +15,8 @@ export default {
       },
       colors: {
         'aws-squid-ink': '#232F3E',
-        'aws-sea-blue': '#005276',
-        'aws-sea-blue-hover': '#003550',
+        'aws-sea-blue': '#004A7C',
+        'aws-sea-blue-hover': '#004A7C',
         'aws-aqua': '#007faa',
         'aws-lab': '#05A0E4',
         'aws-mist': '#004A7C',

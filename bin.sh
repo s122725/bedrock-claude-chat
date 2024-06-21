@@ -18,6 +18,11 @@ echo "!!! you can safely proceed with the installation. !!!"
 echo "!!! !!!"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo ""
+
+# Usage:
+# ./bin.sh --region us-east-1 --allowed-signup-email-domains "republicservices.com,repsrv.com" --ipv4-ranges "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+#
+
 while true; do
 read -p "Are you a new user or already using v1.x of Bedrock Claude Chat? (y/N):  " answer
 case ${answer:0:1} in

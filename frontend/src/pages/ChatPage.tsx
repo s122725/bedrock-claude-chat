@@ -297,8 +297,8 @@ const ChatPage: React.FC = () => {
         )}
       </div>
       <hr className="w-full border-t border-gray" />
-      {/* <div className="pb-52 lg:pb-40">
-        {messages.length === 0 ? (
+      <div className="pb-52 lg:pb-40">
+        {messages.length > 999999 ? (
           <div className="relative flex w-full justify-center">
             {!loadingConversation && (
               <SwitchBedrockModel className="mt-3 w-min" />
@@ -306,7 +306,7 @@ const ChatPage: React.FC = () => {
             <div className="absolute mx-3 my-20 flex items-center justify-center text-4xl font-bold text-gray">
               {!MISTRAL_ENABLED ? t('app.name') : t('app.nameWithoutClaude')}
             </div>
-          </div> */}
+          </div>
         ) : (
           messages.map((message, idx) => (
             <div
