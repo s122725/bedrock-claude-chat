@@ -20,7 +20,7 @@ export default {
         'aws-aqua': '#007faa',
         'aws-lab': '#05A0E4',
         'aws-mist': '#004A7C',
-        'aws-font-color': '#ffffff',
+        'aws-font-color': '#003763',
         'aws-font-color-white': '#ffffff',
         'aws-paper': '#f1f3f3',
         red: '#dc2626',
