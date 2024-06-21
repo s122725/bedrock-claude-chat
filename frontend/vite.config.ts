@@ -14,7 +14,7 @@ export default defineConfig({
       },
       injectRegister: 'auto',
       manifest: {
-        name: 'Bedrock Claude Chat',
+        name: 'Chat RSG',
         short_name: 'Bedrock Chat',
         description: 'AWS-native chatbot using Bedrock + Claude',
         start_url: '/index.html',
@@ -22,51 +22,14 @@ export default defineConfig({
         theme_color: '#232F3E',
         icons: [
           {
-            src: '/images/bedrock_icon_72.png',
-            sizes: '72x72',
+            src: '/images/rsg_64.svg',
+            sizes: '64x64',
             type: 'image/png',
           },
           {
-            src: '/images/bedrock_icon_96.png',
+            src: '/images/rsg_96.svg',
             sizes: '96x96',
-            type: 'image/png',
-          },
-          {
-            src: '/images/bedrock_icon_128.png',
-            sizes: '128x128',
-            type: 'image/png',
-          },
-          {
-            src: '/images/bedrock_icon_144.png',
-            sizes: '144x144',
-            type: 'image/png',
-          },
-          {
-            src: '/images/bedrock_icon_152.png',
-            sizes: '152x152',
-            type: 'image/png',
-          },
-          {
-            src: '/images/bedrock_icon_192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/images/bedrock_icon_384.png',
-            sizes: '384x384',
-            type: 'image/png',
-          },
-          {
-            src: '/images/bedrock_icon_512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-          {
-            src: '/images/bedrock_icon_512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any',
+            type: 'image/svg',
           },
         ],
       },
