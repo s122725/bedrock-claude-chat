@@ -407,7 +407,6 @@ const ChatPage: React.FC = () => {
 
         {bot?.hasAgent ? (
           <TextInputChatContent
-            dndMode={dndMode}
             disabledSend={postingMessage}
             disabled={disabledInput}
             placeholder={
