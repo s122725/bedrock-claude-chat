@@ -279,9 +279,8 @@ const ChatPage: React.FC = () => {
                     {bot?.owned && (
                       <PopoverItem
                         onClick={() => {
-                          if (bot) {
-                            onClickBotEdit(bot.id);
-                          }
+                          if (!bot) return;
+                          onClickBotEdit(bot.id);
                         }}>
                         <PiPencilLine />
                         {t('bot.titleSubmenu.edit')}
@@ -290,9 +289,8 @@ const ChatPage: React.FC = () => {
                     {bot?.isPublic && (
                       <PopoverItem
                         onClick={() => {
-                          if (bot) {
-                            onClickCopyUrl(bot.id);
-                          }
+                          if (!bot) return;
+                          onClickCopyUrl(bot.id);
                         }}>
                         <PiLink />
                         {copyLabel}
