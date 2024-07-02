@@ -37,6 +37,7 @@ import useModel from '../hooks/useModel';
 import { TextInputChatContent } from '../features/agent/components/TextInputChatContent';
 import { AgentProcessingIndicator } from '../features/agent/components/AgentProcessingIndicator';
 import { AgentState } from '../features/agent/xstates/agentThinkProgress';
+import { SyncStatus } from '../constants';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -379,7 +380,7 @@ const ChatPage: React.FC = () => {
       </div>
 
       <div className="bottom-0 z-0 flex w-full flex-col items-center justify-center">
-        {bot && bot.syncStatus !== 'SUCCEEDED' && (
+        {bot && bot.syncStatus !== SyncStatus.SUCCEEDED && (
           <div className="mb-8 w-1/2">
             <Alert
               severity="warning"
