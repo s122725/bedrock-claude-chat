@@ -409,6 +409,7 @@ const translation = {
       signOut: 'サインアウト',
       close: '閉じる',
       add: '追加',
+      continue: '生成を続ける',
     },
     input: {
       hint: {
@@ -493,6 +494,10 @@ const translation = {
       notFoundConversation:
         '指定のチャットは存在しないため、新規チャット画面を表示しました。',
       notFoundPage: 'お探しのページが見つかりませんでした。',
+      unexpectedError: {
+        title: '予期せぬエラーが発生しました',
+        restore: 'TOPページに戻る',
+      },
       predict: {
         general: '推論中にエラーが発生しました。',
         invalidResponse: '想定外のResponseが返ってきました。',
@@ -513,6 +518,15 @@ const translation = {
       },
       quickStarter: {
         message: 'タイトルと入力例は、どちらも入力してください。',
+      },
+    },
+    heler: {
+      shortcuts: {
+        title: 'ショートカットキー',
+        items: {
+          focusInput: 'チャット入力にフォーカスを移す',
+          newChat: '新しいチャットを開く',
+        },
       },
     },
   },

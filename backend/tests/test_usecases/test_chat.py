@@ -325,6 +325,7 @@ class TestContinueChat(unittest.TestCase):
                     ),
                 },
                 bot_id=None,
+                should_continue=False,
             ),
         )
 
@@ -345,6 +346,7 @@ class TestContinueChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_id, chat_input=chat_input)
         self.output = output
@@ -449,6 +451,7 @@ class TestRegenerateChat(unittest.TestCase):
                     ),
                 },
                 bot_id=None,
+                should_continue=False,
             ),
         )
 
@@ -471,6 +474,7 @@ class TestRegenerateChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_id, chat_input=chat_input)
         self.output = output
@@ -497,6 +501,7 @@ class TestRegenerateChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_id, chat_input=chat_input)
         self.output = output
@@ -528,6 +533,7 @@ class TestProposeTitle(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -599,6 +605,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -625,6 +632,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -646,6 +654,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
 
@@ -671,6 +680,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="public1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
 
@@ -693,6 +703,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -717,6 +728,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
 
@@ -727,6 +739,56 @@ class TestChatWithCustomizedBot(unittest.TestCase):
         msg = trace_to_root(conv.last_message_id, conv.message_map)  # type: ignore
         self.assertEqual(len(msg), 3)  # system + user + assistant
         pprint(msg)
+
+
+class TestAgentChat(unittest.TestCase):
+    user_name = "user1"
+    bot_id = "bot1"
+    model: type_model_name = "claude-v3-sonnet"
+
+    def setUp(self) -> None:
+        private_bot = create_test_private_bot(
+            self.bot_id,
+            True,
+            self.user_name,
+            create_test_instruction_template("俺様風の口調で"),
+            "SUCCEEDED",
+            include_internet_tool=True,
+            set_dummy_knowledge=False,
+        )
+        store_bot(self.user_name, private_bot)
+
+    def tearDown(self) -> None:
+        delete_bot_by_id(self.user_name, self.bot_id)
+        delete_conversation_by_user_id(self.user_name)
+
+    def test_agent_chat(self):
+        chat_input = ChatInput(
+            conversation_id="test_conversation_id",
+            message=MessageInput(
+                role="user",
+                content=[
+                    Content(
+                        content_type="text",
+                        body="Today's amazon stock price?",
+                        media_type=None,
+                    )
+                ],
+                model=self.model,
+                parent_message_id=None,
+                message_id=None,
+            ),
+            bot_id=self.bot_id,
+            continue_generate=False,
+        )
+        output: ChatOutput = chat(user_id=self.user_name, chat_input=chat_input)
+        print(output.message.content[0].body)
+
+        conv = find_conversation_by_id(self.user_name, output.conversation_id)
+        # Assert if thinking log is not empty
+        assistant_message = conv.message_map[conv.last_message_id]
+        self.assertIsNotNone(assistant_message.thinking_log)
+        print("Thinking log: ", assistant_message.thinking_log)
 
 
 class TestInsertKnowledge(unittest.TestCase):
@@ -797,6 +859,7 @@ class TestInsertKnowledge(unittest.TestCase):
             },
             bot_id="bot1",
             last_message_id="1-user",
+            continue_generate=False,
         )
         conversation_with_context = insert_knowledge(
             conversation, results, display_citation=True
@@ -823,6 +886,7 @@ class TestStreamingApi(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         user_msg_id, conversation, bot = prepare_conversation("user1", chat_input)
         messages = trace_to_root(

@@ -405,6 +405,7 @@ How would you categorize this email?`,
       signOut: 'Sign out',
       close: 'Close',
       add: 'Add',
+      continue: 'Continue to generate',
     },
     input: {
       hint: {
@@ -489,6 +490,10 @@ How would you categorize this email?`,
       notFoundConversation:
         'Since the specified chat does not exist, a new chat screen is displayed.',
       notFoundPage: 'The page you are looking for is not found.',
+      unexpectedError: {
+        title: 'An unexpected error has occurred.',
+        restore: 'Go to TOP page',
+      },
       predict: {
         general: 'An error occurred while predicting.',
         invalidResponse:
@@ -509,6 +514,15 @@ How would you categorize this email?`,
       },
       quickStarter: {
         message: 'Please input both Title and Conversation Example.',
+      },
+    },
+    heler: {
+      shortcuts: {
+        title: 'Shortcut Keys',
+        items: {
+          focusInput: 'Shift focus to chat input',
+          newChat: 'Open new chat',
+        },
       },
     },
   },

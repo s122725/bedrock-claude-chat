@@ -38,10 +38,19 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
-COPY ./embedding.requirements.txt ./requirements.txt
-RUN pip3 install -r requirements.txt --no-cache-dir
+
+COPY ./embedding/pyproject.toml ./embedding/poetry.lock ./
+RUN pip install poetry --no-cache-dir && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
 
 RUN playwright install chromium
+
+# Install NLTK and tokenizers and taggers
+# Ref: https://www.nltk.org/data.html
+RUN python -m nltk.downloader -d /usr/local/share/nltk_data punkt averaged_perceptron_tagger stopwords
+# Set NLTK_DATA environment variable
+ENV NLTK_DATA /usr/local/share/nltk_data
 
 COPY ./embedding ./embedding
 COPY ./app ./app

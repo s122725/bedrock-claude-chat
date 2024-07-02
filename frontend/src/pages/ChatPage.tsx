@@ -39,6 +39,9 @@ import { AgentProcessingIndicator } from '../features/agent/components/AgentProc
 import { AgentState } from '../features/agent/xstates/agentThinkProgress';
 import { SyncStatus } from '../constants';
 
+import { BottomHelper } from '../features/helper/components/BottomHelper';
+import { useIsWindows } from '../hooks/useIsWindows';
+
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
 
@@ -57,9 +60,12 @@ const ChatPage: React.FC = () => {
     retryPostChat,
     setCurrentMessageId,
     regenerate,
+    continueGenerate,
     getPostedModel,
     loadingConversation,
   } = useChat();
+
+  const { isWindows } = useIsWindows();
 
   const { getBotId } = useConversation();
 
@@ -168,6 +174,10 @@ const ChatPage: React.FC = () => {
     });
   }, [inputBotParams, regenerate]);
 
+  const onContinueGenerate = useCallback(()=>{
+    continueGenerate({bot: inputBotParams});
+  }, [inputBotParams, continueGenerate])
+
   useLayoutEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
@@ -242,6 +252,29 @@ const ChatPage: React.FC = () => {
     e.preventDefault();
   }, []);
 
+  useEffect(() => {
+    const activeCodes: { [key in KeyboardEvent['code']]: boolean } = {};
+    const handleKeyDown = (event: KeyboardEvent) => {
+      activeCodes[event.code] = true;
+
+      const hasKeyDownCommand = (() => {
+        return isWindows
+          ? (activeCodes['ControlLeft'] || activeCodes['ControlRight']) &&
+              (activeCodes['ShiftLeft'] || activeCodes['ShiftRight']) &&
+              activeCodes['KeyO']
+          : (activeCodes['MetaLeft'] || activeCodes['MetaRight']) &&
+              (activeCodes['ShiftLeft'] || activeCodes['ShiftRight']) &&
+              activeCodes['KeyO'];
+      })();
+
+      if (!hasKeyDownCommand) return;
+      event.preventDefault();
+      navigate('/');
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  });
+
   return (
     <div
       className="relative flex h-full flex-1 flex-col"
@@ -249,7 +282,7 @@ const ChatPage: React.FC = () => {
       onDrop={endDnd}
       onDragEnd={endDnd}>
       <div className="flex-1 overflow-hidden">
-        <div className="sticky top-0 z-10 mb-1.5 flex h-14 w-full items-center justify-between border-b border-gray bg-aws-paper p-2 font-semibold">
+        <div className="sticky top-0 z-10 mb-1.5 flex h-14 w-full items-center justify-between border-b border-gray bg-aws-paper p-2">
           <div className="flex w-full justify-between">
             <div className="p-2">
               <div className="mr-10 font-bold">{pageTitle}</div>
@@ -313,7 +346,7 @@ const ChatPage: React.FC = () => {
               id="messages"
               role="presentation"
               className=" flex h-full flex-col overflow-auto pb-9">
-              {messages.length === 0 ? (
+              {messages?.length === 0 ? (
                 <div className="relative flex w-full justify-center">
                   {!loadingConversation && (
                     <SwitchBedrockModel className="mt-3 w-min" />
@@ -326,7 +359,7 @@ const ChatPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {messages.map((message, idx) => (
+                  {messages?.map((message, idx) => (
                     <div
                       key={idx}
                       className={`${
@@ -389,7 +422,7 @@ const ChatPage: React.FC = () => {
         )}
         {messages.length === 0 && (
           <div className="mb-3 flex w-11/12 flex-wrap-reverse justify-start gap-2 md:w-10/12 lg:w-4/6 xl:w-3/6">
-            {bot?.conversationQuickStarters.map((qs, idx) => (
+            {bot?.conversationQuickStarters?.map((qs, idx) => (
               <div
                 key={idx}
                 className="w-[calc(33.333%-0.5rem)] cursor-pointer rounded-2xl border border-aws-squid-ink/20 bg-white p-2  text-sm text-dark-gray  hover:shadow-lg hover:shadow-gray"
@@ -429,9 +462,11 @@ const ChatPage: React.FC = () => {
             }
             onSend={onSend}
             onRegenerate={onRegenerate}
+            continueGenerate={onContinueGenerate}
           />
         )}
       </div>
+      <BottomHelper />
     </div>
   );
 };
