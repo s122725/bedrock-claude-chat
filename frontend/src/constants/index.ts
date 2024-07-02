@@ -107,3 +107,14 @@ export const TooltipDirection = {
 
 export type Direction =
   (typeof TooltipDirection)[keyof typeof TooltipDirection];
+
+export const PostStreamingStatus = {
+  START: 'START',
+  BODY: 'BODY',
+  FETCHING_KNOWLEDGE: 'FETCHING_KNOWLEDGE',
+  THINKING: 'THINKING',
+  STREAMING: 'STREAMING',
+  STREAMING_END: 'STREAMING_END',
+  ERROR: 'ERROR',
+  END: 'END',
+} as const;
