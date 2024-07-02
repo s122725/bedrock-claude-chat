@@ -99,3 +99,11 @@ export const SyncStatus = {
   RUNNING: 'RUNNING',
   SUCCEEDED: 'SUCCEEDED',
 } as const;
+
+export const TooltipDirection = {
+  LEFT: 'left',
+  RIGHT: 'right',
+} as const;
+
+export type Direction =
+  (typeof TooltipDirection)[keyof typeof TooltipDirection];
