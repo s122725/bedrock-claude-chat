@@ -37,6 +37,7 @@ export interface BedrockChatStackProps extends StackProps {
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
   readonly selfSignUpEnabled: boolean;
+  readonly natgatewayCount: number;
 }
 
 export class BedrockChatStack extends cdk.Stack {
@@ -47,7 +48,9 @@ export class BedrockChatStack extends cdk.Stack {
     });
     const cronSchedule = createCronSchedule(props.rdsSchedules);
 
-    const vpc = new ec2.Vpc(this, "VPC", {});
+    const vpc = new ec2.Vpc(this, "VPC", {
+      natGateways: props.natgatewayCount
+    });
     vpc.publicSubnets.forEach((subnet) => {
       (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
     });
