@@ -73,6 +73,6 @@
     },
     "embeddingContainerVcpu": 2048,
     "embeddingContainerMemory": 4096,
-    "natgatewayCount": 1
+    "natgatewayCount": 2
   }
 }
