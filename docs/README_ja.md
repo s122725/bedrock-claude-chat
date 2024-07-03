@@ -200,7 +200,7 @@ GENERATION_CONFIG = {
 
 ### NAT Gateway数のカスタマイズ
 
-このサンプルはデフォルトでは2つの NAT ゲートウェイがデプロイされますが、2つの NAT ゲートウェイが不要な場合は、NAT ゲートウェイの数を変更してコストを削減できます。`cdk.json`を開き、 `natgatewayCount` のパラメータをを変更してください。
+このサンプルはデフォルトでは2つの NAT Gatewayがデプロイされますが、2つの NAT Gatewayが不要な場合は、NAT Gatewayの数を変更してコストを削減できます。`cdk.json`を開き、 `natgatewayCount` のパラメータを変更してください。
 
 ```ts
 "natgatewayCount": 2
