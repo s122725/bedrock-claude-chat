@@ -42,6 +42,9 @@ const SELF_SIGN_UP_ENABLED: boolean = app.node.tryGetContext("selfSignUpEnabled"
 const EMBEDDING_CONTAINER_VCPU:number = app.node.tryGetContext("embeddingContainerVcpu")
 const EMBEDDING_CONTAINER_MEMORY:number = app.node.tryGetContext("embeddingContainerMemory")
 
+// how many nat gateways
+const NATGATEWAY_COUNT:number = app.node.tryGetContext("natgatewayCount")
+
 // WAF for frontend
 // 2023/9: Currently, the WAF for CloudFront needs to be created in the North America region (us-east-1), so the stacks are separated
 // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-wafv2-webacl.html
@@ -76,5 +79,6 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   embeddingContainerVcpu: EMBEDDING_CONTAINER_VCPU,
   embeddingContainerMemory: EMBEDDING_CONTAINER_MEMORY,
   selfSignUpEnabled: SELF_SIGN_UP_ENABLED,
+  natgatewayCount: NATGATEWAY_COUNT,
 });
 chat.addDependency(waf);

@@ -250,6 +250,14 @@ By default, this sample does not restrict the domains for sign-up email addresse
 "allowedSignUpEmailDomains": ["example.com"],
 ```
 
+### Customize Number of NAT Gateway
+
+By default, this sample deploys 2 NAT gateways, but you can change the number of NAT gateways if you don't need 2 NAT gateways to reduce costs. Open `cdk.json` and change this parameter 'number of NAT gateways'.
+
+```ts
+"natgatewayCount": 2
+```
+
 ### External Identity Provider
 
 This sample supports external identity provider. Currently we support [Google](./docs/idp/SET_UP_GOOGLE.md) and [custom OIDC provider](./docs/idp/SET_UP_CUSTOM_OIDC.md).
