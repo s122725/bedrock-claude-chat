@@ -296,6 +296,7 @@ class TestContinueChat(unittest.TestCase):
                                 content_type="text",
                                 body="こんにちは",
                                 media_type=None,
+                                file_name=None,
                             )
                         ],
                         model=MODEL,
@@ -313,6 +314,7 @@ class TestContinueChat(unittest.TestCase):
                                 content_type="text",
                                 body="はい、こんにちは。どうしましたか?",
                                 media_type=None,
+                                file_name=None,
                             )
                         ],
                         model=MODEL,
@@ -325,6 +327,7 @@ class TestContinueChat(unittest.TestCase):
                     ),
                 },
                 bot_id=None,
+                should_continue=False,
             ),
         )
 
@@ -345,6 +348,7 @@ class TestContinueChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_id, chat_input=chat_input)
         self.output = output
@@ -386,6 +390,7 @@ class TestRegenerateChat(unittest.TestCase):
                                 content_type="text",
                                 body="こんにちはを英語で",
                                 media_type=None,
+                                file_name=None,
                             )
                         ],
                         model=MODEL,
@@ -403,6 +408,7 @@ class TestRegenerateChat(unittest.TestCase):
                                 content_type="text",
                                 body="Hello!",
                                 media_type=None,
+                                file_name=None,
                             )
                         ],
                         model=MODEL,
@@ -420,6 +426,7 @@ class TestRegenerateChat(unittest.TestCase):
                                 content_type="text",
                                 body="こんにちはを中国語で",
                                 media_type=None,
+                                file_name=None,
                             )
                         ],
                         model=MODEL,
@@ -437,6 +444,7 @@ class TestRegenerateChat(unittest.TestCase):
                                 content_type="text",
                                 body="你好!",
                                 media_type=None,
+                                file_name=None,
                             )
                         ],
                         model=MODEL,
@@ -449,6 +457,7 @@ class TestRegenerateChat(unittest.TestCase):
                     ),
                 },
                 bot_id=None,
+                should_continue=False,
             ),
         )
 
@@ -471,6 +480,7 @@ class TestRegenerateChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_id, chat_input=chat_input)
         self.output = output
@@ -497,6 +507,7 @@ class TestRegenerateChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_id, chat_input=chat_input)
         self.output = output
@@ -521,6 +532,7 @@ class TestProposeTitle(unittest.TestCase):
                         # body="Australian famous site seeing place",
                         body="日本の有名な料理を3つ教えて",
                         media_type=None,
+                        file_name=None,
                     )
                 ],
                 model=MODEL,
@@ -528,6 +540,7 @@ class TestProposeTitle(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -599,6 +612,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -625,6 +639,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -646,6 +661,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
 
@@ -671,6 +687,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="public1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
 
@@ -693,6 +710,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         print(output)
@@ -717,6 +735,7 @@ class TestChatWithCustomizedBot(unittest.TestCase):
                 message_id=None,
             ),
             bot_id="private1",
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
 
@@ -767,6 +786,7 @@ class TestAgentChat(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=self.bot_id,
+            continue_generate=False,
         )
         output: ChatOutput = chat(user_id=self.user_name, chat_input=chat_input)
         print(output.message.content[0].body)
@@ -846,6 +866,7 @@ class TestInsertKnowledge(unittest.TestCase):
             },
             bot_id="bot1",
             last_message_id="1-user",
+            continue_generate=False,
         )
         conversation_with_context = insert_knowledge(
             conversation, results, display_citation=True
@@ -872,6 +893,7 @@ class TestStreamingApi(unittest.TestCase):
                 message_id=None,
             ),
             bot_id=None,
+            continue_generate=False,
         )
         user_msg_id, conversation, bot = prepare_conversation("user1", chat_input)
         messages = trace_to_root(

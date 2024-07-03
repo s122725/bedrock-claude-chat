@@ -10,8 +10,9 @@ export type Model =
   | 'mixtral-8x7b-instruct'
   | 'mistral-large';
 export type Content = {
-  contentType: 'text' | 'image';
+  contentType: 'text' | 'image' | 'textAttachment';
   mediaType?: string;
+  fileName?: string;
   body: string;
 };
 
@@ -50,6 +51,7 @@ export type PostMessageRequest = {
     parentMessageId: null | string;
   };
   botId?: string;
+  continueGenerate?: bool;
 };
 
 export type PostMessageResponse = {
@@ -86,6 +88,7 @@ export type MessageMap = {
 
 export type Conversation = ConversationMeta & {
   messageMap: MessageMap;
+  shouldContinue: boolean;
 };
 
 export type PutFeedbackRequest = {

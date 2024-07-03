@@ -17,12 +17,16 @@ type_model_name = Literal[
 
 
 class Content(BaseSchema):
-    content_type: Literal["text", "image"] = Field(
+    content_type: Literal["text", "image", "textAttachment"] = Field(
         ..., description="Content type. Note that image is only available for claude 3."
     )
     media_type: str | None = Field(
         None,
         description="MIME type of the image. Must be specified if `content_type` is `image`.",
+    )
+    file_name: str | None = Field(
+        None,
+        description="File name of the attachment. Must be specified if `content_type` is `textAttachment`.",
     )
     body: str = Field(..., description="Content body. Text or base64 encoded image.")
 
@@ -82,6 +86,7 @@ class ChatInput(BaseSchema):
     conversation_id: str
     message: MessageInput
     bot_id: str | None = Field(None)
+    continue_generate: bool = Field(False)
 
 
 class ChatOutput(BaseSchema):
@@ -113,6 +118,7 @@ class Conversation(BaseSchema):
     message_map: dict[str, MessageOutput]
     last_message_id: str
     bot_id: str | None
+    should_continue: bool
 
 
 class NewTitleInput(BaseSchema):

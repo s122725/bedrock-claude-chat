@@ -405,6 +405,7 @@ How would you categorize this email?`,
       signOut: 'Sign out',
       close: 'Close',
       add: 'Add',
+      continue: 'Continue to generate',
     },
     input: {
       hint: {
@@ -504,6 +505,7 @@ How would you categorize this email?`,
           'Unexpected response received. The response format does not match the expected format.',
       },
       notSupportedImage: 'The selected model does not support images.',
+      unsupportedFileFormat: 'The selected file format is not supported.',
     },
     validation: {
       title: 'Validation Error',
@@ -518,6 +520,15 @@ How would you categorize this email?`,
       },
       quickStarter: {
         message: 'Please input both Title and Conversation Example.',
+      },
+    },
+    heler: {
+      shortcuts: {
+        title: 'Shortcut Keys',
+        items: {
+          focusInput: 'Shift focus to chat input',
+          newChat: 'Open new chat',
+        },
       },
     },
   },

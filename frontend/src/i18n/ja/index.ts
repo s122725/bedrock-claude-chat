@@ -409,6 +409,7 @@ const translation = {
       signOut: 'サインアウト',
       close: '閉じる',
       add: '追加',
+      continue: '生成を続ける',
     },
     input: {
       hint: {
@@ -507,6 +508,7 @@ const translation = {
         invalidResponse: '想定外のResponseが返ってきました。',
       },
       notSupportedImage: '選択しているモデルは、画像を利用できません。',
+      unsupportedFileFormat: '選択したファイル形式はサポートされていません。',
     },
     validation: {
       title: 'バリデーションエラー',
@@ -522,6 +524,15 @@ const translation = {
       },
       quickStarter: {
         message: 'タイトルと入力例は、どちらも入力してください。',
+      },
+    },
+    heler: {
+      shortcuts: {
+        title: 'ショートカットキー',
+        items: {
+          focusInput: 'チャット入力にフォーカスを移す',
+          newChat: '新しいチャットを開く',
+        },
       },
     },
   },
