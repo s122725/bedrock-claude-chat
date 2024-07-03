@@ -1,0 +1,5 @@
+aws-lambda-powertools == 2.1.0
+anthropic == 0.18.1
+pdf2image == 1.17.0
+pyhumps == 3.8.0
+python-poppler == 0.4.1

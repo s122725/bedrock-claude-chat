@@ -85,9 +85,11 @@ export class WebSocket extends Construct {
     props.largeMessageBucket.grantReadWrite(handlerRole);
 
     const handler = new DockerImageFunction(this, "Handler", {
+      functionName: "WebsocketHandler",
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
+          assetName: "WebsocketHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "websocket.Dockerfile",
         }

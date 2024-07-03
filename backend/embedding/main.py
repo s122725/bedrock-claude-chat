@@ -21,6 +21,7 @@ from aws_lambda_powertools.utilities import parameters
 from embedding.loaders import UrlLoader
 from embedding.loaders.base import BaseLoader
 from embedding.loaders.s3 import S3FileLoader
+from embedding.loaders.sfn import StepFunctionsLoader
 from embedding.wrapper import DocumentSplitter, Embedder
 from llama_index.core.node_parser import SentenceSplitter
 from retry import retry
@@ -148,6 +149,7 @@ def main(
     chunk_size: int,
     chunk_overlap: int,
     enable_partition_pdf: bool,
+    enable_pdf_image_scan: bool,
 ):
     exec_id = ""
     try:
@@ -197,29 +199,64 @@ def main(
                 for sitemap_url in sitemap_urls:
                     raise NotImplementedError()
             if len(filenames) > 0:
-                with multiprocessing.Pool(processes=None) as pool:
-                    futures = [
-                        pool.apply_async(
-                            embed,
-                            args=(
-                                S3FileLoader(
-                                    bucket=DOCUMENT_BUCKET,
-                                    key=compose_upload_document_s3_path(
-                                        user_id, bot_id, filename
+                # イメージ変換ありの場合はStepFunctionsで処理
+                if enable_pdf_image_scan == True:
+
+                    # イメージ変換なしの場合は、マルチプロセスで処理
+                    with multiprocessing.Pool(processes=None) as pool:
+                        futures = [
+                            pool.apply_async(
+                                embed,
+                                args=(
+                                    StepFunctionsLoader(
+                                        bucket=DOCUMENT_BUCKET,
+                                        key=compose_upload_document_s3_path(
+                                            user_id, bot_id, filename
+                                        ),
+                                        user_id = user_id, 
+                                        bot_id = bot_id,
+                                        exec_id = exec_id,
+                                        filename = filename,
+                                        enable_partition_pdf=enable_partition_pdf,
+                                        enable_pdf_image_scan=enable_pdf_image_scan,
                                     ),
-                                    enable_partition_pdf=enable_partition_pdf,
+                                    contents,
+                                    sources,
+                                    embeddings,
+                                    chunk_size,
+                                    chunk_overlap,
                                 ),
-                                contents,
-                                sources,
-                                embeddings,
-                                chunk_size,
-                                chunk_overlap,
-                            ),
-                        )
-                        for filename in filenames
-                    ]
-                    for future in futures:
-                        future.get()
+                            )
+                            for filename in filenames
+                        ]
+                        for future in futures:
+                            future.get()
+                    
+                else:
+                    # イメージ変換なしの場合は、マルチプロセスで処理
+                    with multiprocessing.Pool(processes=None) as pool:
+                        futures = [
+                            pool.apply_async(
+                                embed,
+                                args=(
+                                    S3FileLoader(
+                                        bucket=DOCUMENT_BUCKET,
+                                        key=compose_upload_document_s3_path(
+                                            user_id, bot_id, filename
+                                        ),
+                                        enable_partition_pdf=enable_partition_pdf,
+                                    ),
+                                    contents,
+                                    sources,
+                                    embeddings,
+                                    chunk_size,
+                                    chunk_overlap,
+                                ),
+                            )
+                            for filename in filenames
+                        ]
+                        for future in futures:
+                            future.get()
 
             logger.info(f"Number of chunks: {len(contents)}")
 
@@ -266,6 +303,7 @@ if __name__ == "__main__":
     chunk_size = embedding_params.chunk_size
     chunk_overlap = embedding_params.chunk_overlap
     enable_partition_pdf = embedding_params.enable_partition_pdf
+    enable_pdf_image_scan = embedding_params.enable_pdf_image_scan
     knowledge = new_image.knowledge
     sitemap_urls = knowledge.sitemap_urls
     source_urls = knowledge.source_urls
@@ -277,6 +315,7 @@ if __name__ == "__main__":
     logger.info(f"chunk_size: {chunk_size}")
     logger.info(f"chunk_overlap: {chunk_overlap}")
     logger.info(f"enable_partition_pdf: {enable_partition_pdf}")
+    logger.info(f"enable_pdf_image_scan: {enable_pdf_image_scan}")
 
     main(
         user_id,
@@ -287,4 +326,5 @@ if __name__ == "__main__":
         chunk_size,
         chunk_overlap,
         enable_partition_pdf,
+        enable_pdf_image_scan,
     )

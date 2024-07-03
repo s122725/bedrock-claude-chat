@@ -166,9 +166,11 @@ export class Api extends Construct {
     props.largeMessageBucket.grantReadWrite(handlerRole);
 
     const handler = new DockerImageFunction(this, "Handler", {
+      functionName: "BackendHandler",
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
+          assetName: "BackendHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
         }

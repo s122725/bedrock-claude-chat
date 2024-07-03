@@ -151,6 +151,7 @@ export class Auth extends Construct {
         this,
         "CheckEmailDomain",
         {
+          functionName: "CheckEmailDomain",
           runtime: Runtime.PYTHON_3_12,
           index: "check_email_domain.py",
           entry: path.join(
@@ -208,6 +209,7 @@ export class Auth extends Construct {
         this,
         "AddUserToGroups",
         {
+          functionName: "AddUserToGroups",
           runtime: Runtime.PYTHON_3_12,
           index: "add_user_to_groups.py",
           entry: path.join(

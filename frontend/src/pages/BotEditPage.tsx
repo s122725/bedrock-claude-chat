@@ -67,6 +67,7 @@ const BotEditPage: React.FC = () => {
     chunkSize: DEFAULT_EMBEDDING_CONFIG.chunkSize,
     chunkOverlap: DEFAULT_EMBEDDING_CONFIG.chunkOverlap,
     enablePartitionPdf: DEFAULT_EMBEDDING_CONFIG.enablePartitionPdf,
+    enablePdfImageScan: DEFAULT_EMBEDDING_CONFIG.enablePdfImageScan,
   });
   const [addedFilenames, setAddedFilenames] = useState<string[]>([]);
   const [unchangedFilenames, setUnchangedFilenames] = useState<string[]>([]);
@@ -465,6 +466,7 @@ const BotEditPage: React.FC = () => {
         chunkSize: embeddingParams.chunkSize,
         chunkOverlap: embeddingParams.chunkOverlap,
         enablePartitionPdf: embeddingParams.enablePartitionPdf,
+        enablePdfImageScan: embeddingParams.enablePdfImageScan,
       },
       generationParams: {
         maxTokens,
@@ -502,6 +504,7 @@ const BotEditPage: React.FC = () => {
     embeddingParams.chunkSize,
     embeddingParams.chunkOverlap,
     embeddingParams.enablePartitionPdf,
+    embeddingParams.enablePdfImageScan,
     maxTokens,
     temperature,
     topK,
@@ -531,6 +534,7 @@ const BotEditPage: React.FC = () => {
           chunkSize: embeddingParams?.chunkSize,
           chunkOverlap: embeddingParams?.chunkOverlap,
           enablePartitionPdf: embeddingParams?.enablePartitionPdf,
+          enablePdfImageScan: embeddingParams?.enablePdfImageScan,
         },
         generationParams: {
           maxTokens,
@@ -572,6 +576,7 @@ const BotEditPage: React.FC = () => {
     embeddingParams?.chunkSize,
     embeddingParams?.chunkOverlap,
     embeddingParams?.enablePartitionPdf,
+    embeddingParams?.enablePdfImageScan,
     maxTokens,
     temperature,
     topK,
@@ -920,6 +925,19 @@ const BotEditPage: React.FC = () => {
                       setEmbeddingParams((params) => ({
                         ...params,
                         enablePartitionPdf: enablePartitionPdf,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="mt-2">
+                  <Toggle
+                    value={embeddingParams?.enablePdfImageScan ?? false}
+                    label={t('embeddingSettings.enablePdfImageScan.label')}
+                    hint={t('embeddingSettings.enablePdfImageScan.hint')}
+                    onChange={(enablePdfImageScan) =>
+                      setEmbeddingParams((params) => ({
+                        ...params,
+                        enablePdfImageScan: enablePdfImageScan,
                       }))
                     }
                   />

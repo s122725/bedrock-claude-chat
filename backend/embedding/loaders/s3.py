@@ -2,7 +2,6 @@ import os
 import tempfile
 import logging
 import boto3
-from distutils.util import strtobool
 from embedding.loaders.base import BaseLoader, Document
 from unstructured.partition.auto import partition
 from unstructured.partition.pdf import partition_pdf

@@ -3,7 +3,8 @@ import { EmdeddingParams, GenerationParams, SearchParams } from '../@types/bot';
 export const DEFAULT_EMBEDDING_CONFIG: EmdeddingParams = {
   chunkSize: 1000,
   chunkOverlap: 200,
-  enablePartitionPdf: false
+  enablePartitionPdf: false,
+  enablePdfImageScan: false,
 };
 
 export const EDGE_EMBEDDING_PARAMS = {

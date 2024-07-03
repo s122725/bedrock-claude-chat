@@ -72,6 +72,10 @@ class TestCustomBotRepository(unittest.TestCase):
             bot.embedding_params.enable_partition_pdf,
             DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
         )
+        self.assertEqual(
+            bot.embedding_params.enable_pdf_image_scan,
+            DEFAULT_EMBEDDING_CONFIG["enable_pdf_image_scan"],
+        )
         self.assertEqual(bot.generation_params.max_tokens, 2000)
         self.assertEqual(bot.generation_params.top_k, 250)
         self.assertEqual(bot.generation_params.top_p, 0.999)
@@ -144,7 +148,7 @@ class TestCustomBotRepository(unittest.TestCase):
             description="Updated Description",
             instruction="Updated Instruction",
             embedding_params=EmbeddingParamsModel(
-                chunk_size=500, chunk_overlap=100, enable_partition_pdf=False
+                chunk_size=500, chunk_overlap=100, enable_partition_pdf=False, enable_pdf_image_scan=False
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2500,
@@ -181,6 +185,7 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.embedding_params.chunk_overlap, 100)
 
         self.assertEqual(bot.embedding_params.enable_partition_pdf, False)
+        self.assertEqual(bot.embedding_params.enable_pdf_image_scan, False)
 
         self.assertEqual(bot.generation_params.max_tokens, 2500)
         self.assertEqual(bot.generation_params.top_k, 200)
@@ -337,6 +342,7 @@ class TestUpdateBotVisibility(unittest.TestCase):
                 chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
                 chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
                 enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
+                enable_pdf_image_scan=DEFAULT_EMBEDDING_CONFIG["enable_pdf_image_scan"],
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,

@@ -20,6 +20,8 @@ import { UsageAnalysis } from "./constructs/usage-analysis";
 import { TIdentityProvider, identityProvider } from "./utils/identity-provider";
 import { ApiPublishCodebuild } from "./constructs/api-publish-codebuild";
 import { WebAclForPublishedApi } from "./constructs/webacl-for-published-api";
+import { SfnLambdaInvoke } from './constructs/sfn-lambda-invoke';
+import { SfnWorkFlow } from './constructs/sfn-workflow';
 import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
 import { NagSuppressions } from "cdk-nag";
 
@@ -169,6 +171,17 @@ export class BedrockChatStack extends cdk.Stack {
       maxAge: 3000,
     });
 
+    // Stepfunctionsで使用するLambdaの定義
+    const sfnLambdaInvoke = new SfnLambdaInvoke(this, `SfnLambdaInvoke`, {
+      s3Bucket: documentBucket
+    })
+    // ワークフローの定義(CDKで定義する場合)
+    const sfnWorkFlow = new SfnWorkFlow(this, `SfnWorkFlow`, {
+      sfnLambdaInvoke,
+      table: database.table,
+      tableAccessRole: database.tableAccessRole,
+    })
+
     const embedding = new Embedding(this, "Embedding", {
       vpc,
       bedrockRegion: props.bedrockRegion,
@@ -178,6 +191,7 @@ export class BedrockChatStack extends cdk.Stack {
       documentBucket,
       embeddingContainerVcpu: props.embeddingContainerVcpu,
       embeddingContainerMemory: props.embeddingContainerMemory,
+      stateMachineArn: sfnWorkFlow.stateMachine.stateMachineArn
     });
     documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
 

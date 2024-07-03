@@ -29,6 +29,7 @@ export interface EmbeddingProps {
   readonly documentBucket: IBucket;
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
+  readonly stateMachineArn: string;
 }
 
 export class Embedding extends Construct {
@@ -65,6 +66,16 @@ export class Embedding extends Construct {
     );
     taskDefinition.addToTaskRolePolicy(
       new iam.PolicyStatement({
+        actions: [
+          "states:StartExecution",
+          "states:DescribeExecution",
+          "states:StopExecution",
+        ],
+        resources: ["*"],
+      })
+    );
+    taskDefinition.addToTaskRolePolicy(
+      new iam.PolicyStatement({
         actions: ["sts:AssumeRole"],
         resources: [props.tableAccessRole.roleArn],
       })
@@ -75,6 +86,7 @@ export class Embedding extends Construct {
     });
 
     const asset = new DockerImageAsset(this, "Image", {
+      assetName: "EmbeddingImage",
       directory: path.join(__dirname, "../../../backend"),
       file: "embedding/Dockerfile",
       platform: Platform.LINUX_AMD64,
@@ -95,6 +107,7 @@ export class Embedding extends Construct {
         TABLE_NAME: props.database.tableName,
         TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
         DOCUMENT_BUCKET: props.documentBucket.bucketName,
+        STATE_MACHINE_ARN: props.stateMachineArn,
       },
     });
     taskLogGroup.grantWrite(container.taskDefinition.executionRole!);
@@ -242,9 +255,11 @@ export class Embedding extends Construct {
     props.database.grantStreamRead(removeHandlerRole);
     props.documentBucket.grantReadWrite(removeHandlerRole);
     const removalHandler = new DockerImageFunction(this, "BotRemovalHandler", {
+      functionName: "BotRemovalHandler",
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
+          assetName: "BotRemovalHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "websocket.Dockerfile",
           cmd: ["app.bot_remove.handler"],
