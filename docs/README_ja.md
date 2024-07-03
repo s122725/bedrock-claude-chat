@@ -198,6 +198,14 @@ GENERATION_CONFIG = {
 "allowedSignUpEmailDomains": ["example.com"],
 ```
 
+### NAT Gateway数のカスタマイズ
+
+このサンプルはデフォルトでは2つの NAT ゲートウェイがデプロイされますが、2つの NAT ゲートウェイが不要な場合は、NAT ゲートウェイの数を変更してコストを削減できます。`cdk.json`を開き、 `natgatewayCount` のパラメータをを変更してください。
+
+```ts
+"natgatewayCount": 2
+```
+
 ### リソースの削除
 
 cli および CDK を利用されている場合、`cdk destroy`を実行してください。そうでない場合は[CloudFormation](https://console.aws.amazon.com/cloudformation/home)へアクセスし、手動で`BedrockChatStack`および`FrontendWafStack`を削除してください。なお`FrontendWafStack`は `us-east-1` リージョンにあります。
