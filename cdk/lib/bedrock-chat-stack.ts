@@ -37,6 +37,7 @@ export interface BedrockChatStackProps extends StackProps {
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
   readonly selfSignUpEnabled: boolean;
+  readonly enableIpV6: boolean;
 }
 
 export class BedrockChatStack extends cdk.Stack {
@@ -92,6 +93,7 @@ export class BedrockChatStack extends cdk.Stack {
       accessLogBucket,
       webAclId: props.webAclId,
       enableMistral: props.enableMistral,
+      enableIpV6: props.enableIpV6,
     });
 
     const auth = new Auth(this, "Auth", {
