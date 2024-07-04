@@ -97,7 +97,9 @@ export class FrontendWafStack extends Stack {
         value: webAcl.attrArn,
       });
     } else {
-      throw new Error("Not a single permitted IP range has been specified.");
+      throw new Error(
+        "One or more allowed IP ranges must be specified in IPv4 or IPv6."
+      );
     }
   }
 }

@@ -74,7 +74,7 @@ export class WebAclForPublishedApi extends Construct {
       this.webAclArn = webAcl.attrArn;
     } else {
       throw new Error(
-        "Not a single permitted IP range has been specified for Published API."
+        "One or more allowed IP ranges for the published API must be specified in IPv4 or IPv6."
       );
     }
   }
