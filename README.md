@@ -77,6 +77,7 @@ You can specify the following parameters during deployment to enhance security a
 - **--disable-self-register**: Disable self-registration (default: enabled). If this flag is set, you will need to create all users on cognito and it will not allow users to self register their accounts.
 - **--ipv4-ranges**: Comma-separated list of allowed IPv4 ranges. (default: allow all ipv4 addresses)
 - **--ipv6-ranges**: Comma-separated list of allowed IPv6 ranges. (default: allow all ipv6 addresses)
+- **- --disable-ipv6**: Disable connections over IPv6. (default: enabled)
 - **--allowed-signup-email-domains**: Comma-separated list of allowed email domains for sign-up. (default: no domain restriction)
 - **--region**: Define the region where bedrock is available. (default: us-east-1)
 
