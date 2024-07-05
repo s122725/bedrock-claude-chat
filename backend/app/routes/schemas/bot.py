@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, Optional
 
 from app.routes.schemas.base import BaseSchema
-from pydantic import Field
+from pydantic import Field, root_validator
+from app.routes.schemas.bot_kb import BedrockKnowledgeBaseInput, BedrockKnowledgeBaseOutput
 
 if TYPE_CHECKING:
     from app.repositories.models.custom_bot import BotModel
@@ -51,6 +52,20 @@ class Knowledge(BaseSchema):
     sitemap_urls: list[str]
     filenames: list[str]
 
+    @root_validator(pre=True)
+    def validate_s3_url_and_filenames(cls, values):
+        source_urls = values.get('source_urls', [])
+        filenames = values.get('filenames', [])
+
+        # Check if there is any URL that starts with "s3://"
+        contains_s3_url = any(url.startswith('s3://') for url in source_urls)
+        
+        # If there is an s3 URL, filenames must be empty
+        if contains_s3_url and filenames:
+            raise ValueError('If source_urls contain an s3 URL, filenames must be empty.')
+        
+        return values
+
 
 class KnowledgeDiffInput(BaseSchema):
     source_urls: list[str]
@@ -78,6 +93,7 @@ class BotInput(BaseSchema):
     knowledge: Knowledge | None
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter] | None
+    bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
 
 
 class BotModifyInput(BaseSchema):
@@ -165,6 +181,7 @@ class BotOutput(BaseSchema):
     sync_last_exec_id: str
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter]
+    bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None = None
 
 
 class BotMetaOutput(BaseSchema):
@@ -207,3 +224,5 @@ class BotPinnedInput(BaseSchema):
 
 class BotPresignedUrlOutput(BaseSchema):
     url: str
+
+

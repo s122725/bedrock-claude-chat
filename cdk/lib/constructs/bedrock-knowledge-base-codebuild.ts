@@ -1,18 +1,24 @@
 import { Construct } from "constructs";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { IgnoreMode, RemovalPolicy } from "aws-cdk-lib";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+import * as path from "path";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { NagSuppressions } from "cdk-nag";
 
-export interface ApiPublishCodebuildProps {
+export interface BedrockKnowledgeBaseCodebuildProps {
   readonly sourceBucket: s3.Bucket;
-  readonly dbSecret: secretsmanager.ISecret;
 }
 
-export class ApiPublishCodebuild extends Construct {
+export class BedrockKnowledgeBaseCodebuild extends Construct {
   public readonly project: codebuild.Project;
-  constructor(scope: Construct, id: string, props: ApiPublishCodebuildProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: BedrockKnowledgeBaseCodebuildProps
+  ) {
     super(scope, id);
 
     const sourceBucket = props.sourceBucket;
@@ -26,14 +32,16 @@ export class ApiPublishCodebuild extends Construct {
         privileged: true,
       },
       environmentVariables: {
-        // Need to be overridden when invoke the project
-        // PUBLISHED_API_THROTTLE_RATE_LIMIT: { value: undefined },
-        // PUBLISHED_API_THROTTLE_BURST_LIMIT: { value: undefined },
-        // PUBLISHED_API_QUOTA_LIMIT: { value: undefined },
-        // PUBLISHED_API_QUOTA_PERIOD: { value: undefined },
-        PUBLISHED_API_DEPLOYMENT_STAGE: { value: "api" },
-        PUBLISHED_API_ID: { value: "xy1234" },
-        PUBLISHED_API_ALLOWED_ORIGINS: { value: '["*"]' },
+        OWNER_USER_ID: { value: "" },
+        BOT_ID: { value: "" },
+        EMBEDDINGS_MODEL: { value: "" },
+        BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: { value: "" },
+        CHUNKING_STRATEGY: { value: "" },
+        EXISTING_BUCKET_NAMES: { value: "[]" },
+        MAX_TOKENS: { value: "" },
+        INSTRUCTION: { value: "" },
+        ANALYZER: { value: "" },
+        OVERLAP_PERCENTAGE: { value: "" },
       },
       buildSpec: codebuild.BuildSpec.fromObject({
         version: "0.2",
@@ -50,22 +58,24 @@ export class ApiPublishCodebuild extends Construct {
               "cd cdk",
               "npm ci",
               // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
-              "sed -i 's|bin/bedrock-chat.ts|bin/api-publish.ts|' cdk.json",
-              `cdk deploy --require-approval never ApiPublishmentStack$PUBLISHED_API_ID \\
-         -c publishedApiThrottleRateLimit=$PUBLISHED_API_THROTTLE_RATE_LIMIT \\
-         -c publishedApiThrottleBurstLimit=$PUBLISHED_API_THROTTLE_BURST_LIMIT \\
-         -c publishedApiQuotaLimit=$PUBLISHED_API_QUOTA_LIMIT \\
-         -c publishedApiQuotaPeriod=$PUBLISHED_API_QUOTA_PERIOD \\
-         -c publishedApiDeploymentStage=$PUBLISHED_API_DEPLOYMENT_STAGE \\
-         -c publishedApiId=$PUBLISHED_API_ID \\
-         -c publishedApiAllowedOrigins=$PUBLISHED_API_ALLOWED_ORIGINS`,
+              "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
+              `cdk deploy --require-approval never KBStack$BOT_ID \\
+         -c ownerUserId=$OWNER_USER_ID \\
+         -c botId=$BOT_ID \\
+         -c embeddingsModel=$EMBEDDINGS_MODEL \\
+         -c bedrockClaudeChatDocumentBucketName=$BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME \\
+         -c chunkingStrategy=$CHUNKING_STRATEGY \\
+         -c existingBucketNames=$EXISTING_BUCKET_NAMES \\
+         -c maxTokens=$MAX_TOKENS \\
+         -c instruction=$INSTRUCTION \\
+         -c analyzer=$ANALYZER \\
+         -c overlapPercentage=$OVERLAP_PERCENTAGE`,
             ],
           },
         },
       }),
     });
     sourceBucket.grantRead(project.role!);
-    props.dbSecret.grantRead(project.role!);
 
     // Allow `cdk deploy`
     project.role!.addToPrincipalPolicy(
@@ -83,7 +93,7 @@ export class ApiPublishCodebuild extends Construct {
       },
       {
         id: "AwsPrototyping-CodeBuildProjectPrivilegedModeDisabled",
-        reason: "for runnning on the docker daemon on the docker container",
+        reason: "for running on the docker daemon on the docker container",
       },
     ]);
 

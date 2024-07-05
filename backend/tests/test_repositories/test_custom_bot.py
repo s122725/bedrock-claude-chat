@@ -31,6 +31,11 @@ from app.repositories.models.custom_bot import (
     KnowledgeModel,
     SearchParamsModel,
 )
+from app.repositories.models.custom_bot_kb import (
+    BedrockKnowledgeBaseModel,
+    AnalyzerParamsModel,
+    OpenSearchParamsModel,
+)
 from app.usecases.bot import fetch_all_bots_by_user_id
 from tests.test_repositories.utils.bot_factory import (
     create_test_private_bot,
@@ -51,6 +56,20 @@ class TestCustomBotRepository(unittest.TestCase):
             conversation_quick_starters=[
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
+            bedrock_knowledge_base=BedrockKnowledgeBaseModel(
+                embeddings_model="titan_v1",
+                open_search=OpenSearchParamsModel(
+                    analyzer=AnalyzerParamsModel(
+                        character_filters=["icu_normalizer"],
+                        tokenizer="kuromoji_tokenizer",
+                        token_filters=["kuromoji_baseform"],
+                    )
+                ),
+                chunking_strategy="default",
+                max_tokens=2000,
+                overlap_percentage=0,
+                instruction="Test KB Prompt",
+            )
         )
         store_bot("user1", bot)
 
@@ -91,6 +110,14 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(len(bot.conversation_quick_starters), 1)
         self.assertEqual(bot.conversation_quick_starters[0].title, "QS title")
         self.assertEqual(bot.conversation_quick_starters[0].example, "QS example")
+        self.assertEqual(bot.bedrock_knowledge_base.embeddings_model, "titan_v1")
+        self.assertEqual(bot.bedrock_knowledge_base.chunking_strategy, "default")
+        self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
+        self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
+        self.assertEqual(bot.bedrock_knowledge_base.instruction, "Test KB Prompt")
+        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.character_filters, ["icu_normalizer"])
+        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.tokenizer, "kuromoji_tokenizer")
+        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.token_filters, ["kuromoji_baseform"])
 
         # Assert bot is stored in user1's bot list
         bot = find_private_bots_by_user_id("user1")

@@ -14,6 +14,7 @@ from app.repositories.models.custom_bot import (
     KnowledgeModel,
     SearchParamsModel,
     ConversationQuickStarterModel,
+    BedrockKnowledgeBaseModel
 )
 from app.routes.schemas.bot import type_sync_status
 
@@ -29,6 +30,7 @@ def create_test_private_bot(
     published_api_codebuild_id: str | None = None,
     display_retrieved_chunks: bool = True,
     conversation_quick_starters: list[ConversationQuickStarterModel] | None = None,
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
 ):
     return BotModel(
         id=id,
@@ -76,6 +78,7 @@ def create_test_private_bot(
         conversation_quick_starters=(
             [] if conversation_quick_starters is None else conversation_quick_starters
         ),
+        bedrock_knowledge_base=bedrock_knowledge_base,
     )
 
 

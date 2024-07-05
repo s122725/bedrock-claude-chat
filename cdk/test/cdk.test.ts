@@ -2,8 +2,14 @@ import * as cdk from "aws-cdk-lib";
 import { BedrockChatStack } from "../lib/bedrock-chat-stack";
 import { Template } from "aws-cdk-lib/assertions";
 import { AwsPrototypingChecks } from "@aws-prototyping-sdk/pdk-nag";
+import {
+  getEmbeddingModel,
+  getChunkingStrategy,
+  getAnalyzer,
+} from "../lib/utils/bedrock-knowledge-base-args";
+import { BedrockKnowledgeBaseStack } from "../lib/bedrock-knowledge-base-stack";
 
-describe("Fine-grained Assertions Test", () => {
+describe("Bedrock Chat Stack Test", () => {
   test("Identity Provider Generation", () => {
     const app = new cdk.App();
 
@@ -35,7 +41,7 @@ describe("Fine-grained Assertions Test", () => {
         selfSignUpEnabled: true,
         embeddingContainerVcpu: 1024,
         embeddingContainerMemory: 2048,
-        natgatewayCount: 2
+        natgatewayCount: 2,
       }
     );
     const hasGoogleProviderTemplate = Template.fromStack(
@@ -93,7 +99,7 @@ describe("Fine-grained Assertions Test", () => {
         selfSignUpEnabled: true,
         embeddingContainerVcpu: 1024,
         embeddingContainerMemory: 2048,
-        natgatewayCount: 2
+        natgatewayCount: 2,
       }
     );
     const hasOidcProviderTemplate = Template.fromStack(hasOidcProviderStack);
@@ -142,7 +148,7 @@ describe("Fine-grained Assertions Test", () => {
       selfSignUpEnabled: true,
       embeddingContainerVcpu: 1024,
       embeddingContainerMemory: 2048,
-      natgatewayCount: 2
+      natgatewayCount: 2,
     });
     const template = Template.fromStack(stack);
 
@@ -190,7 +196,7 @@ describe("Scheduler Test", () => {
       selfSignUpEnabled: true,
       embeddingContainerVcpu: 1024,
       embeddingContainerMemory: 2048,
-      natgatewayCount: 2
+      natgatewayCount: 2,
     });
     const template = Template.fromStack(hasScheduleStack);
     template.hasResourceProperties("AWS::Scheduler::Schedule", {
@@ -221,10 +227,58 @@ describe("Scheduler Test", () => {
       selfSignUpEnabled: true,
       embeddingContainerVcpu: 1024,
       embeddingContainerMemory: 2048,
-      natgatewayCount: 2
+      natgatewayCount: 2,
     });
     const template = Template.fromStack(defaultStack);
     // The stack should have only 1 rule for exporting the data from ddb to s3
     template.resourceCountIs("AWS::Events::Rule", 1);
+  });
+});
+
+describe("Bedrock Knowledge Base Stack", () => {
+  test("default kb stack", () => {
+    const app = new cdk.App();
+    // Security check
+    cdk.Aspects.of(app).add(new AwsPrototypingChecks());
+
+    const OWNER_USER_ID: string = "test-owner-user-id";
+    const BOT_ID: string = "test-bot-id";
+    const EMBEDDINGS_MODEL = getEmbeddingModel("titan_v1");
+    const BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME =
+      "test-document-bucket-name";
+    const CHUNKING_STRATEGY = getChunkingStrategy("default");
+
+    const EXISTING_BUCKET_NAMES: string[] = ["bucket1", "bucket2"];
+    const MAX_TOKENS: number | undefined = 1024;
+    const INSTRUCTION: string | undefined = "Test instruction";
+    const ANALYZER = getAnalyzer(
+      JSON.stringify({
+        character_filters: ["icu_normalizer"],
+        tokenizer: "icu_tokenizer",
+        token_filters: ["lowercase", "icu_folding"],
+      })
+    );
+    const OVERLAP_PERCENTAGE: number | undefined = 10;
+
+    const stack = new BedrockKnowledgeBaseStack(
+      app,
+      "BedrockKnowledgeBaseStack",
+      {
+        ownerUserId: OWNER_USER_ID,
+        botId: BOT_ID,
+        embeddingsModel: EMBEDDINGS_MODEL,
+        bedrockClaudeChatDocumentBucketName:
+          BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME,
+        chunkingStrategy: CHUNKING_STRATEGY,
+        existingBucketNames: EXISTING_BUCKET_NAMES,
+        maxTokens: MAX_TOKENS,
+        instruction: INSTRUCTION,
+        analyzer: ANALYZER,
+        overlapPercentage: OVERLAP_PERCENTAGE,
+      }
+    );
+
+    const template = Template.fromStack(stack);
+    expect(template).toBeDefined();
   });
 });

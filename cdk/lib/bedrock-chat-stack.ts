@@ -1,4 +1,4 @@
-import { CfnOutput, RemovalPolicy, StackProps } from "aws-cdk-lib";
+import { CfnOutput, RemovalPolicy, StackProps, IgnoreMode } from "aws-cdk-lib";
 import {
   BlockPublicAccess,
   Bucket,
@@ -21,7 +21,9 @@ import { TIdentityProvider, identityProvider } from "./utils/identity-provider";
 import { ApiPublishCodebuild } from "./constructs/api-publish-codebuild";
 import { WebAclForPublishedApi } from "./constructs/webacl-for-published-api";
 import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
-import { NagSuppressions } from "cdk-nag";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+import * as path from "path";
+import { BedrockKnowledgeBaseCodebuild } from "./constructs/bedrock-knowledge-base-codebuild";
 
 export interface BedrockChatStackProps extends StackProps {
   readonly bedrockRegion: string;
@@ -49,7 +51,7 @@ export class BedrockChatStack extends cdk.Stack {
     const cronSchedule = createCronSchedule(props.rdsSchedules);
 
     const vpc = new ec2.Vpc(this, "VPC", {
-      natGateways: props.natgatewayCount
+      natGateways: props.natgatewayCount,
     });
     vpc.publicSubnets.forEach((subnet) => {
       (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
@@ -81,13 +83,52 @@ export class BedrockChatStack extends cdk.Stack {
       serverAccessLogsPrefix: "DocumentBucket",
     });
 
-    // CodeBuild is used for api publication
+    // Bucket for source code
+    const sourceBucket = new Bucket(this, "SourceBucketForCodeBuild", {
+      encryption: BucketEncryption.S3_MANAGED,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
+      autoDeleteObjects: true,
+      serverAccessLogsBucket: accessLogBucket,
+      serverAccessLogsPrefix: "SourceBucketForCodeBuild",
+    });
+    new s3deploy.BucketDeployment(this, "SourceDeploy", {
+      sources: [
+        s3deploy.Source.asset(path.join(__dirname, "../../../"), {
+          ignoreMode: IgnoreMode.GIT,
+          exclude: [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/.venv/**",
+            "**/__pycache__/**",
+            "**/cdk.out/**",
+            "**/.vscode/**",
+            "**/.DS_Store/**",
+            "**/.git/**",
+            "**/.github/**",
+            "**/.mypy_cache/**",
+          ],
+        }),
+      ],
+      destinationBucket: sourceBucket,
+    });
+    // CodeBuild used for api publication
     const apiPublishCodebuild = new ApiPublishCodebuild(
       this,
       "ApiPublishCodebuild",
       {
-        accessLogBucket,
+        sourceBucket,
         dbSecret: vectorStore.secret,
+      }
+    );
+    // CodeBuild used for KnowledgeBase
+    const bedrockKnowledgeBaseCodebuild = new BedrockKnowledgeBaseCodebuild(
+      this,
+      "BedrockKnowledgeBaseCodebuild",
+      {
+        sourceBucket,
       }
     );
 
@@ -135,6 +176,7 @@ export class BedrockChatStack extends cdk.Stack {
       dbSecrets: vectorStore.secret,
       documentBucket,
       apiPublishProject: apiPublishCodebuild.project,
+      bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
       usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,

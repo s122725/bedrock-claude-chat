@@ -1,7 +1,7 @@
 from app.repositories.models.common import Float
 from app.routes.schemas.bot import type_sync_status
 from pydantic import BaseModel
-
+from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 
 class EmbeddingParamsModel(BaseModel):
     chunk_size: int
@@ -81,6 +81,8 @@ class BotModel(BaseModel):
     published_api_codebuild_id: str | None
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarterModel]
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None
+    
 
     def has_knowledge(self) -> bool:
         return (

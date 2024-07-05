@@ -31,6 +31,11 @@ from app.repositories.models.custom_bot import (
     SearchParamsModel,
     ConversationQuickStarterModel,
 )
+from app.repositories.models.custom_bot_kb import (
+    AnalyzerParamsModel,
+    OpenSearchParamsModel,
+    BedrockKnowledgeBaseModel,
+)
 from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
 from boto3.dynamodb.conditions import Attr, Key
@@ -78,6 +83,8 @@ def store_bot(user_id: str, custom_bot: BotModel):
             starter.model_dump() for starter in custom_bot.conversation_quick_starters
         ],
     }
+    if custom_bot.bedrock_knowledge_base:
+        item["BedrockKnowledgeBase"] = custom_bot.bedrock_knowledge_base.model_dump()
 
     response = table.put_item(Item=item)
     return response
@@ -406,6 +413,7 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
+        bedrock_knowledge_base=BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"]) if "BedrockKnowledgeBase" in item else None,
     )
 
     logger.info(f"Found bot: {bot}")
@@ -492,6 +500,7 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
+        bedrock_knowledge_base=BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"]) if "BedrockKnowledgeBase" in item else None,
     )
     logger.info(f"Found public bot: {bot}")
     return bot
