@@ -45,7 +45,7 @@ const useModelState = create<{
   modelId: Model;
   setModelId: (m: Model) => void;
 }>((set) => ({
-  modelId: 'claude-v3.5-sonnet',
+  modelId: 'claude-v3-haiku',
   setModelId: (m) => {
     set({
       modelId: m,
