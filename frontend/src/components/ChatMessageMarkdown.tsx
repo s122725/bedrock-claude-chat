@@ -124,7 +124,7 @@ const ChatMessageMarkdown: React.FC<Props> = ({
   }, [children]);
 
   const remarkPlugins = useMemo(() => {
-    return [remarkGfm, remarkBreaks, remarkMath]
+    return [remarkGfm, remarkBreaks, ] //  remarkMath] don't use math mark up
   }, [])
   const rehypePlugins = useMemo(() => {
     const rehypeExternalLinksOptions: Options = {
