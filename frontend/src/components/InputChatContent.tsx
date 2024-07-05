@@ -191,7 +191,9 @@ const InputChatContent: React.FC<Props> = (props) => {
       for (let i = 0; i < clipboardItems.length; i++) {
         if (model?.supportMediaType.includes(clipboardItems[i].type)) {
           const pastedFile = clipboardItems[i].getAsFile();
-          if (pastedFile) {
+          const contentType = pastedFile?.type.split('/')[0];
+
+          if (pastedFile && contentType === 'image') {
             encodeAndPushImage(pastedFile);
             e.preventDefault();
           }
