@@ -61,6 +61,7 @@ class BaseStreamHandler:
         return self
 
 
+# Merge stream handler to converse API
 class AnthropicStreamHandler(BaseStreamHandler):
     """Stream handler for Anthropic models."""
 
