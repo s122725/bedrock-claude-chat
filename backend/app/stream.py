@@ -28,6 +28,8 @@ class OnStopInput(BaseModel):
     price: float
 
 
+
+
 class BaseStreamHandler:
     def __init__(
         self,
@@ -143,3 +145,10 @@ class BedrockStreamHandler(BaseStreamHandler):
                         )
                     )
                     yield res
+
+
+class ConverseApiHandler:
+    """Stream handler for ConverseAPI"""
+    
+    def __init__(self):
+        pass
