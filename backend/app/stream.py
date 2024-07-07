@@ -9,6 +9,8 @@ from app.utils import get_anthropic_client, is_anthropic_model
 from langchain_core.outputs import GenerationChunk
 from pydantic import BaseModel
 
+import boto3
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -152,8 +154,9 @@ class BedrockStreamHandler(BaseStreamHandler):
 class ConverseApiHandler:
     """Stream handler for ConverseAPI"""
 
-    def __init__(self):
-        pass
+    def __init__(self,
+                 model_id):
+        client = boto3.client(model_id, region_name="us-east-1")
 
     def stream_conversation(bedrock_client,
                     model_id,
