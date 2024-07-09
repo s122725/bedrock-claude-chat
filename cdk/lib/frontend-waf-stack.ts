@@ -20,7 +20,7 @@ export class FrontendWafStack extends Stack {
   /**
    * Whether IPv6 is used or not
    */
-  public readonly enableIpV6: boolean;
+  public readonly ipV6Enabled: boolean;
 
   constructor(scope: Construct, id: string, props: FrontendWafStackProps) {
     super(scope, id, props);
@@ -75,9 +75,9 @@ export class FrontendWafStack extends Stack {
           ipSetReferenceStatement: { arn: ipV6SetReferenceStatement.attrArn },
         },
       });
-      this.enableIpV6 = true;
+      this.ipV6Enabled = true;
     } else {
-      this.enableIpV6 = false;
+      this.ipV6Enabled = false;
     }
 
     if (rules.length > 0) {

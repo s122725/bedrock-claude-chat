@@ -35,7 +35,8 @@ describe("Fine-grained Assertions Test", () => {
         selfSignUpEnabled: true,
         embeddingContainerVcpu: 1024,
         embeddingContainerMemory: 2048,
-        natgatewayCount: 2
+        natgatewayCount: 2,
+        enableIpV6: true,
       }
     );
     const hasGoogleProviderTemplate = Template.fromStack(
@@ -93,7 +94,8 @@ describe("Fine-grained Assertions Test", () => {
         selfSignUpEnabled: true,
         embeddingContainerVcpu: 1024,
         embeddingContainerMemory: 2048,
-        natgatewayCount: 2
+        natgatewayCount: 2,
+        enableIpV6: true,
       }
     );
     const hasOidcProviderTemplate = Template.fromStack(hasOidcProviderStack);
@@ -142,7 +144,8 @@ describe("Fine-grained Assertions Test", () => {
       selfSignUpEnabled: true,
       embeddingContainerVcpu: 1024,
       embeddingContainerMemory: 2048,
-      natgatewayCount: 2
+      natgatewayCount: 2,
+      enableIpV6: true,
     });
     const template = Template.fromStack(stack);
 
@@ -190,7 +193,8 @@ describe("Scheduler Test", () => {
       selfSignUpEnabled: true,
       embeddingContainerVcpu: 1024,
       embeddingContainerMemory: 2048,
-      natgatewayCount: 2
+      natgatewayCount: 2,
+      enableIpV6: true,
     });
     const template = Template.fromStack(hasScheduleStack);
     template.hasResourceProperties("AWS::Scheduler::Schedule", {
@@ -221,7 +225,8 @@ describe("Scheduler Test", () => {
       selfSignUpEnabled: true,
       embeddingContainerVcpu: 1024,
       embeddingContainerMemory: 2048,
-      natgatewayCount: 2
+      natgatewayCount: 2,
+      enableIpV6: true,
     });
     const template = Template.fromStack(defaultStack);
     // The stack should have only 1 rule for exporting the data from ddb to s3
