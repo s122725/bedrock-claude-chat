@@ -206,6 +206,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                     for starter in bot_input.conversation_quick_starters
                 ]
             ),
+            bedrock_knowledge_base=bot_input.bedrock_knowledge_base,
         ),
     )
     return BotOutput(
@@ -249,6 +250,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 for starter in bot_input.conversation_quick_starters
             ]
         ),
+        bedrock_knowledge_base=bot_input.bedrock_knowledge_base,
     )
 
 

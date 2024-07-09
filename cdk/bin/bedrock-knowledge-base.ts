@@ -34,6 +34,20 @@ const OVERLAP_PERCENTAGE: number | undefined = app.node.tryGetContext(
   ? Number(app.node.tryGetContext("overlapPercentage"))
   : undefined;
 
+console.log("OWNER_USER_ID: ", OWNER_USER_ID);
+console.log("BOT_ID: ", BOT_ID);
+console.log("EMBEDDINGS_MODEL: ", EMBEDDINGS_MODEL);
+console.log(
+  "BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: ",
+  BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME
+);
+console.log("CHUNKING_STRATEGY: ", CHUNKING_STRATEGY);
+console.log("EXISTING_BUCKET_NAMES: ", EXISTING_BUCKET_NAMES);
+console.log("MAX_TOKENS: ", MAX_TOKENS);
+console.log("INSTRUCTION: ", INSTRUCTION);
+console.log("ANALYZER: ", ANALYZER);
+console.log("OVERLAP_PERCENTAGE: ", OVERLAP_PERCENTAGE);
+
 const knowledgeBaseStack = new BedrockKnowledgeBaseStack(
   app,
   `KBStack${BOT_ID}`,

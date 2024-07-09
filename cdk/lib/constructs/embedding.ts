@@ -19,6 +19,8 @@ import {
 } from "aws-cdk-lib/aws-lambda";
 import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { SociIndexBuild } from "deploy-time-build";
+import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 
 export interface EmbeddingProps {
   readonly vpc: ec2.IVpc;
@@ -35,17 +37,51 @@ export class Embedding extends Construct {
   readonly taskSecurityGroup: ec2.ISecurityGroup;
   readonly container: ecs.ContainerDefinition;
   readonly removalHandler: IFunction;
+  private _cluster: ecs.Cluster;
+  private _taskDefinition: ecs.FargateTaskDefinition;
+  private _pipeRole: iam.Role;
+  private _stateMachine: sfn.StateMachine;
+  private _taskSecurityGroup: ec2.ISecurityGroup;
+  private _container: ecs.ContainerDefinition;
+  private _removalHandler: IFunction;
+
   constructor(scope: Construct, id: string, props: EmbeddingProps) {
     super(scope, id);
 
-    /**
-     * ECS
-     */
-    const cluster = new ecs.Cluster(this, "Cluster", {
+    this.setupCluster(props)
+      .setupEcsTaskDefinition(props)
+      .createEcsContainer(props)
+      .setupStateMachine(props)
+      .setupEventBridgePipe(props)
+      .setupRemovalHandler(props);
+    this.outputValues();
+
+    this.taskSecurityGroup = this._taskSecurityGroup;
+    this.container = this._container;
+    this.removalHandler = this._removalHandler;
+  }
+
+  private setupCluster(props: EmbeddingProps): this {
+    this._cluster = new ecs.Cluster(this, "Cluster", {
       vpc: props.vpc,
       containerInsights: true,
     });
-    const taskDefinition = new ecs.FargateTaskDefinition(
+    return this;
+  }
+
+  private setupEcsTaskDefinition(props: EmbeddingProps): this {
+    if (!this._cluster) {
+      throw new Error(
+        "Cluster must be initialized before setting up the task definition"
+      );
+    }
+
+    this._taskSecurityGroup = new ec2.SecurityGroup(this, "TaskSecurityGroup", {
+      vpc: props.vpc,
+      allowAllOutbound: true,
+    });
+
+    this._taskDefinition = new ecs.FargateTaskDefinition(
       this,
       "TaskDefinition",
       {
@@ -57,18 +93,28 @@ export class Embedding extends Construct {
         },
       }
     );
-    taskDefinition.addToTaskRolePolicy(
+    this._taskDefinition.addToTaskRolePolicy(
       new iam.PolicyStatement({
         actions: ["bedrock:*"],
         resources: ["*"],
       })
     );
-    taskDefinition.addToTaskRolePolicy(
+    this._taskDefinition.addToTaskRolePolicy(
       new iam.PolicyStatement({
         actions: ["sts:AssumeRole"],
         resources: [props.tableAccessRole.roleArn],
       })
     );
+    return this;
+  }
+
+  private createEcsContainer(props: EmbeddingProps): this {
+    if (!this._taskDefinition) {
+      throw new Error(
+        "Task definition must be set up before creating the container"
+      );
+    }
+
     const taskLogGroup = new logs.LogGroup(this, "TaskLogGroup", {
       removalPolicy: RemovalPolicy.DESTROY,
       retention: logs.RetentionDays.ONE_WEEK,
@@ -81,7 +127,7 @@ export class Embedding extends Construct {
     });
     SociIndexBuild.fromDockerImageAsset(this, "Index", asset);
 
-    const container = taskDefinition.addContainer("Container", {
+    this._container = this._taskDefinition.addContainer("Container", {
       image: ecs.AssetImage.fromDockerImageAsset(asset),
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: "embed-task",
@@ -97,24 +143,67 @@ export class Embedding extends Construct {
         DOCUMENT_BUCKET: props.documentBucket.bucketName,
       },
     });
-    taskLogGroup.grantWrite(container.taskDefinition.executionRole!);
-    props.dbSecrets.grantRead(container.taskDefinition.taskRole);
-    const taskSg = new ec2.SecurityGroup(this, "TaskSecurityGroup", {
-      vpc: props.vpc,
-      allowAllOutbound: true,
+    taskLogGroup.grantWrite(this._container.taskDefinition.executionRole!);
+    props.dbSecrets.grantRead(this._container.taskDefinition.taskRole);
+    return this;
+  }
+
+  private setupStateMachine(props: EmbeddingProps): this {
+    if (!this._container) {
+      throw new Error(
+        "Container must be created before setting up the state machine"
+      );
+    }
+
+    const ecsTask = new tasks.EcsRunTask(this, "RunEcsTask", {
+      integrationPattern: sfn.IntegrationPattern.RUN_JOB,
+      cluster: this._cluster,
+      taskDefinition: this._taskDefinition,
+      launchTarget: new tasks.EcsFargateLaunchTarget(),
+      containerOverrides: [
+        {
+          containerDefinition: this._container,
+          // We use environment variables to pass the event data to the ecs task
+          // instead of command because JsonPath is not supported on command
+          environment: [
+            {
+              name: "EVENT",
+              // Note that DynamoDB stream batch size is 1
+              value: sfn.JsonPath.stringAt(
+                "States.JsonToString($[0].dynamodb.Keys)"
+              ),
+            },
+          ],
+        },
+      ],
+      assignPublicIp: false,
+      securityGroups: [this._taskSecurityGroup],
+      subnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
     });
 
-    /**
-     * EventBridge Pipes
-     */
+    this._stateMachine = new sfn.StateMachine(this, "StateMachine", {
+      definitionBody: sfn.DefinitionBody.fromChainable(ecsTask),
+    });
+    return this;
+  }
+
+  private setupEventBridgePipe(props: EmbeddingProps): this {
+    if (!this._stateMachine) {
+      throw new Error(
+        "State machine must be set up before setting up the EventBridge pipe"
+      );
+    }
+
     const pipeLogGroup = new logs.LogGroup(this, "PipeLogGroup", {
       removalPolicy: RemovalPolicy.DESTROY,
       retention: logs.RetentionDays.ONE_WEEK,
     });
-    const pipeRole = new iam.Role(this, "PipeRole", {
+    this._pipeRole = new iam.Role(this, "PipeRole", {
       assumedBy: new iam.ServicePrincipal("pipes.amazonaws.com"),
     });
-    pipeRole.addToPolicy(
+    this._pipeRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
           "dynamodb:DescribeStream",
@@ -125,36 +214,22 @@ export class Embedding extends Construct {
         resources: [props.database.tableStreamArn!],
       })
     );
-    pipeRole.addToPolicy(
+    this._pipeRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ["ecs:RunTask"],
-        resources: [
-          taskDefinition.taskDefinitionArn,
-          `${taskDefinition.taskDefinitionArn}:*`,
-        ],
+        actions: ["states:StartExecution"],
+        resources: [this._stateMachine.stateMachineArn],
       })
     );
-    pipeRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ["iam:PassRole"],
-        resources: ["*"],
-        conditions: {
-          StringLike: {
-            "iam:PassedToService": "ecs-tasks.amazonaws.com",
-          },
-        },
-      })
-    );
-    const pipe = new CfnPipe(this, "Pipe", {
+
+    new CfnPipe(this, "Pipe", {
       source: props.database.tableStreamArn!,
       sourceParameters: {
         dynamoDbStreamParameters: {
           batchSize: 1,
           startingPosition: "LATEST",
-          maximumRetryAttempts: 1, // Avoid infinite retry which causes stuck
+          maximumRetryAttempts: 1,
         },
         filterCriteria: {
-          // Trigger when bot is created or updated
           filters: [
             {
               pattern:
@@ -163,35 +238,11 @@ export class Embedding extends Construct {
           ],
         },
       },
-      target: cluster.clusterArn,
+      target: this._stateMachine.stateMachineArn,
       targetParameters: {
-        ecsTaskParameters: {
-          enableEcsManagedTags: false,
-          enableExecuteCommand: false,
-          launchType: "FARGATE",
-          networkConfiguration: {
-            awsvpcConfiguration: {
-              assignPublicIp: "DISABLED",
-              subnets: props.vpc.selectSubnets({
-                subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-              }).subnetIds,
-              securityGroups: [taskSg.securityGroupId],
-            },
-          },
-          taskCount: 1,
-          taskDefinitionArn: taskDefinition.taskDefinitionArn,
-          overrides: {
-            // Pass event as argument.
-            // Ref: https://repost.aws/questions/QU_WC7301mT8qR7ip_9cyjdQ/eventbridge-pipes-and-ecs-task
-            containerOverrides: [
-              {
-                // Only pass keys and load the object from within the ECS task.
-                // https://github.com/aws-samples/bedrock-claude-chat/issues/190
-                command: ["-u", "embedding/main.py", "$.dynamodb.Keys"],
-                name: taskDefinition.defaultContainer!.containerName,
-              },
-            ],
-          },
+        stepFunctionStateMachineParameters: {
+          invocationType: "FIRE_AND_FORGET",
+          // input: sfn.JsonPath.stringAt("$.dynamodb.Keys"),
         },
       },
       logConfiguration: {
@@ -200,12 +251,13 @@ export class Embedding extends Construct {
         },
         level: "INFO",
       },
-      roleArn: pipeRole.roleArn,
+      roleArn: this._pipeRole.roleArn,
     });
 
-    /**
-     * Removal handler
-     */
+    return this;
+  }
+
+  private setupRemovalHandler(props: EmbeddingProps): this {
     const removeHandlerRole = new iam.Role(this, "RemovalHandlerRole", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
@@ -241,7 +293,8 @@ export class Embedding extends Construct {
     );
     props.database.grantStreamRead(removeHandlerRole);
     props.documentBucket.grantReadWrite(removeHandlerRole);
-    const removalHandler = new DockerImageFunction(this, "BotRemovalHandler", {
+
+    this._removalHandler = new DockerImageFunction(this, "BotRemovalHandler", {
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
@@ -259,8 +312,8 @@ export class Embedding extends Construct {
       },
       role: removeHandlerRole,
     });
-    props.dbSecrets.grantRead(removalHandler);
-    removalHandler.addEventSource(
+    props.dbSecrets.grantRead(this._removalHandler);
+    this._removalHandler.addEventSource(
       new DynamoEventSource(props.database, {
         startingPosition: lambda.StartingPosition.TRIM_HORIZON,
         batchSize: 1,
@@ -273,25 +326,27 @@ export class Embedding extends Construct {
       })
     );
 
-    this.taskSecurityGroup = taskSg;
-    this.container = container;
-    this.removalHandler = removalHandler;
+    return this;
+  }
 
+  private outputValues(): void {
     new CfnOutput(this, "ClusterName", {
-      value: cluster.clusterName,
+      value: this._cluster.clusterName,
     });
     new CfnOutput(this, "TaskDefinitionName", {
       value: cdk.Fn.select(
         1,
         cdk.Fn.split(
           "/",
-          cdk.Fn.select(5, cdk.Fn.split(":", taskDefinition.taskDefinitionArn))
+          cdk.Fn.select(
+            5,
+            cdk.Fn.split(":", this._taskDefinition.taskDefinitionArn)
+          )
         )
       ),
     });
-
     new CfnOutput(this, "TaskSecurityGroupId", {
-      value: taskSg.securityGroupId,
+      value: this._taskSecurityGroup.securityGroupId,
     });
   }
 }
