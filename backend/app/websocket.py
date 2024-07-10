@@ -220,9 +220,9 @@ def process_chat_input(
                     used_chunks = []
                     for r in filter_used_results(arg.full_token, search_results):
                         content_type, source_link = get_source_link(r.source)
-                        if ('metadata' in  r and "parentSource" in r.metadata):
-                            _, parentSource_link = get_source_link(r.metadata.parentSource)
-                            r.metadata['parentSource_link'] = parentSource_link
+                        if (r.metadata and "parentSource" in r.metadata):
+                            _, parentSource_link = get_source_link(r.metadata["parentSource"])
+                            r.metadata['parentSourceLink'] = parentSource_link
                         used_chunks.append(
                             ChunkModel(
                                 content=r.content,

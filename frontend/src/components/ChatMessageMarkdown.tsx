@@ -48,7 +48,6 @@ const RelatedDocumentLink: React.FC<{
   const { isOpenReference, setIsOpenReference } = useMarkdownState();
 
   const linkUrl = useMemo(() => {
-    console.log(props.relatedDocument?.sourceLink)
     const url = props.relatedDocument?.sourceLink;
     if (url) {
       if (props.relatedDocument?.contentType === 's3') {
@@ -60,9 +59,8 @@ const RelatedDocumentLink: React.FC<{
     return '';
   }, [props.relatedDocument?.contentType, props.relatedDocument?.sourceLink]);
 
-  const parentLinkUrl = useMemo(() => {
-    console.log(props.relatedDocument?.metadata?.parentSource)
-    const url = props.relatedDocument?.metadata?.parentSource;
+  const parentSourceLinkUrl = useMemo(() => {
+    const url = props.relatedDocument?.metadata.parentSourceLink;
     if (url) {
       if (props.relatedDocument?.contentType === 's3') {
         return decodeURIComponent(url.split('?')[0].split('/').pop() ?? '');
@@ -71,7 +69,7 @@ const RelatedDocumentLink: React.FC<{
       }
     }
     return '';
-  }, [props.relatedDocument?.contentType, props.relatedDocument?.metadata?.parentSource]);
+  }, [props.relatedDocument?.contentType, props.relatedDocument?.metadata.parentSourceLink]);
 
   return (
     <>
@@ -115,14 +113,14 @@ const RelatedDocumentLink: React.FC<{
                 }}>
                 {linkUrl}
               </span>
-              {t('bot.label.referenceLink')}:
               <span
                 className="ml-1 cursor-pointer underline"
                 onClick={() => {
-                  window.open(props.relatedDocument?.metadata?.parentSource, '_blank');
+                  window.open(props.relatedDocument?.metadata?.parentSourceLink, '_blank');
                 }}>
-                {parentLinkUrl}
+                {parentSourceLinkUrl}
               </span>
+              
             </div>
           </div>
         </div>
