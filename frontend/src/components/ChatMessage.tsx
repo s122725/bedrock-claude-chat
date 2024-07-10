@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import useChat from '../hooks/useChat';
 import DialogFeedback from './DialogFeedback';
 import UploadedFileText from './UploadedFileText';
+import RelatedImageGallery from './RelatedImageGallery';
 
 type Props = BaseProps & {
   chatContent?: DisplayMessageContent;
@@ -261,11 +262,17 @@ const ChatMessage: React.FC<Props> = (props) => {
             </div>
           )}
           {chatContent?.role === 'assistant' && (
-            <ChatMessageMarkdown
+            <div>
+              <ChatMessageMarkdown
               relatedDocuments={relatedDocuments}
               messageId={chatContent.id}>
               {chatContent.content[0].body}
             </ChatMessageMarkdown>
+            <RelatedImageGallery 
+              relatedDocuments={relatedDocuments}
+            />
+            {/* <img src={relatedDocuments[0].sourceLink} alt="Related Document" /> */}
+          </div>
           )}
         </div>
       </div>

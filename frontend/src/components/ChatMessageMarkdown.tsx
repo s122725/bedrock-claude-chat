@@ -71,6 +71,23 @@ const RelatedDocumentLink: React.FC<{
     return '';
   }, [props.relatedDocument?.contentType, props.relatedDocument?.metadata.parentSourceLink]);
 
+  const isImageLink = useMemo(() => {
+    const url = props.relatedDocument?.sourceLink;
+    if (url) {
+      const pattern = /\.\w+\?/;
+      const match = url.match(pattern);
+
+      if (match) {
+        const extension = match[0].slice(1, -1);
+        const isImageExtension = ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(extension.toLowerCase());
+        return isImageExtension;    
+      } else {
+        return false
+      }
+    }
+    return false;
+  }, [props.relatedDocument?.contentType, props.relatedDocument?.sourceLink]);
+
   return (
     <>
       <a
@@ -103,6 +120,12 @@ const RelatedDocumentLink: React.FC<{
             {props.relatedDocument.chunkBody.split('\n').map((s, idx) => (
               <div key={idx}>{s}</div>
             ))}
+
+            {isImageLink ? (
+              <img src={props.relatedDocument.sourceLink} alt="Related Document" />
+            ) : (
+              <></>
+            )}
 
             <div className="my-1 border-t pt-1 italic">
               {t('bot.label.referenceLink')}:
