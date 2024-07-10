@@ -63,6 +63,7 @@ chmod +x bin.sh
 - --disable-self-register: セルフ登録を無効にします（デフォルト: 有効）。このフラグを設定すると、Cognito 上で全てのユーザーを作成する必要があり、ユーザーが自分でアカウントを登録することはできなくなります。
 - --ipv4-ranges: 許可する IPv4 範囲のカンマ区切りリスト。（デフォルト: 全ての IPv4 アドレスを許可）
 - --ipv6-ranges: 許可する IPv6 範囲のカンマ区切りリスト。（デフォルト: 全ての IPv6 アドレスを許可）
+- --disable-ipv6: IPv6 での接続を無効にします (デフォルト: 有効)
 - --allowed-signup-email-domains: サインアップ時に許可するメールドメインのカンマ区切りリスト。（デフォルト: ドメイン制限なし）
 - --region: Bedrock が利用可能なリージョンを指定します。（デフォルト: us-east-1）
 
@@ -198,9 +199,9 @@ GENERATION_CONFIG = {
 "allowedSignUpEmailDomains": ["example.com"],
 ```
 
-### NAT Gateway数のカスタマイズ
+### NAT Gateway 数のカスタマイズ
 
-このサンプルはデフォルトでは2つの NAT Gatewayがデプロイされますが、2つの NAT Gatewayが不要な場合は、NAT Gatewayの数を変更してコストを削減できます。`cdk.json`を開き、 `natgatewayCount` のパラメータを変更してください。
+このサンプルはデフォルトでは 2 つの NAT Gateway がデプロイされますが、2 つの NAT Gateway が不要な場合は、NAT Gateway の数を変更してコストを削減できます。`cdk.json`を開き、 `natgatewayCount` のパラメータを変更してください。
 
 ```ts
 "natgatewayCount": 2
