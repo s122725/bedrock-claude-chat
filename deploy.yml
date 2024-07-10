@@ -114,7 +114,7 @@ Resources:
             Value: !Ref Ipv4Ranges
           - Name: IPV6_RANGES
             Value: !Ref Ipv6Ranges
-          - NAME: DISABLE_IPV6
+          - Name: DISABLE_IPV6
             Value: !Ref DisableIpv6
           - Name: ALLOWED_SIGN_UP_EMAIL_DOMAINS
             Value: !Ref AllowedSignUpEmailDomains
