@@ -52,6 +52,7 @@ const ChatMessage: React.FC<Props> = (props) => {
               chunkBody: chunk.content,
               contentType: chunk.contentType,
               sourceLink: chunk.source,
+              metadata: chunk.metadata,
               rank: chunk.rank,
             };
           })

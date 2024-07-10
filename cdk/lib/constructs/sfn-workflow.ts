@@ -5,15 +5,16 @@ import {
   aws_iam as iam,
   aws_logs as logs,
   aws_dynamodb as dynamodb,
+  aws_s3 as s3,
   Stack
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import { type SfnLambdaInvoke } from '../constructs/sfn-lambda-invoke'
 import { NagSuppressions } from 'cdk-nag'
-import { table } from 'console'
 
 interface CustomProps extends StackProps {
   sfnLambdaInvoke: SfnLambdaInvoke,
+  bucket: s3.Bucket
   table: dynamodb.Table,
   tableAccessRole: iam.Role,
 }
@@ -53,7 +54,6 @@ export class SfnWorkFlow extends Construct {
       retention: logs.RetentionDays.TWO_WEEKS // 保存期間は運用ポリシーに応じて変更すること
     })
 
-
     // dynamodbの値をRUNNINGに変更する
     const statusUpdateRunning = new sfnTasks.DynamoUpdateItem(this, 'StatusUpdateRunning', {
       table: props.table,
@@ -69,28 +69,10 @@ export class SfnWorkFlow extends Construct {
           ":sync_status_reason": sfnTasks.DynamoAttributeValue.fromString(""),
           ":exec_id": sfnTasks.DynamoAttributeValue.fromString(sfn.JsonPath.stringAt('$.exec_id')),
         },
-        resultPath: '$.result',
-        outputPath: '$'
+        resultPath: sfn.JsonPath.stringAt('$.resultStatusUpdateRunning'),
+        outputPath: sfn.JsonPath.stringAt('$'),
       }
     )
-
-    // urlLoader, s3Loaderなど、用途別に処理を分岐する
-    const parallel = new sfn.Parallel(this, 'Parallel', {
-    })
-    
-    // キャプチャしたPDFの枚数だけMapで並列処理する
-    const fileMap = new sfn.Map(this, 'FileMap', {
-      maxConcurrency: 5,  // 並列実行数。bedrockのquotaに注意
-      itemsPath: sfn.JsonPath.stringAt('$.result.Payload.body.object_keys'),
-      itemSelector: {
-        "input": sfn.JsonPath.stringAt('$'),
-        "image_object_key": sfn.JsonPath.stringAt('$$.Map.Item.Value'),
-      }
-    })
-    fileMap.itemProcessor(
-      props.sfnLambdaInvoke.lambdaInvoke['task2']
-    )
-
 
     // dynamodbの値をSUCCEEDEDに変更する
     const statusUpdateSucceeded = new sfnTasks.DynamoUpdateItem(this, 'StatusUpdateSucceeded', {
@@ -107,18 +89,37 @@ export class SfnWorkFlow extends Construct {
           ":sync_status_reason": sfnTasks.DynamoAttributeValue.fromString(""),
           ":exec_id": sfnTasks.DynamoAttributeValue.fromString(sfn.JsonPath.stringAt('$.[0].exec_id')),
         },
-        // resultPath: '$.result',
-        // outputPath: '$'
+        resultPath: sfn.JsonPath.stringAt('$'),
+        outputPath: sfn.JsonPath.stringAt('$'),
       }
     )
 
+    // urlLoader, s3Loaderなど、用途別に処理を分岐する
+    const parallel = new sfn.Parallel(this, 'Parallel', {
+    })
+    
+    // キャプチャしたPDFの枚数だけMapで並列処理する
+    const fileMap = new sfn.Map(this, 'FileMap', {
+      maxConcurrency: 5,  // 並列実行数。bedrockのquotaに注意
+      itemsPath: sfn.JsonPath.stringAt('$.resultTask1.Payload.body.image_file_names'),
+      itemSelector: {
+        "input": sfn.JsonPath.stringAt('$'),
+        "image_file_name": sfn.JsonPath.stringAt('$$.Map.Item.Value'),
+      }
+    })
+    fileMap.itemProcessor(
+      props.sfnLambdaInvoke.lambdaInvoke['task2']
+    )
     
     // 最後のdynamodbのステータス変更で使用するパラメータをバイパスする。
     parallel.branch(
       new sfn.Pass(this, 'Pass', {
         parameters: {
+          "bucket": sfn.JsonPath.stringAt('$.bucket'),
+          "key": sfn.JsonPath.stringAt('$.key'),
           "user_id": sfn.JsonPath.stringAt('$.user_id'),
           "bot_id": sfn.JsonPath.stringAt('$.bot_id'),
+          "filename": sfn.JsonPath.stringAt('$.filename'),
           "exec_id": sfn.JsonPath.stringAt('$.exec_id'),
         }
       }
@@ -140,9 +141,32 @@ export class SfnWorkFlow extends Construct {
         // )
     )
 
+    // task2完了後に、dynamodbのステータス更新と、task2の実行結果を後続に渡すタスクに分岐する
+    const parallel2 = new sfn.Parallel(this, 'Parallel2', {})
+      .branch(
+        new sfn.Pass(this, 'Pass2', {
+          parameters: {
+            "resultObjectKeyList": sfn.JsonPath.stringAt('$.[1]'),
+          }
+        })
+      )
+      .branch(
+        statusUpdateSucceeded
+      )
+    
+    // 最後の出力のフォーマットを整える
+    parallel2.next(
+      new sfn.Pass(this, "outputFilter", {
+        parameters: {
+          "resultObjectKeyList":  sfn.JsonPath.stringAt('$.[0].resultObjectKeyList'),
+        }
+      })
+    )
+
+    // dynamodnのステータスをrunning -> pdfから画像抽出 -> 画像からAI-OCR -> dynamodbのステータスをsucceeded
     statusUpdateRunning.next(
       parallel.next(
-        statusUpdateSucceeded
+        parallel2
       )
     )
     

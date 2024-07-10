@@ -112,6 +112,7 @@ export class Embedding extends Construct {
     });
     taskLogGroup.grantWrite(container.taskDefinition.executionRole!);
     props.dbSecrets.grantRead(container.taskDefinition.taskRole);
+    props.documentBucket.grantReadWrite(container.taskDefinition.taskRole);
     const taskSg = new ec2.SecurityGroup(this, "TaskSecurityGroup", {
       vpc: props.vpc,
       allowAllOutbound: true,

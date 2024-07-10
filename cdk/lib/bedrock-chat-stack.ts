@@ -179,6 +179,7 @@ export class BedrockChatStack extends cdk.Stack {
     // ワークフローの定義(CDKで定義する場合)
     const sfnWorkFlow = new SfnWorkFlow(this, `SfnWorkFlow`, {
       sfnLambdaInvoke,
+      bucket: documentBucket,
       table: database.table,
       tableAccessRole: database.tableAccessRole,
     })

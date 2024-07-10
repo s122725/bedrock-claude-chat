@@ -6,9 +6,7 @@ import tempfile
 import os
 from pdf2image import convert_from_path
 
-# from lib.prompt import promptTest
-from lib.s3 import base64_image_upload_to_s3
-# from app.bedrock import get_model_id, compose_args, get_bedrock_response
+from lib.s3 import base64_image_upload_to_s3, check_s3_folder_and_list_files
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -50,9 +48,7 @@ def lambda_handler(event, context):
   key = event['body']['key']
   user_id = event['body']['user_id']
   bot_id = event['body']['bot_id']
-  exec_id = event['body']['exec_id']
   filename = event['body']['filename']
-  text = event['body']['text']
   enable_pdf_image_scan = event['body']['enable_pdf_image_scan']
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -65,88 +61,49 @@ def lambda_handler(event, context):
 
     if extension == ".pdf" and enable_pdf_image_scan == True:
 
-      # PDFを１ページごとに画像変換
-      image_paths = _pdf_to_images(file_path, temp_dir)
+      # すでに画像返還済みであればスキップ
+      image_file_names = check_s3_folder_and_list_files(bucket, f"{user_id}/{bot_id}/pdf_to_image/{filename}/image")
+      if image_file_names == None:
+        
+        # PDFを１ページごとに画像変換
+        image_paths = _pdf_to_images(file_path, temp_dir)
 
-      # base64形式でimage_pathsのファイルを読み取る
-      ai_ocr_result = []
-      object_keys = []
-      for page_num, image_path in enumerate(image_paths):
-        with open(image_path, "rb") as image_file:
-          # 画像ファイルの内容を読み込む
-          image_data = image_file.read()
-          # 画像データをBase64エンコードする
-          base64_encoded_data = base64.b64encode(image_data)
+        # base64形式でimage_pathsのファイルを読み取る
+        image_file_names = []
+        for page_num, image_path in enumerate(image_paths):
+          with open(image_path, "rb") as image_file:
+            # 画像ファイルの内容を読み込む
+            image_data = image_file.read()
+            # 画像データをBase64エンコードする
+            base64_encoded_data = base64.b64encode(image_data)
 
-          # 画像に変換したPDFをS3にアップロードする
-          object_key = f"{user_id}/{bot_id}/{exec_id}/pdf_to_image/{filename}/page{page_num}.png"
-          base64_image_upload_to_s3(
-            bucket=bucket,
-            object_key=object_key,
-            base64_img=base64_encoded_data,
-          )
-          object_keys.append(object_key)
+            # 画像に変換したPDFをS3にアップロードする
+            object_key = f"{user_id}/{bot_id}/pdf_to_image/{filename}/image/page{page_num}.png"
+            base64_image_upload_to_s3(
+              bucket=bucket,
+              object_key=object_key,
+              base64_img=base64_encoded_data,
+            )
+            image_file_names.append(f"page{page_num}.png")
 
-          # # LLMを使った画像のOCR
-          # for page_number, image_path in enumerate(image_paths, start=0):
-          #   logger.info(f"page_number: {page_number}")
-          #   logger.info(f"image_path: {image_path}")
-
-          #   prompt = promptTest.format(text, page_number)
-
-          #   messages = [
-          #     {
-          #       "role": "user",
-          #       "content": [
-          #         {
-          #           "type": "image",
-          #           "source": {
-          #             "type": "base64",
-          #             "media_type": 'image/png',
-          #             "data": base64_encoded_data
-          #           }
-          #         },
-          #         {
-          #           "type": "text",
-          #           "text": prompt
-          #         },
-          #       ],
-          #     },
-          #     {
-          #       "role": "assistant",
-          #       "content": [
-          #           {
-          #           "type": "text",
-          #           "text": '\n\nAssistant:'
-          #           },
-          #       ],
-          #     },
-          #   ]
-
-          #   args = compose_args(
-          #     messages=messages,
-          #     model=get_model_id('claude-v3-sonnet'), # todo: コンテナの環境変数から取得する
-          #   )
-
-          #   response = get_bedrock_response(args)
-          #   reply_txt = response["outputs"][0]["text"]  # type: ignore
-          #   logger.info(f"reply_txt: {reply_txt}")
-          #   ai_ocr_result.append(reply_txt)
-
-          # 返り値を返す
-      return {
-        'statusCode': 200,
-        'body': {
-          'object_keys': object_keys
+        return {
+          'statusCode': 200,
+          'body': {
+            'image_file_names': image_file_names,
+          }
         }
-      }
+      else:
+        return {
+          'statusCode': 200,
+          'body': {
+            'image_file_names': image_file_names,
+          }
+        }
 
     else:
       return {
         'statusCode': 200,
-        'body': {
-           'text': text,
-        } 
+        'body': {}
     }
   
 

@@ -1,12 +1,8 @@
 const { Client } = require("pg");
 const { getSecret } = require("@aws-lambda-powertools/parameters/secrets");
 
-const setUp = async (dbConfig) => {
-  const client = new Client(dbConfig);
+const setUp = async (client) => {
   try {
-    await client.connect();
-    console.log("Connected to the database.");
-
     // Create pgvector table and index
     // Ref: https://github.com/pgvector/pgvector
     await client.query("CREATE EXTENSION IF NOT EXISTS pgcrypto;");
@@ -19,6 +15,7 @@ const setUp = async (dbConfig) => {
                          botid CHAR(26),
                          content text,
                          source text,
+                         metadata jsonb,
                          embedding vector(1024));`);
     // `lists` parameter controls the nubmer of clusters created during index building.
     // Also it's important to choose the same index method as the one used in the query.
@@ -28,6 +25,19 @@ const setUp = async (dbConfig) => {
                          USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);`);
     await client.query(`CREATE INDEX idx_items_botid ON items (botid);`);
 
+    console.log("SQL execution successful.");
+  } catch (err) {
+    console.error("Error executing SQL: ", err.stack);
+    throw err;
+  } finally {
+    await client.end();
+    console.log("Database connection closed.");
+  }
+};
+
+const updateTable = async (client) => {
+  try {
+    await client.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS metadata jsonb;`);
     console.log("SQL execution successful.");
   } catch (err) {
     console.error("Error executing SQL: ", err.stack);
@@ -80,10 +90,12 @@ exports.handler = async (event, context) => {
       database: dbInfo["dbname"],
       port: dbInfo["port"],
     };
+    const client = new Client(dbConfig);
+    await client.connect();
+
     switch (event.RequestType) {
       case "Create":
-      case "Update":
-        await setUp(dbConfig);
+        await setUp(client);
         await updateStatus(
           event,
           "SUCCESS",
@@ -91,9 +103,19 @@ exports.handler = async (event, context) => {
           dbClusterIdentifier
         );
         break;
+      case "Update":
+        await updateTable(client);
+        await updateStatus(
+          event,
+          "SUCCESS",
+          "Update succeeded",
+          dbClusterIdentifier
+        );
+        break;
       case "Delete":
         await updateStatus(event, "SUCCESS", "", dbClusterIdentifier);
     }
+    await client.end();
   } catch (error) {
     console.log(error);
     if (event.PhysicalResourceId) {

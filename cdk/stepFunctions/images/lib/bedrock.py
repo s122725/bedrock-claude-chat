@@ -2,7 +2,6 @@
 from aws_lambda_powertools import Logger
 import boto3
 import json
-import os
 from lib.s3 import get_image_content_type
 from retry import retry
 
@@ -55,3 +54,26 @@ def get_base64_image_for_bedrock_content(base64_image: str) -> bedrock_content:
       }
     )
 
+
+def get_model_id(model: str) -> str:
+  # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids-arns.html
+  if model == "claude-v2":
+      return "anthropic.claude-v2:1"
+  elif model == "claude-instant-v1":
+      return "anthropic.claude-instant-v1"
+  elif model == "claude-v3-sonnet":
+      return "anthropic.claude-3-sonnet-20240229-v1:0"
+  elif model == "claude-v3-haiku":
+      return "anthropic.claude-3-haiku-20240307-v1:0"
+  elif model == "claude-v3-opus":
+      return "anthropic.claude-3-opus-20240229-v1:0"
+  elif model == "claude-v3.5-sonnet":
+      return "anthropic.claude-3-5-sonnet-20240620-v1:0"
+  elif model == "mistral-7b-instruct":
+      return "mistral.mistral-7b-instruct-v0:2"
+  elif model == "mixtral-8x7b-instruct":
+      return "mistral.mixtral-8x7b-instruct-v0:1"
+  elif model == "mistral-large":
+      return "mistral.mistral-large-2402-v1:0"
+  else:
+      raise NotImplementedError()

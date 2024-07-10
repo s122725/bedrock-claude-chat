@@ -14,6 +14,7 @@ class SearchResult(BaseModel):
     bot_id: str
     content: str
     source: str
+    metadata: dict
     rank: int
 
 
@@ -75,7 +76,7 @@ def search_related_docs(bot_id: str, limit: int, query: str) -> list[SearchResul
     logger.info(f"query_embedding: {query_embedding}")
 
     search_query = """
-SELECT id, botid, content, source, embedding 
+SELECT id, botid, content, source, embedding, metadata 
 FROM items 
 WHERE botid = %s 
 ORDER BY embedding <-> %s 
@@ -90,6 +91,6 @@ LIMIT %s
     #     ...
     # ]
     return [
-        SearchResult(rank=i, bot_id=r[1], content=r[2], source=r[3])
+        SearchResult(rank=i, bot_id=r[1], content=r[2], source=r[3], metadata=r[5])
         for i, r in enumerate(results)
     ]

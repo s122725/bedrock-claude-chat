@@ -373,11 +373,15 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                 used_chunks = []
                 for r in filter_used_results(reply_txt, search_results):
                     content_type, source_link = get_source_link(r.source)
+                    if ('metadata' in  r and "parentSource" in r.metadata):
+                        _, parentSource_link = get_source_link(r.metadata.parentSource)
+                        r.metadata['parentSource_link'] = parentSource_link
                     used_chunks.append(
                         ChunkModel(
                             content=r.content,
                             content_type=content_type,
                             source=source_link,
+                            metadata=r.metadata,
                             rank=r.rank,
                         )
                     )
@@ -458,6 +462,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                         content=c.content,
                         content_type=c.content_type,
                         source=c.source,
+                        metadata=c.metadata,
                         rank=c.rank,
                     )
                     for c in message.used_chunks
@@ -571,6 +576,7 @@ def fetch_conversation(user_id: str, conversation_id: str) -> Conversation:
                         content=c.content,
                         content_type=c.content_type,
                         source=c.source,
+                        metadata=c.metadata,
                         rank=c.rank,
                     )
                     for c in message.used_chunks
@@ -623,11 +629,13 @@ def fetch_related_documents(
     documents = []
     for chunk in chunks:
         content_type, source_link = get_source_link(chunk.source)
+
         documents.append(
             RelatedDocumentsOutput(
                 chunk_body=chunk.content,
                 content_type=content_type,
                 source_link=source_link,
+                metadata=chunk.metadata,
                 rank=chunk.rank,
             )
         )

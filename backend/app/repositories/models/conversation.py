@@ -21,6 +21,7 @@ class ChunkModel(BaseModel):
     content: str
     content_type: str
     source: str
+    metadata: dict
     rank: int
 
 

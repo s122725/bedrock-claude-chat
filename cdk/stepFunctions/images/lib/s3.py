@@ -2,6 +2,7 @@
 from aws_lambda_powertools import Logger
 import base64
 import boto3
+import botocore
 import os
 import imghdr
 from typing import Union
@@ -38,13 +39,68 @@ def get_image_base64(bucket: str, key: str) -> str:
   return base64.b64encode(image_data).decode('utf-8')
 
 # s3からテキストファイルを取得
-def get_text_from_s3(bucket: str, keys: list[str]) -> list[str]:
-  texts: list = []
-  for key in keys:
+def get_text_from_s3(bucket: str, key: str) -> str:
+  try:
     response = s3.get_object(Bucket=bucket, Key=key)
     text = response['Body'].read().decode('utf-8')
-    texts.append(text)
-  return texts
+    return text
+
+  except botocore.exceptions.ClientError as e:
+    error_code = e.response['Error']['Code']
+    if error_code == 'NoSuchKey':
+        logger.debug("指定したキーは存在しません。")
+        return None
+    else:
+        raise
+
+# S3バケット内の指定したファイルの存在を確認する関数
+def check_s3_folder_and_list_files(bucket_name, folder_path) -> None | list:
+    """
+    Check if a folder exists in an S3 bucket and list its contents if it does.
+    
+    Args:
+    bucket_name (str): Name of the S3 bucket
+    folder_path (str): Path of the folder to check (should end with '/')
+    
+    Returns:
+    list: List of file names in the folder if it exists, None otherwise
+    """
+    s3 = boto3.client('s3')
+    
+    # Ensure folder_path ends with '/'
+    if not folder_path.endswith('/'):
+        folder_path += '/'
+    
+    try:
+        # List objects in the specified folder
+        response = s3.list_objects_v2(
+            Bucket=bucket_name,
+            Prefix=folder_path,
+            Delimiter='/'
+        )
+        
+        # Check if the folder exists
+        if 'Contents' in response or 'CommonPrefixes' in response:
+            files = []
+            
+            # Get files directly in the folder
+            if 'Contents' in response:
+                files.extend([obj['Key'].split('/')[-1] for obj in response['Contents'] 
+                              if obj['Key'] != folder_path])
+            
+            # Get subfolders
+            if 'CommonPrefixes' in response:
+                files.extend([prefix['Prefix'].split('/')[-2] + '/' 
+                              for prefix in response['CommonPrefixes']])
+            
+            return files
+        else:
+            logger.debug(f"Folder '{folder_path}' does not exist in bucket '{bucket_name}'")
+            return None
+    
+    except botocore.ClientError as e:
+        logger.debug(f"An error occurred: {e}")
+        return None
 
 # ローカルの画像ファイルをs3にpush
 def local_image_upload_to_s3(filepath: str, bucket: str, filename: str):

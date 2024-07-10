@@ -2,6 +2,7 @@ import os
 import tempfile
 import logging
 import boto3
+import botocore
 import time
 import json
 from distutils.util import strtobool
@@ -64,13 +65,6 @@ class StepFunctionsLoader(BaseLoader):
                 logger.info(f"Start partitioning using auto mode: {file_path}")
                 return partition(filename=file_path)
 
-    def _get_metadata(self) -> dict:
-        return {
-            "source": f"s3://{self.bucket}/{self.key}",
-            # todo: PDFのキャプチャを追加
-            # "capture": f"s3://{self.bucket}/{self.key}"
-        }
-
     def _pdf_to_images(self, pdf_path: str, output_folder: str) -> list[str]:
         # PDFの各ページを画像に変換
         pages = convert_from_path(pdf_path, 300)  # 8000pxがbedrockの最大値. 6500で3.8MB未満
@@ -114,14 +108,43 @@ class StepFunctionsLoader(BaseLoader):
                 logger.info("sfn execution was undefined status")
                 return response
 
+    # s3からテキストファイルを取得
+    def _get_text_from_s3(self, bucket: str, key: str) -> str:
+        try:
+            s3 = boto3.client('s3')
+            response = s3.get_object(Bucket=bucket, Key=key)
+            text = response['Body'].read().decode('utf-8')
+            return text
+
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == 'NoSuchKey':
+                print("指定したキーは存在しません。")
+                return None
+            else:
+                raise
+
+    def text_upload_to_s3(self, bucket: str, body, object_key: str):
+        s3 = boto3.client('s3')
+        s3.put_object(
+            Bucket=bucket,
+            Key=object_key,
+            Body=body,
+            ContentType='text/plain'
+        )
 
     def load(self) -> list[Document]:
         """Load file."""
 
         # PDFからテキストを抽出
-        elements = self._get_elements()            
-        metadata = self._get_metadata()
-        text = "\n\n".join([str(el) for el in elements])
+        elements = self._get_elements()
+        ocrText = "\n\n".join([str(el) for el in elements])
+        logger.info(f"ocrText: {ocrText}")
+
+        # PDFから抽出したテキストをS3にアップロード
+        ocrResultObjectKey = f"{self.user_id}/{self.bot_id}/pdf_to_image/{self.filename}/text/ocrText.txt"
+        logger.info(f"ocrResultObjectKey: {ocrResultObjectKey}")
+        self.text_upload_to_s3(self.bucket, ocrText, ocrResultObjectKey)
 
         # StepFunctionsを同期で実行
         sfn = boto3.client('stepfunctions')
@@ -129,7 +152,7 @@ class StepFunctionsLoader(BaseLoader):
         # ランダムな文字列を五文字分
         suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
 
-        response = sfn.start_execution(
+        sfn_response = sfn.start_execution(
             stateMachineArn=STATE_MACHINE_ARN,
             name=f"pdf_aiocr_{self.filename}_{suffix}", # 重複禁止。デバッグしやすいようにわかりやすい名前をつける。
             input=json.dumps({
@@ -139,95 +162,41 @@ class StepFunctionsLoader(BaseLoader):
                 "bot_id": self.bot_id,
                 "exec_id": self.exec_id,
                 "filename": self.filename,
-                "text": text,
+                "ocrResultObjectKey": ocrResultObjectKey,
                 "mode": "pdf",
                 "enable_partition_pdf": self.enable_partition_pdf,
                 "enable_pdf_image_scan": self.enable_pdf_image_scan,
             })
         )
         # 実行ARNを取得
-        logger.info(f"response: {response}")
+        logger.info(f"sfn_response: {sfn_response}")
         # ステートマシンの終了を待つ。
-        response = self._wait_sfn_execution(response.get('executionArn'))
+        sfn_exec_result = self._wait_sfn_execution(sfn_response.get('executionArn'))
+        # 実行結果から出力を取得
+        logger.info(f"sfn_exec_result: {sfn_exec_result}")
 
-        # '''
-        # textにOCR結果が入っている。PDFの場合は、それを使って１ページごとの画像を解析する。
-        # その後Documentの形式に加工する
-        # '''
+        # S3から結果を結果を取得する
+        output = json.loads(sfn_exec_result['output'])
+        resultObjectKeyList = output['resultObjectKeyList']
+        logger.info(f"resultObjectKeyList: {resultObjectKeyList}")
+        docs = []
+        for resultObjectKey in resultObjectKeyList:
+            logger.info(f"resultObjectKey: {resultObjectKey}")
+            text_file_name = resultObjectKey["text_file_name"]
+            image_file_name = resultObjectKey["image_file_name"]
 
-        # s3 = boto3.client("s3")
-        # with tempfile.TemporaryDirectory() as temp_dir:
-        #     file_path = f"{temp_dir}/{self.key}"
-        #     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        #     s3.download_file(self.bucket, self.key, file_path)
-        #     extension = os.path.splitext(file_path)[1]
+            resultObject = self._get_text_from_s3(self.bucket, f"{self.user_id}/{self.bot_id}/pdf_to_image/{self.filename}/text/{text_file_name}")
+            logger.info(f"resultObject: {resultObject}")
 
-        #     if extension == ".pdf" and self.enable_partition_pdf == True:
-
-        #         # PDFを１ページごとに画像変換
-        #         image_paths = self._pdf_to_images(file_path, temp_dir)
-
-        #         # base64形式でimage_pathsのファイルを読み取る
-        #         ai_ocr_result = []
-        #         for image_path in image_paths:
-        #             with open(image_path, "rb") as image_file:
-        #                 # 画像ファイルの内容を読み込む
-        #                 image_data = image_file.read()
-        #                 # 画像データをBase64エンコードする
-        #                 base64_encoded_data = base64.b64encode(image_data)
-
-        #                 # LLMを使った画像のOCR
-        #                 for page_number, image_path in enumerate(image_paths, start=0):
-        #                     logger.info(f"page_number: {page_number}")
-        #                     logger.info(f"image_path: {image_path}")
-
-        #                     messages = [
-        #                         {
-        #                             "role": "user",
-        #                             "content": [
-        #                                 {
-        #                                     "type": "image",
-        #                                     "source": {
-        #                                     "type": "base64",
-        #                                     "media_type": 'image/png',
-        #                                     "data": base64_encoded_data
-        #                                     }
-        #                                 },
-        #                                 {
-        #                                 "type": "text",
-        #                                 "text": prompt
-        #                                 },
-        #                             ],
-        #                         },
-        #                         {
-        #                         "role": "assistant",
-        #                         "content": [
-        #                             {
-        #                             "type": "text",
-        #                             "text": '\n\nAssistant:'
-        #                             },
-        #                         ],
-        #                         },
-        #                     ]
-
-        #                     args = compose_args(
-        #                         messages=messages,
-        #                         model=get_model_id('claude-v3-sonnet'), # todo: コンテナの環境変数から取得する
-        #                     )
-
-        #                     response = get_bedrock_response(args)
-        #                     reply_txt = response["outputs"][0]["text"]  # type: ignore
-        #                     logger.info(f"reply_txt: {reply_txt}")
-        #                     ai_ocr_result.append(reply_txt)
-
-        #                 # 返り値を返す
-
-        docs = [Document(page_content=text, metadata=metadata)]
-
-        # docs.append(
-        #     Document(
-        #         page_content=text,
-        #         metadata=metadata,
-        #     )
-        # )for text in ai_ocr_result
+            docs.append(
+                Document(
+                    page_content=resultObject, 
+                    metadata={
+                        'metadata': { # metadataはDBのmetadataにJSON型で格納される想定
+                            'parentSource': "s3://{}/{}".format(self.bucket, self.key), # オリジナルのPDFをmetadata.parentSourceにセットする. 
+                        },
+                        'source': "s3://{}/{}/{}/pdf_to_image/{}/image/{}".format(self.bucket, self.user_id, self.bot_id, self.filename, image_file_name), # 該当ページの画像
+                    }
+                )
+            )
         return docs

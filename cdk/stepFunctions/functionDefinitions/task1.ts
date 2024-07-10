@@ -17,5 +17,5 @@ export const functionDefinitionParam = {
   retry: true,
   retryCount: 2,
   outputPath: '$',
-  resultPath: '$.result',
+  resultPath: '$.resultTask1',
 }

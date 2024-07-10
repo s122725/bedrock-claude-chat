@@ -54,7 +54,7 @@ def get_exec_id() -> str:
 
 @retry(tries=RETRIES_TO_INSERT_TO_POSTGRES, delay=RETRY_DELAY_TO_INSERT_TO_POSTGRES)
 def insert_to_postgres(
-    bot_id: str, contents: ListProxy, sources: ListProxy, embeddings: ListProxy
+    bot_id: str, contents: ListProxy, sources: ListProxy, metadatas: ListProxy, embeddings: ListProxy
 ):
     secrets: Any = parameters.get_secret(DB_SECRETS_ARN)  # type: ignore
     db_info = json.loads(secrets)
@@ -72,15 +72,16 @@ def insert_to_postgres(
             delete_query = "DELETE FROM items WHERE botid = %s"
             cursor.execute(delete_query, (bot_id,))
 
-            insert_query = f"INSERT INTO items (id, botid, content, source, embedding) VALUES (%s, %s, %s, %s, %s)"
+            insert_query = f"INSERT INTO items (id, botid, content, source, metadata, embedding) VALUES (%s, %s, %s, %s, %s, %s)"
             values_to_insert = []
-            for i, (source, content, embedding) in enumerate(
-                zip(sources, contents, embeddings)
+            for i, (source, metadata, content, embedding) in enumerate(
+                zip(sources, metadatas, contents, embeddings)
             ):
                 id_ = str(ULID())
                 logger.info(f"Preview of content {i}: {content[:200]}")
+                logger.info(f"{bot_id}, {content[:10]}, {source}, {metadata}")
                 values_to_insert.append(
-                    (id_, bot_id, content, source, json.dumps(embedding))
+                    (id_, bot_id, content, source, json.dumps(metadata), json.dumps(embedding))
                 )
             cursor.executemany(insert_query, values_to_insert)
         conn.commit()
@@ -116,6 +117,7 @@ def embed(
     loader: BaseLoader,
     contents: ListProxy,
     sources: ListProxy,
+    metadatas: ListProxy,
     embeddings: ListProxy,
     chunk_size: int,
     chunk_overlap: int,
@@ -137,6 +139,7 @@ def embed(
 
     contents.extend([t.page_content for t in splitted])
     sources.extend([t.metadata["source"] for t in splitted])
+    metadatas.extend([t.metadata["metadata"] for t in splitted])
     embeddings.extend(splitted_embeddings)
 
 
@@ -184,6 +187,7 @@ def main(
         with multiprocessing.Manager() as manager:
             contents: ListProxy = manager.list()
             sources: ListProxy = manager.list()
+            metadatas: ListProxy = manager.list()
             embeddings: ListProxy = manager.list()
 
             if len(source_urls) > 0:
@@ -191,6 +195,7 @@ def main(
                     UrlLoader(source_urls),
                     contents,
                     sources,
+                    metadatas,
                     embeddings,
                     chunk_size,
                     chunk_overlap,
@@ -222,6 +227,7 @@ def main(
                                     ),
                                     contents,
                                     sources,
+                                    metadatas,
                                     embeddings,
                                     chunk_size,
                                     chunk_overlap,
@@ -248,6 +254,7 @@ def main(
                                     ),
                                     contents,
                                     sources,
+                                    metadatas,
                                     embeddings,
                                     chunk_size,
                                     chunk_overlap,
@@ -261,7 +268,7 @@ def main(
             logger.info(f"Number of chunks: {len(contents)}")
 
             # Insert records into postgres
-            insert_to_postgres(bot_id, contents, sources, embeddings)
+            insert_to_postgres(bot_id, contents, sources, metadatas, embeddings)
             status_reason = "Successfully inserted to vector store."
     except Exception as e:
         logger.error("[ERROR] Failed to embed.")

@@ -142,7 +142,7 @@ class TestConversationRepository(unittest.TestCase):
                     create_time=1627984879.9,
                     feedback=None,
                     used_chunks=[
-                        ChunkModel(content="chunk1", source="source1", rank=1),
+                        ChunkModel(content="chunk1", source="source1", metadata={}, rank=1),
                     ],
                     thinking_log="test thinking log",
                 )

@@ -226,6 +226,7 @@ def find_conversation_by_id(user_id: str, conversation_id: str) -> ConversationM
                                 c["content_type"] if "content_type" in c else "s3"
                             ),
                             source=c["source"],
+                            metadata=c["metadata"],
                             rank=c["rank"],
                         )
                         for c in v["used_chunks"]
