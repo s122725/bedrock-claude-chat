@@ -96,7 +96,7 @@ export class BedrockChatStack extends cdk.Stack {
     });
     new s3deploy.BucketDeployment(this, "SourceDeploy", {
       sources: [
-        s3deploy.Source.asset(path.join(__dirname, "../../../"), {
+        s3deploy.Source.asset(path.join(__dirname, "../../"), {
           ignoreMode: IgnoreMode.GIT,
           exclude: [
             "**/node_modules/**",
@@ -221,6 +221,7 @@ export class BedrockChatStack extends cdk.Stack {
       documentBucket,
       embeddingContainerVcpu: props.embeddingContainerVcpu,
       embeddingContainerMemory: props.embeddingContainerMemory,
+      bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
     });
     documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
 

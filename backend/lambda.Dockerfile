@@ -6,5 +6,6 @@ RUN pip install poetry --no-cache-dir && \
     poetry install --no-interaction --no-ansi
 
 COPY ./app ./app
+COPY ./embedding_statemachine ./embedding_statemachine
 
 CMD ["app.websocket.handler"]

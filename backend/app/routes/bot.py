@@ -150,6 +150,7 @@ def get_private_bot(request: Request, bot_id: str):
             source_urls=bot.knowledge.source_urls,
             sitemap_urls=bot.knowledge.sitemap_urls,
             filenames=bot.knowledge.filenames,
+            s3_urls=bot.knowledge.s3_urls,
         ),
         generation_params=GenerationParams(
             max_tokens=bot.generation_params.max_tokens,

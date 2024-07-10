@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, Optional
 
 from app.routes.schemas.base import BaseSchema
-from pydantic import Field, root_validator
+from pydantic import Field, root_validator, validator
 from app.routes.schemas.bot_kb import BedrockKnowledgeBaseInput, BedrockKnowledgeBaseOutput
 
 if TYPE_CHECKING:
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 # Knowledge sync status type
 # NOTE: `ORIGINAL_NOT_FOUND` is used when the original bot is removed.
 type_sync_status = Literal[
-    "QUEUED", "RUNNING", "SUCCEEDED", "FAILED", "ORIGINAL_NOT_FOUND"
+    "QUEUED", "KNOWLEDGE_BASE_STACK_CREATED", "RUNNING", "SUCCEEDED", "FAILED", "ORIGINAL_NOT_FOUND"
 ]
 
 
@@ -51,20 +51,24 @@ class Knowledge(BaseSchema):
     source_urls: list[str]
     sitemap_urls: list[str]
     filenames: list[str]
+    s3_urls: list[str]
 
-    @root_validator(pre=True)
-    def validate_s3_url_and_filenames(cls, values):
-        source_urls = values.get('source_urls', [])
-        filenames = values.get('filenames', [])
-
-        # Check if there is any URL that starts with "s3://"
-        contains_s3_url = any(url.startswith('s3://') for url in source_urls)
+    @validator('s3_urls', each_item=True)
+    def validate_s3_url(cls, v):
+        if not v.startswith("s3://"):
+            raise ValueError(f"Invalid S3 URL format: {v}")
         
-        # If there is an s3 URL, filenames must be empty
-        if contains_s3_url and filenames:
-            raise ValueError('If source_urls contain an s3 URL, filenames must be empty.')
+        url_parts = v.replace("s3://", "").split("/")
+        if len(url_parts) < 1:
+            raise ValueError(f"Invalid S3 URL format: {v}")
         
-        return values
+        bucket_name = url_parts.pop(0)
+        prefix = "/".join(url_parts)
+        
+        if not bucket_name:
+            raise ValueError(f"Invalid S3 URL format: {v}")
+        
+        return v
 
 
 class KnowledgeDiffInput(BaseSchema):
@@ -107,6 +111,7 @@ class BotModifyInput(BaseSchema):
     knowledge: KnowledgeDiffInput | None
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter] | None
+    bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
 
     def has_update_files(self) -> bool:
         return self.knowledge is not None and (
@@ -158,6 +163,7 @@ class BotModifyOutput(BaseSchema):
     agent: Agent
     knowledge: Knowledge
     conversation_quick_starters: list[ConversationQuickStarter]
+    bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None = None
 
 
 class BotOutput(BaseSchema):

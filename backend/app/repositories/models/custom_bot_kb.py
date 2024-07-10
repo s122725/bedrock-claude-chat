@@ -18,3 +18,5 @@ class BedrockKnowledgeBaseModel(BaseModel):
     max_tokens: int | None = None
     overlap_percentage: int | None = None
     instruction: str | None = None
+    knowledge_base_id: str | None = None
+    data_source_ids: list[str] | None = None

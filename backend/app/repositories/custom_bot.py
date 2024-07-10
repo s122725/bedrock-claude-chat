@@ -32,8 +32,6 @@ from app.repositories.models.custom_bot import (
     ConversationQuickStarterModel,
 )
 from app.repositories.models.custom_bot_kb import (
-    AnalyzerParamsModel,
-    OpenSearchParamsModel,
     BedrockKnowledgeBaseModel,
 )
 from app.routes.schemas.bot import type_sync_status
@@ -105,6 +103,7 @@ def update_bot(
     sync_status_reason: str,
     display_retrieved_chunks: bool,
     conversation_quick_starters: list[ConversationQuickStarterModel],
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel = None
 ):
     """Update bot title, description, and instruction.
     NOTE: Use `update_bot_visibility` to update visibility.
@@ -112,37 +111,46 @@ def update_bot(
     table = _get_table_client(user_id)
     logger.info(f"Updating bot: {bot_id}")
 
+    update_expression = (
+        "SET Title = :title, "
+        "Description = :description, "
+        "Instruction = :instruction, "
+        "EmbeddingParams = :embedding_params, "
+        "AgentData = :agent_data, "
+        "Knowledge = :knowledge, "
+        "SyncStatus = :sync_status, "
+        "SyncStatusReason = :sync_status_reason, "
+        "GenerationParams = :generation_params, "
+        "SearchParams = :search_params, "
+        "DisplayRetrievedChunks = :display_retrieved_chunks, "
+        "ConversationQuickStarters = :conversation_quick_starters"
+    )
+
+    expression_attribute_values = {
+        ":title": title,
+        ":description": description,
+        ":instruction": instruction,
+        ":knowledge": knowledge.model_dump(),
+        ":agent_data": agent.model_dump(),
+        ":embedding_params": embedding_params.model_dump(),
+        ":sync_status": sync_status,
+        ":sync_status_reason": sync_status_reason,
+        ":display_retrieved_chunks": display_retrieved_chunks,
+        ":generation_params": generation_params.model_dump(),
+        ":search_params": search_params.model_dump(),
+        ":conversation_quick_starters": [
+            starter.model_dump() for starter in conversation_quick_starters
+        ],
+    }
+    if bedrock_knowledge_base:
+        update_expression += ", BedrockKnowledgeBase = :bedrock_knowledge_base"
+        expression_attribute_values[":bedrock_knowledge_base"] = bedrock_knowledge_base.model_dump()
+
     try:
         response = table.update_item(
             Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
-            UpdateExpression="SET Title = :title, "
-            "Description = :description, "
-            "Instruction = :instruction, "
-            "EmbeddingParams = :embedding_params, "
-            "AgentData = :agent_data, "  # Note: `Agent` is reserved keyword
-            "Knowledge = :knowledge, "
-            "SyncStatus = :sync_status, "
-            "SyncStatusReason = :sync_status_reason, "
-            "GenerationParams = :generation_params, "
-            "SearchParams = :search_params, "
-            "DisplayRetrievedChunks = :display_retrieved_chunks, "
-            "ConversationQuickStarters = :conversation_quick_starters",
-            ExpressionAttributeValues={
-                ":title": title,
-                ":description": description,
-                ":instruction": instruction,
-                ":knowledge": knowledge.model_dump(),
-                ":agent_data": agent.model_dump(),
-                ":embedding_params": embedding_params.model_dump(),
-                ":sync_status": sync_status,
-                ":sync_status_reason": sync_status_reason,
-                ":display_retrieved_chunks": display_retrieved_chunks,
-                ":generation_params": generation_params.model_dump(),
-                ":search_params": search_params.model_dump(),
-                ":conversation_quick_starters": [
-                    starter.model_dump() for starter in conversation_quick_starters
-                ],
-            },
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_attribute_values,
             ReturnValues="ALL_NEW",
             ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
         )
@@ -254,6 +262,31 @@ def update_alias_pin_status(user_id: str, alias_id: str, pinned: bool):
         else:
             raise e
     return response
+
+def update_knowledge_base_id(user_id: str, bot_id: str, knowledge_base_id: str, data_source_ids: list[str]):
+    table = _get_table_client(user_id)
+    logger.info(f"Updating knowledge base id for bot: {bot_id}")
+
+    try:
+        response = table.update_item(
+            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
+            UpdateExpression="SET BedrockKnowledgeBase.knowledge_base_id = :kb_id, BedrockKnowledgeBase.data_source_ids = :ds_ids",
+            ExpressionAttributeValues={
+                ":kb_id": knowledge_base_id,
+                ":ds_ids": data_source_ids
+            },
+            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
+            ReturnValues="ALL_NEW"
+        )
+        logger.info(f"Updated knowledge base id for bot: {bot_id} successfully")
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
+        else:
+            raise e
+
+    return response
+
 
 
 def find_private_bots_by_user_id(
@@ -394,7 +427,9 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             if "AgentData" in item
             else AgentModel(tools=[])
         ),
-        knowledge=KnowledgeModel(**item["Knowledge"]),
+        knowledge=KnowledgeModel(
+            **{**item["Knowledge"], "s3_urls": item["Knowledge"].get("s3_urls", [])}
+        ),
         sync_status=item["SyncStatus"],
         sync_status_reason=item["SyncStatusReason"],
         sync_last_exec_id=item["LastExecId"],
@@ -481,7 +516,9 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             if "AgentData" in item
             else AgentModel(tools=[])
         ),
-        knowledge=KnowledgeModel(**item["Knowledge"]),
+        knowledge=KnowledgeModel(
+            **{**item["Knowledge"], "s3_urls": item["Knowledge"].get("s3_urls", [])}
+        ),
         sync_status=item["SyncStatus"],
         sync_status_reason=item["SyncStatusReason"],
         sync_last_exec_id=item["LastExecId"],

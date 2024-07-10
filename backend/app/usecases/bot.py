@@ -65,6 +65,9 @@ from app.utils import (
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
 
+from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
+from app.routes.schemas.bot_kb import BedrockKnowledgeBaseOutput
+
 logger = logging.getLogger(__name__)
 
 DOCUMENT_BUCKET = os.environ.get("DOCUMENT_BUCKET", "bedrock-documents")
@@ -108,9 +111,11 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
     source_urls = []
     sitemap_urls = []
     filenames = []
+    s3_urls = []
     if bot_input.knowledge:
         source_urls = bot_input.knowledge.source_urls
         sitemap_urls = bot_input.knowledge.sitemap_urls
+        s3_urls = bot_input.knowledge.s3_urls
 
         # Commit changes to S3
         _update_s3_documents_by_diff(
@@ -186,7 +191,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             search_params=SearchParamsModel(**search_params),
             agent=agent,
             knowledge=KnowledgeModel(
-                source_urls=source_urls, sitemap_urls=sitemap_urls, filenames=filenames
+                source_urls=source_urls, sitemap_urls=sitemap_urls, filenames=filenames, s3_urls=s3_urls
             ),
             sync_status=sync_status,
             sync_status_reason="",
@@ -206,7 +211,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                     for starter in bot_input.conversation_quick_starters
                 ]
             ),
-            bedrock_knowledge_base=bot_input.bedrock_knowledge_base,
+            bedrock_knowledge_base=BedrockKnowledgeBaseModel(**bot_input.bedrock_knowledge_base.model_dump()),
         ),
     )
     return BotOutput(
@@ -233,7 +238,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             ]
         ),
         knowledge=Knowledge(
-            source_urls=source_urls, sitemap_urls=sitemap_urls, filenames=filenames
+            source_urls=source_urls, sitemap_urls=sitemap_urls, filenames=filenames, s3_urls=s3_urls
         ),
         sync_status=sync_status,
         sync_status_reason="",
@@ -250,7 +255,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 for starter in bot_input.conversation_quick_starters
             ]
         ),
-        bedrock_knowledge_base=bot_input.bedrock_knowledge_base,
+        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(**bot_input.bedrock_knowledge_base.model_dump()),
     )
 
 
@@ -367,6 +372,7 @@ def modify_owned_bot(
                 for starter in modify_input.conversation_quick_starters
             ]
         ),
+        bedrock_knowledge_base=BedrockKnowledgeBaseModel(**modify_input.bedrock_knowledge_base.model_dump()),
     )
 
     return BotModifyOutput(
@@ -403,6 +409,7 @@ def modify_owned_bot(
                 for starter in modify_input.conversation_quick_starters
             ]
         ),
+        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(**modify_input.bedrock_knowledge_base.model_dump()),
     )
 
 

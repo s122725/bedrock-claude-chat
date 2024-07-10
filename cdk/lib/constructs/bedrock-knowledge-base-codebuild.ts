@@ -1,11 +1,7 @@
 import { Construct } from "constructs";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import { IgnoreMode, RemovalPolicy } from "aws-cdk-lib";
-import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
-import * as path from "path";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { NagSuppressions } from "cdk-nag";
 
 export interface BedrockKnowledgeBaseCodebuildProps {
@@ -32,16 +28,13 @@ export class BedrockKnowledgeBaseCodebuild extends Construct {
         privileged: true,
       },
       environmentVariables: {
-        OWNER_USER_ID: { value: "" },
-        BOT_ID: { value: "" },
-        EMBEDDINGS_MODEL: { value: "" },
-        BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: { value: "" },
-        CHUNKING_STRATEGY: { value: "" },
-        EXISTING_BUCKET_NAMES: { value: "[]" },
-        MAX_TOKENS: { value: "" },
-        INSTRUCTION: { value: "" },
-        ANALYZER: { value: "" },
-        OVERLAP_PERCENTAGE: { value: "" },
+        PK: { value: "" },
+        SK: { value: "" },
+        BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: {
+          value: "",
+        },
+        KNOWLEDGE: { value: "" },
+        BEDROCK_KNOWLEDGE_BASE: { value: "" },
       },
       buildSpec: codebuild.BuildSpec.fromObject({
         version: "0.2",
@@ -55,21 +48,14 @@ export class BedrockKnowledgeBaseCodebuild extends Construct {
           },
           build: {
             commands: [
-              "cd cdk",
-              "npm ci",
-              // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
-              "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
-              `cdk deploy --require-approval never KBStack$BOT_ID \\
-         -c ownerUserId=$OWNER_USER_ID \\
-         -c botId=$BOT_ID \\
-         -c embeddingsModel=$EMBEDDINGS_MODEL \\
-         -c bedrockClaudeChatDocumentBucketName=$BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME \\
-         -c chunkingStrategy=$CHUNKING_STRATEGY \\
-         -c existingBucketNames=$EXISTING_BUCKET_NAMES \\
-         -c maxTokens=$MAX_TOKENS \\
-         -c instruction=$INSTRUCTION \\
-         -c analyzer=$ANALYZER \\
-         -c overlapPercentage=$OVERLAP_PERCENTAGE`,
+              // TODO: remove comment out
+              // "cd cdk",
+              // "npm ci",
+              // // Extract BOT_ID from SK. Note that SK is given like <user-id>#BOT#<bot-id>
+              // `export BOT_ID=$(echo $SK | awk -F'#' '{print $3}')`,
+              // // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
+              // "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
+              // `cdk deploy --require-approval never KBStack$BOT_ID`,
             ],
           },
         },

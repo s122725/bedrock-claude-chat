@@ -123,7 +123,7 @@ export class ApiPublishmentStack extends Stack {
           path.join(__dirname, "../../backend"),
           {
             platform: Platform.LINUX_AMD64,
-            file: "websocket.Dockerfile",
+            file: "lambda.Dockerfile",
             cmd: ["app.sqs_consumer.handler"],
           }
         ),

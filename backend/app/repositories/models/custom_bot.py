@@ -13,6 +13,7 @@ class KnowledgeModel(BaseModel):
     source_urls: list[str]
     sitemap_urls: list[str]
     filenames: list[str]
+    s3_urls: list[str]
 
     def __str_in_claude_format__(self) -> str:
         """Description of the knowledge in Claude format."""

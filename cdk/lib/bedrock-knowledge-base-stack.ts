@@ -19,7 +19,7 @@ interface BedrockKnowledgeBaseStackProps extends StackProps {
   readonly embeddingsModel: BedrockFoundationModel;
   readonly bedrockClaudeChatDocumentBucketName: string;
   readonly chunkingStrategy: ChunkingStrategy;
-  readonly existingBucketNames: string[];
+  readonly existingS3Urls: string[];
   readonly maxTokens?: number;
   readonly instruction?: string;
   readonly analyzer?: Analyzer;
@@ -34,33 +34,14 @@ export class BedrockKnowledgeBaseStack extends Stack {
   ) {
     super(scope, id, props);
 
-    // If existingBucketNames is not provided, only use the bedrockClaudeChatDocumentBucket.
-    // Otherwise use the existingBucketNames, but exclude the bedrockClaudeChatDocumentBucket.
-    const docBuckets: s3.IBucket[] = [];
-    let inclusionPrefixes: string[] | undefined;
-    if (props.existingBucketNames) {
-      props.existingBucketNames.forEach((bucketName) => {
-        if (bucketName !== props.bedrockClaudeChatDocumentBucketName) {
-          docBuckets.push(
-            s3.Bucket.fromBucketName(this, bucketName, bucketName)
-          );
-        }
-      });
-    } else {
-      docBuckets.push(
-        s3.Bucket.fromBucketName(
-          this,
-          props.bedrockClaudeChatDocumentBucketName,
-          props.bedrockClaudeChatDocumentBucketName
-        )
-      );
-      inclusionPrefixes = [`${props.ownerUserId}/${props.botId}/documents/`];
-    }
+    const { docBucketsAndPrefixes } = this.setupBucketsAndPrefixes(props);
 
     const vectorCollection = new VectorCollection(this, "KBVectors");
     const vectorIndex = new VectorIndex(this, "KBIndex", {
       collection: vectorCollection,
+      // DO NOT CHANGE THIS VALUE
       indexName: "bedrock-knowledge-base-default-index",
+      // DO NOT CHANGE THIS VALUE
       vectorField: "bedrock-knowledge-base-default-vector",
       vectorDimensions: props.embeddingsModel.vectorDimensions!,
       mappings: [
@@ -77,6 +58,7 @@ export class BedrockKnowledgeBaseStack extends Stack {
       ],
       analyzer: props.analyzer,
     });
+
     const kb = new KnowledgeBase(this, "KB", {
       embeddingsModel: props.embeddingsModel,
       vectorStore: vectorCollection,
@@ -84,17 +66,30 @@ export class BedrockKnowledgeBaseStack extends Stack {
       instruction: props.instruction,
     });
 
-    docBuckets.forEach((bucket, index) => {
-      new S3DataSource(this, `DataSource${index}`, {
+    const dataSources = docBucketsAndPrefixes.map(({ bucket, prefix }) => {
+      bucket.grantRead(kb.role);
+      return new S3DataSource(this, `DataSource${prefix}`, {
         bucket: bucket,
         knowledgeBase: kb,
         dataSourceName: bucket.bucketName,
         chunkingStrategy: props.chunkingStrategy,
         maxTokens: props.maxTokens,
         overlapPercentage: props.overlapPercentage,
-        inclusionPrefixes,
+        inclusionPrefixes: [prefix],
       });
     });
+    // docBucketsAndPrefixes.forEach(({ bucket, prefix }, index) => {
+    //   bucket.grantRead(kb.role);
+    //   new S3DataSource(this, `DataSource${index}`, {
+    //     bucket: bucket,
+    //     knowledgeBase: kb,
+    //     dataSourceName: bucket.bucketName,
+    //     chunkingStrategy: props.chunkingStrategy,
+    //     maxTokens: props.maxTokens,
+    //     overlapPercentage: props.overlapPercentage,
+    //     inclusionPrefixes: [prefix],
+    //   });
+    // });
 
     new CfnOutput(this, "KnowledgeBaseId", {
       value: kb.knowledgeBaseId,
@@ -108,5 +103,63 @@ export class BedrockKnowledgeBaseStack extends Stack {
     new CfnOutput(this, "BotId", {
       value: props.botId,
     });
+    dataSources.forEach((dataSource, index) => {
+      new CfnOutput(this, `DataSource${index}`, {
+        value: dataSource.dataSourceId,
+      });
+    });
+  }
+
+  private setupBucketsAndPrefixes(props: BedrockKnowledgeBaseStackProps): {
+    docBucketsAndPrefixes: { bucket: s3.IBucket; prefix: string }[];
+  } {
+    /**
+     * Setup the document buckets and prefixes based on the provided properties.
+     *
+     * This method processes the provided existing bucket URLs and sets up the
+     * S3 buckets and inclusion prefixes accordingly. It always includes the
+     * default bedrockClaudeChatDocumentBucketName in the list of document buckets.
+     *
+     * @param props The properties passed to the stack, including existing bucket URLs, owner user ID, and bot ID.
+     * @returns An object containing the list of document buckets and extracted prefixes.
+     */
+    const docBucketsAndPrefixes: { bucket: s3.IBucket; prefix: string }[] = [];
+
+    // Always add the default bucket with its default prefix
+    docBucketsAndPrefixes.push({
+      bucket: s3.Bucket.fromBucketName(
+        this,
+        props.bedrockClaudeChatDocumentBucketName,
+        props.bedrockClaudeChatDocumentBucketName
+      ),
+      prefix: `${props.ownerUserId}/${props.botId}/documents/`,
+    });
+
+    if (props.existingS3Urls && props.existingS3Urls.length > 0) {
+      props.existingS3Urls.forEach((url) => {
+        const { bucketName, prefix } = this.parseS3Url(url);
+        docBucketsAndPrefixes.push({
+          bucket: s3.Bucket.fromBucketName(this, bucketName, bucketName),
+          prefix: prefix,
+        });
+      });
+    }
+
+    return { docBucketsAndPrefixes };
+  }
+
+  private parseS3Url(url: string): { bucketName: string; prefix: string } {
+    if (!url.startsWith("s3://")) {
+      throw new Error(`Invalid S3 URL format: ${url}`);
+    }
+
+    const urlParts = url.replace("s3://", "").split("/");
+    if (urlParts.length < 1) {
+      throw new Error(`Invalid S3 URL format: ${url}`);
+    }
+
+    const bucketName = urlParts.shift()!;
+    const prefix = urlParts.join("/");
+    return { bucketName, prefix };
   }
 }

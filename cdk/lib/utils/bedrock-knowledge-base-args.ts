@@ -37,34 +37,66 @@ export const getChunkingStrategy = (
   }
 };
 
-export const getAnalyzer = (analyzerContext: string): Analyzer => {
-  const analyzer = JSON.parse(analyzerContext);
+export const getAnalyzer = (analyzer: any): Analyzer | undefined => {
+  // Example of analyzer:
+  //    {
+  //     "character_filters": {
+  //       "L": [
+  //         {
+  //           "S": "icu_normalizer"
+  //         }
+  //       ]
+  //     },
+  //     "token_filters": {
+  //       "L": [
+  //         {
+  //           "S": "kuromoji_baseform"
+  //         },
+  //         {
+  //           "S": "kuromoji_part_of_speech"
+  //         }
+  //       ]
+  //     },
+  //     "tokenizer": {
+  //       "S": "kuromoji_tokenizer"
+  //     }
+  //   }
+  console.log("getAnalyzer: analyzer: ", analyzer);
+  if (
+    !analyzer ||
+    !analyzer.character_filters ||
+    !analyzer.character_filters.L
+  ) {
+    return undefined;
+  }
 
   const characterFilters: CharacterFilterType[] =
-    analyzer.character_filters.map((filter: string) => {
-      switch (filter) {
+    analyzer.character_filters.L.map((filter: any) => {
+      switch (filter.S) {
         case "icu_normalizer":
           return CharacterFilterType.ICU_NORMALIZER;
-        // Add other character filters as needed
         default:
-          throw new Error(`Unknown character filter: ${filter}`);
+          throw new Error(`Unknown character filter: ${filter.S}`);
       }
     });
 
   const tokenizer: TokenizerType = (() => {
-    switch (analyzer.tokenizer) {
+    if (!analyzer.tokenizer || !analyzer.tokenizer.S) {
+      throw new Error(`Tokenizer is not defined`);
+    }
+    switch (analyzer.tokenizer.S) {
       case "kuromoji_tokenizer":
         return TokenizerType.KUROMOJI_TOKENIZER;
       case "icu_tokenizer":
         return TokenizerType.ICU_TOKENIZER;
       default:
-        throw new Error(`Unknown tokenizer: ${analyzer.tokenizer}`);
+        throw new Error(`Unknown tokenizer: ${analyzer.tokenizer.S}`);
     }
   })();
 
-  const tokenFilters: TokenFilterType[] = analyzer.token_filters.map(
-    (filter: string) => {
-      switch (filter) {
+  const tokenFilters: TokenFilterType[] =
+    analyzer.token_filters?.L.map((filter: any) => {
+      switch (filter.S) {
         case "kuromoji_baseform":
           return TokenFilterType.KUROMOJI_BASEFORM;
         case "kuromoji_part_of_speech":
@@ -80,10 +112,9 @@ export const getAnalyzer = (analyzerContext: string): Analyzer => {
         case "icu_folding":
           return TokenFilterType.ICU_FOLDING;
         default:
-          throw new Error(`Unknown token filter: ${filter}`);
+          throw new Error(`Unknown token filter: ${filter.S}`);
       }
-    }
-  );
+    }) || [];
 
   return {
     characterFilters,

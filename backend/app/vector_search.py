@@ -6,8 +6,11 @@ from typing import Any, Literal
 from app.bedrock import calculate_query_embedding
 from app.utils import generate_presigned_url, query_postgres
 from pydantic import BaseModel
+from app.utils import get_bedrock_agent_client
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
+agent_client = get_bedrock_agent_client()
 
 
 class SearchResult(BaseModel):
@@ -61,8 +64,7 @@ def get_source_link(source: str) -> tuple[Literal["s3", "url"], str]:
         # Assume source is a youtube video id
         return "url", f"https://www.youtube.com/watch?v={source}"
 
-
-def search_related_docs(bot_id: str, limit: int, query: str) -> list[SearchResult]:
+def _pgvector_search(bot_id: str, limit:int, query: str)  -> list[SearchResult]:
     """Search to fetch top n most related documents from pgvector.
     Args:
         bot_id (str): bot id
@@ -93,3 +95,42 @@ LIMIT %s
         SearchResult(rank=i, bot_id=r[1], content=r[2], source=r[3])
         for i, r in enumerate(results)
     ]
+
+def _bedrock_knowledge_base_search(bot_id: str, limit: int, query: str) -> list[SearchResult]:
+    try:
+        # Assuming bot_id is used as the knowledge base id
+        response = agent_client.retrieve(
+            knowledgeBaseId=bot_id,
+            retrievalQuery={
+                'text': query
+            },
+            retrievalConfiguration={
+                'vectorSearchConfiguration': {
+                    'numberOfResults': limit
+                }
+            }
+        )
+        
+        search_results = []
+        for i, retrieval_result in enumerate(response.get('retrievalResults', [])):
+            content = retrieval_result.get('content', {}).get('text', '')
+            source = retrieval_result.get('location', {}).get('s3Location', {}).get('uri', '')
+            
+            search_results.append(
+                SearchResult(
+                    rank=i,
+                    bot_id=bot_id,
+                    content=content,
+                    source=source
+                )
+            )
+        
+        return search_results
+    
+    except ClientError as e:
+        logger.error(f"Error querying Bedrock Knowledge Base: {e}")
+        raise e
+
+
+def search_related_docs(bot_id: str, limit: int, query: str) -> list[SearchResult]:
+    return _pgvector_search(bot_id, limit, query)

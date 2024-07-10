@@ -12,6 +12,7 @@ import { IBucket } from "aws-cdk-lib/aws-s3";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as cdk from "aws-cdk-lib";
+import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import {
   DockerImageCode,
   DockerImageFunction,
@@ -21,6 +22,9 @@ import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { SociIndexBuild } from "deploy-time-build";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
+// Note: replace following custom construct with official construct when available
+import { StartIngestionJob } from "./embedding-statemachine/start-injestion-job";
+import { GetIngestionJob } from "./embedding-statemachine/get-injestion-job";
 
 export interface EmbeddingProps {
   readonly vpc: ec2.IVpc;
@@ -31,6 +35,7 @@ export interface EmbeddingProps {
   readonly documentBucket: IBucket;
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
+  readonly bedrockKnowledgeBaseProject: codebuild.IProject;
 }
 
 export class Embedding extends Construct {
@@ -38,6 +43,9 @@ export class Embedding extends Construct {
   readonly container: ecs.ContainerDefinition;
   readonly removalHandler: IFunction;
   private _cluster: ecs.Cluster;
+  private _updateSyncStatusHandler: IFunction;
+  private _fetchStackOutputHandler: IFunction;
+  private _StoreKnowledgeBaseIdHandler: IFunction;
   private _taskDefinition: ecs.FargateTaskDefinition;
   private _pipeRole: iam.Role;
   private _stateMachine: sfn.StateMachine;
@@ -51,6 +59,7 @@ export class Embedding extends Construct {
     this.setupCluster(props)
       .setupEcsTaskDefinition(props)
       .createEcsContainer(props)
+      .setupStateMachineHandlers(props)
       .setupStateMachine(props)
       .setupEventBridgePipe(props)
       .setupRemovalHandler(props);
@@ -148,12 +157,126 @@ export class Embedding extends Construct {
     return this;
   }
 
+  private setupStateMachineHandlers(props: EmbeddingProps): this {
+    const handlerRole = new iam.Role(this, "HandlerRole", {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+    });
+    handlerRole.addToPolicy(
+      // Assume the table access role for row-level access control.
+      new iam.PolicyStatement({
+        actions: ["sts:AssumeRole"],
+        resources: [props.tableAccessRole.roleArn],
+      })
+    );
+    handlerRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:*"],
+        resources: ["*"],
+      })
+    );
+    handlerRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        "service-role/AWSLambdaVPCAccessExecutionRole"
+      )
+    );
+    handlerRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "cloudformation:DescribeStacks",
+          "cloudformation:DescribeStackEvents",
+          "cloudformation:DescribeStackResource",
+          "cloudformation:DescribeStackResources",
+        ],
+        resources: [`*`],
+      })
+    );
+
+    this._updateSyncStatusHandler = new DockerImageFunction(
+      this,
+      "UpdateSyncStatusHandler",
+      {
+        code: DockerImageCode.fromImageAsset(
+          path.join(__dirname, "../../../backend"),
+          {
+            platform: Platform.LINUX_AMD64,
+            file: "lambda.Dockerfile",
+            cmd: [
+              "embedding_statemachine.bedrock_knowledge_base.update_bot_status.handler",
+            ],
+          }
+        ),
+        memorySize: 512,
+        timeout: Duration.minutes(1),
+        environment: {
+          ACCOUNT: Stack.of(this).account,
+          REGION: Stack.of(this).region,
+          TABLE_NAME: props.database.tableName,
+          TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
+        },
+        role: handlerRole,
+      }
+    );
+
+    this._fetchStackOutputHandler = new DockerImageFunction(
+      this,
+      "FetchStackOutputHandler",
+      {
+        code: DockerImageCode.fromImageAsset(
+          path.join(__dirname, "../../../backend"),
+          {
+            platform: Platform.LINUX_AMD64,
+            file: "lambda.Dockerfile",
+            cmd: [
+              "embedding_statemachine.bedrock_knowledge_base.fetch_stack_output.handler",
+            ],
+          }
+        ),
+        memorySize: 512,
+        timeout: Duration.minutes(1),
+        role: handlerRole,
+      }
+    );
+    this._StoreKnowledgeBaseIdHandler = new DockerImageFunction(
+      this,
+      "StoreKnowledgeBaseIdHandler",
+      {
+        code: DockerImageCode.fromImageAsset(
+          path.join(__dirname, "../../../backend"),
+          {
+            platform: Platform.LINUX_AMD64,
+            file: "lambda.Dockerfile",
+            cmd: [
+              "embedding_statemachine.bedrock_knowledge_base.store_knowledge_base_id.handler",
+            ],
+          }
+        ),
+        memorySize: 512,
+        timeout: Duration.minutes(1),
+        role: handlerRole,
+      }
+    );
+    return this;
+  }
+
   private setupStateMachine(props: EmbeddingProps): this {
     if (!this._container) {
       throw new Error(
         "Container must be created before setting up the state machine"
       );
     }
+
+    const extractFirstElement = new sfn.Pass(this, "ExtractFirstElement", {
+      parameters: {
+        "dynamodb.$": "$[0].dynamodb",
+        "eventID.$": "$[0].eventID",
+        "eventName.$": "$[0].eventName",
+        "eventSource.$": "$[0].eventSource",
+        "eventVersion.$": "$[0].eventVersion",
+        "awsRegion.$": "$[0].awsRegion",
+        "eventSourceARN.$": "$[0].eventSourceARN",
+      },
+      resultPath: "$",
+    });
 
     const ecsTask = new tasks.EcsRunTask(this, "RunEcsTask", {
       integrationPattern: sfn.IntegrationPattern.RUN_JOB,
@@ -183,8 +306,128 @@ export class Embedding extends Construct {
       },
     });
 
+    const startKnowledgeBaseBuild = new tasks.CodeBuildStartBuild(
+      this,
+      "StartKnowledgeBaseBuild",
+      {
+        project: props.bedrockKnowledgeBaseProject,
+        integrationPattern: sfn.IntegrationPattern.RUN_JOB,
+        environmentVariablesOverride: {
+          PK: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: sfn.JsonPath.stringAt("$.dynamodb.NewImage.PK.S"),
+          },
+          SK: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: sfn.JsonPath.stringAt("$.dynamodb.NewImage.SK.S"),
+          },
+          // Bucket name provisioned by the bedrock stack
+          BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.documentBucket.bucketName,
+          },
+          // Source info e.g. file names, URLs, etc.
+          KNOWLEDGE: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: sfn.JsonPath.stringAt(
+              "States.JsonToString($.dynamodb.NewImage.Knowledge.M)"
+            ),
+          },
+          // Bedrock Knowledge Base configuration
+          BEDROCK_KNOWLEDGE_BASE: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: sfn.JsonPath.stringAt(
+              "States.JsonToString($.dynamodb.NewImage.BedrockKnowledgeBase.M)"
+            ),
+          },
+        },
+        resultPath: "$.Build",
+      }
+    );
+
+    const updateSyncStatusRunning = this.createUpdateSyncStatusTask(
+      "UpdateSyncStatusRunning",
+      "RUNNING"
+    );
+
+    const updateSyncStatusStackCreated = this.createUpdateSyncStatusTask(
+      "UpdateSyncStatusCreated",
+      "KNOWLEDGE_BASE_STACK_CREATED",
+      "Knowledge base cfn stack created",
+      "$.Build.Build.Arn"
+    );
+
+    const updateSyncStatusSucceeded = this.createUpdateSyncStatusTask(
+      "UpdateSyncStatusSuccess",
+      "SUCCEEDED",
+      "Knowledge base sync succeeded"
+    );
+
+    const updateSyncStatusFailed = this.createUpdateSyncStatusTask(
+      "UpdateSyncStatusFailed",
+      "FAILED",
+      "Knowledge base sync failed",
+      "$.Build.Build.Arn"
+    );
+
+    const fallback = updateSyncStatusFailed.next(
+      new sfn.Fail(this, "Fail", {
+        cause: "Knowledge base sync failed",
+        error: "Knowledge base sync failed",
+      })
+    );
+    startKnowledgeBaseBuild.addCatch(fallback);
+
+    const fetchStackOutput = new tasks.LambdaInvoke(this, "FetchStackOutput", {
+      lambdaFunction: this._fetchStackOutputHandler,
+      payload: sfn.TaskInput.fromObject({
+        "sk.$": "$.dynamodb.NewImage.SK.S",
+      }),
+      resultPath: "$.StackOutput",
+    });
+
+    const storeKnowledgeBaseId = new tasks.LambdaInvoke(
+      this,
+      "StoreKnowledgeBaseId",
+      {
+        lambdaFunction: this._StoreKnowledgeBaseIdHandler,
+        payload: sfn.TaskInput.fromObject({
+          "pk.$": "$.dynamodb.NewImage.PK.S",
+          "sk.$": "$.dynamodb.NewImage.SK.S",
+          "stack_output.$": "$.StackOutput",
+        }),
+        resultPath: sfn.JsonPath.DISCARD,
+      }
+    );
+
+    const definition = new sfn.Choice(this, "CheckKnowledgeBaseExists")
+      .when(
+        sfn.Condition.isPresent("$[0].dynamodb.NewImage.BedrockKnowledgeBase"),
+        extractFirstElement
+          .next(updateSyncStatusRunning)
+          .next(startKnowledgeBaseBuild)
+          .next(updateSyncStatusStackCreated)
+          .next(fetchStackOutput)
+          .next(storeKnowledgeBaseId)
+          .next(
+            new sfn.Map(this, "MapIngestionJobs", {
+              inputPath: "$.StackOutput",
+              itemsPath: "$.DataSources",
+              resultPath: sfn.JsonPath.DISCARD,
+              maxConcurrency: 1,
+            }).itemProcessor(
+              new StartIngestionJob(this, "StartIngestionJob", {
+                dataSourceId: sfn.JsonPath.stringAt("$.DataSourceId"),
+                knowledgeBaseId: sfn.JsonPath.stringAt("$.KnowledgeBaseId"),
+              })
+            )
+          )
+      )
+      .otherwise(ecsTask);
+    // const definition = ecsTask;
+
     this._stateMachine = new sfn.StateMachine(this, "StateMachine", {
-      definitionBody: sfn.DefinitionBody.fromChainable(ecsTask),
+      definitionBody: sfn.DefinitionBody.fromChainable(definition),
     });
     return this;
   }
@@ -220,6 +463,12 @@ export class Embedding extends Construct {
         resources: [this._stateMachine.stateMachineArn],
       })
     );
+    this._pipeRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
+        resources: [pipeLogGroup.logGroupArn],
+      })
+    );
 
     new CfnPipe(this, "Pipe", {
       source: props.database.tableStreamArn!,
@@ -242,7 +491,6 @@ export class Embedding extends Construct {
       targetParameters: {
         stepFunctionStateMachineParameters: {
           invocationType: "FIRE_AND_FORGET",
-          // input: sfn.JsonPath.stringAt("$.dynamodb.Keys"),
         },
       },
       logConfiguration: {
@@ -299,7 +547,7 @@ export class Embedding extends Construct {
         path.join(__dirname, "../../../backend"),
         {
           platform: Platform.LINUX_AMD64,
-          file: "websocket.Dockerfile",
+          file: "lambda.Dockerfile",
           cmd: ["app.bot_remove.handler"],
         }
       ),
@@ -347,6 +595,30 @@ export class Embedding extends Construct {
     });
     new CfnOutput(this, "TaskSecurityGroupId", {
       value: this._taskSecurityGroup.securityGroupId,
+    });
+  }
+
+  private createUpdateSyncStatusTask(
+    id: string,
+    syncStatus: string,
+    syncStatusReason?: string,
+    lastExecIdPath?: string
+  ): tasks.LambdaInvoke {
+    const payload: { [key: string]: any } = {
+      "pk.$": "$.dynamodb.NewImage.PK.S",
+      "sk.$": "$.dynamodb.NewImage.SK.S",
+      sync_status: syncStatus,
+      sync_status_reason: syncStatusReason || "",
+    };
+
+    if (lastExecIdPath) {
+      payload["last_exec_id.$"] = lastExecIdPath;
+    }
+
+    return new tasks.LambdaInvoke(this, id, {
+      lambdaFunction: this._updateSyncStatusHandler,
+      payload: sfn.TaskInput.fromObject(payload),
+      resultPath: sfn.JsonPath.DISCARD,
     });
   }
 }
