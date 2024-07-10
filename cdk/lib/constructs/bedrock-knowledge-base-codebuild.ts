@@ -48,14 +48,13 @@ export class BedrockKnowledgeBaseCodebuild extends Construct {
           },
           build: {
             commands: [
-              // TODO: remove comment out
-              // "cd cdk",
-              // "npm ci",
-              // // Extract BOT_ID from SK. Note that SK is given like <user-id>#BOT#<bot-id>
-              // `export BOT_ID=$(echo $SK | awk -F'#' '{print $3}')`,
-              // // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
-              // "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
-              // `cdk deploy --require-approval never KBStack$BOT_ID`,
+              "cd cdk",
+              "npm ci",
+              // Extract BOT_ID from SK. Note that SK is given like <user-id>#BOT#<bot-id>
+              `export BOT_ID=$(echo $SK | awk -F'#' '{print $3}')`,
+              // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
+              "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
+              `cdk deploy --require-approval never KBStack$BOT_ID`,
             ],
           },
         },

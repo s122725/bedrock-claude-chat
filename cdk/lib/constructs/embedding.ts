@@ -22,9 +22,6 @@ import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { SociIndexBuild } from "deploy-time-build";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
-// Note: replace following custom construct with official construct when available
-import { StartIngestionJob } from "./embedding-statemachine/start-injestion-job";
-import { GetIngestionJob } from "./embedding-statemachine/get-injestion-job";
 
 export interface EmbeddingProps {
   readonly vpc: ec2.IVpc;
@@ -252,6 +249,12 @@ export class Embedding extends Construct {
         ),
         memorySize: 512,
         timeout: Duration.minutes(1),
+        environment: {
+          ACCOUNT: Stack.of(this).account,
+          REGION: Stack.of(this).region,
+          TABLE_NAME: props.database.tableName,
+          TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
+        },
         role: handlerRole,
       }
     );
@@ -385,6 +388,7 @@ export class Embedding extends Construct {
       }),
       resultPath: "$.StackOutput",
     });
+    fetchStackOutput.addCatch(fallback);
 
     const storeKnowledgeBaseId = new tasks.LambdaInvoke(
       this,
@@ -394,10 +398,74 @@ export class Embedding extends Construct {
         payload: sfn.TaskInput.fromObject({
           "pk.$": "$.dynamodb.NewImage.PK.S",
           "sk.$": "$.dynamodb.NewImage.SK.S",
-          "stack_output.$": "$.StackOutput",
+          "stack_output.$": "$.StackOutput.Payload",
         }),
         resultPath: sfn.JsonPath.DISCARD,
       }
+    );
+    storeKnowledgeBaseId.addCatch(fallback);
+
+    const startIngestionJob = new tasks.CallAwsService(
+      this,
+      "StartIngestionJob",
+      {
+        service: "bedrockagent",
+        action: "startIngestionJob",
+        iamAction: "bedrock:StartIngestionJob",
+        parameters: {
+          DataSourceId: sfn.JsonPath.stringAt("$.DataSourceId"),
+          KnowledgeBaseId: sfn.JsonPath.stringAt("$.KnowledgeBaseId"),
+        },
+        // Ref: https://docs.aws.amazon.com/ja_jp/service-authorization/latest/reference/list_amazonbedrock.html#amazonbedrock-knowledge-base
+        iamResources: [
+          `arn:${Stack.of(this).partition}:bedrock:${Stack.of(this).region}:${
+            Stack.of(this).account
+          }:knowledge-base/*`,
+        ],
+        resultPath: "$",
+      }
+    );
+
+    const getIngestionJob = new tasks.CallAwsService(this, "GetIngestionJob", {
+      service: "bedrockagent",
+      action: "getIngestionJob",
+      iamAction: "bedrock:GetIngestionJob",
+      parameters: {
+        DataSourceId: sfn.JsonPath.stringAt("$.IngestionJob.DataSourceId"),
+        KnowledgeBaseId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.KnowledgeBaseId"
+        ),
+        IngestionJobId: sfn.JsonPath.stringAt("$.IngestionJob.IngestionJobId"),
+      },
+      // Ref: https://docs.aws.amazon.com/ja_jp/service-authorization/latest/reference/list_amazonbedrock.html#amazonbedrock-knowledge-base
+      iamResources: [
+        `arn:${Stack.of(this).partition}:bedrock:${Stack.of(this).region}:${
+          Stack.of(this).account
+        }:knowledge-base/*`,
+      ],
+      resultPath: "$",
+    });
+
+    const waitTask = new sfn.Wait(this, "WaitSeconds", {
+      time: sfn.WaitTime.duration(Duration.seconds(3)),
+    });
+
+    const checkIngestionJobStatus = new sfn.Choice(
+      this,
+      "CheckIngestionJobStatus"
+    )
+      .when(
+        sfn.Condition.stringEquals("$.IngestionJob.Status", "COMPLETE"),
+        new sfn.Pass(this, "IngestionJobCompleted")
+      )
+      .otherwise(waitTask.next(getIngestionJob));
+
+    const mapIngestionJobs = new sfn.Map(this, "MapIngestionJobs", {
+      inputPath: "$.StackOutput.Payload",
+      resultPath: sfn.JsonPath.DISCARD,
+      maxConcurrency: 1,
+    }).itemProcessor(
+      startIngestionJob.next(getIngestionJob).next(checkIngestionJobStatus)
     );
 
     const definition = new sfn.Choice(this, "CheckKnowledgeBaseExists")
@@ -409,22 +477,10 @@ export class Embedding extends Construct {
           .next(updateSyncStatusStackCreated)
           .next(fetchStackOutput)
           .next(storeKnowledgeBaseId)
-          .next(
-            new sfn.Map(this, "MapIngestionJobs", {
-              inputPath: "$.StackOutput",
-              itemsPath: "$.DataSources",
-              resultPath: sfn.JsonPath.DISCARD,
-              maxConcurrency: 1,
-            }).itemProcessor(
-              new StartIngestionJob(this, "StartIngestionJob", {
-                dataSourceId: sfn.JsonPath.stringAt("$.DataSourceId"),
-                knowledgeBaseId: sfn.JsonPath.stringAt("$.KnowledgeBaseId"),
-              })
-            )
-          )
+          .next(mapIngestionJobs)
+          .next(updateSyncStatusSucceeded)
       )
       .otherwise(ecsTask);
-    // const definition = ecsTask;
 
     this._stateMachine = new sfn.StateMachine(this, "StateMachine", {
       definitionBody: sfn.DefinitionBody.fromChainable(definition),

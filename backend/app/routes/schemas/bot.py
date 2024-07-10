@@ -163,7 +163,7 @@ class BotModifyOutput(BaseSchema):
     agent: Agent
     knowledge: Knowledge
     conversation_quick_starters: list[ConversationQuickStarter]
-    bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None = None
+    bedrock_knowledge_base: BedrockKnowledgeBaseOutput
 
 
 class BotOutput(BaseSchema):
@@ -187,7 +187,7 @@ class BotOutput(BaseSchema):
     sync_last_exec_id: str
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter]
-    bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None = None
+    bedrock_knowledge_base: BedrockKnowledgeBaseOutput
 
 
 class BotMetaOutput(BaseSchema):

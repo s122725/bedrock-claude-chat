@@ -7,7 +7,10 @@ from app.bedrock import calculate_query_embedding
 from app.utils import generate_presigned_url, query_postgres
 from pydantic import BaseModel
 from app.utils import get_bedrock_agent_client
+from app.repositories.custom_bot import find_public_bot_by_id
 from botocore.exceptions import ClientError
+
+from app.repositories.models.custom_bot import BotModel
 
 logger = logging.getLogger(__name__)
 agent_client = get_bedrock_agent_client()
@@ -96,17 +99,18 @@ LIMIT %s
         for i, r in enumerate(results)
     ]
 
-def _bedrock_knowledge_base_search(bot_id: str, limit: int, query: str) -> list[SearchResult]:
+def _bedrock_knowledge_base_search(bot: BotModel, limit: int, query: str, enable_hybrid: bool = True) -> list[SearchResult]:
+    search_type = 'HYBRID' if enable_hybrid else 'SEMANTIC'
     try:
-        # Assuming bot_id is used as the knowledge base id
         response = agent_client.retrieve(
-            knowledgeBaseId=bot_id,
+            knowledgeBaseId=bot.bedrock_knowledge_base.knowledge_base_id,
             retrievalQuery={
                 'text': query
             },
             retrievalConfiguration={
                 'vectorSearchConfiguration': {
-                    'numberOfResults': limit
+                    'numberOfResults': limit,
+                    'overrideSearchType': search_type
                 }
             }
         )
@@ -119,7 +123,7 @@ def _bedrock_knowledge_base_search(bot_id: str, limit: int, query: str) -> list[
             search_results.append(
                 SearchResult(
                     rank=i,
-                    bot_id=bot_id,
+                    bot_id=bot.id,
                     content=content,
                     source=source
                 )
@@ -132,5 +136,7 @@ def _bedrock_knowledge_base_search(bot_id: str, limit: int, query: str) -> list[
         raise e
 
 
-def search_related_docs(bot_id: str, limit: int, query: str) -> list[SearchResult]:
-    return _pgvector_search(bot_id, limit, query)
+def search_related_docs(bot: BotModel, limit: int, query: str) -> list[SearchResult]:
+    if bot.has_bedrock_knowledge_base():
+        return _bedrock_knowledge_base_search(bot.id, limit, query)
+    return _pgvector_search(bot.id, limit, query)

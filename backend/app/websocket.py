@@ -170,7 +170,7 @@ def process_chat_input(
         # NOTE: Currently embedding not support multi-modal. For now, use the last text content.
         query = conversation.message_map[user_msg_id].content[-1].body
         search_results = search_related_docs(
-            bot_id=bot.id, limit=bot.search_params.max_results, query=query
+            bot=bot, limit=bot.search_params.max_results, query=query
         )
         logger.info(f"Search results from vector store: {search_results}")
 

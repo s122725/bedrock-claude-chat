@@ -134,7 +134,7 @@ class AnswerWithKnowledgeTool(BaseTool):
             search_results = dummy_search_results
         else:
             search_results = search_related_docs(
-                self.bot.id,
+                self.bot,
                 limit=self.bot.search_params.max_results,
                 query=query,
             )

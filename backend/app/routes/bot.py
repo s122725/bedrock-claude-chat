@@ -22,6 +22,7 @@ from app.routes.schemas.bot import (
     Knowledge,
     SearchParams,
     ConversationQuickStarter,
+    BedrockKnowledgeBaseOutput
 )
 from app.usecases.bot import (
     create_new_bot,
@@ -173,6 +174,9 @@ def get_private_bot(request: Request, bot_id: str):
             )
             for starter in bot.conversation_quick_starters
         ],
+        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(
+            **bot.bedrock_knowledge_base.model_dump() if bot.bedrock_knowledge_base else {}
+        ),
     )
     return output
 

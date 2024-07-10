@@ -27,9 +27,9 @@ def handler(event, context):
     stack_output: list[StackOutput] = event['stack_output']
 
     kb_id = stack_output[0]['KnowledgeBaseId']
-    datas_ource_ids = [x['DataSourceId'] for x in stack_output]
+    data_source_ids = [x['DataSourceId'] for x in stack_output]
     
     user_id = pk
     bot_id = decompose_bot_id(sk)
 
-    update_knowledge_base_id(user_id, bot_id, kb_id, datas_ource_ids)
+    update_knowledge_base_id(user_id, bot_id, kb_id, data_source_ids)

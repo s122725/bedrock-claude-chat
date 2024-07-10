@@ -94,6 +94,9 @@ class BotModel(BaseModel):
 
     def is_agent_enabled(self) -> bool:
         return len(self.agent.tools) > 0
+    
+    def has_bedrock_knowledge_base(self) -> bool:
+        return self.bedrock_knowledge_base is not None
 
 
 class BotAliasModel(BaseModel):
