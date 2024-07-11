@@ -135,7 +135,6 @@ class AnswerWithKnowledgeTool(BaseTool):
         else:
             search_results = search_related_docs(
                 self.bot,
-                limit=self.bot.search_params.max_results,
                 query=query,
             )
 

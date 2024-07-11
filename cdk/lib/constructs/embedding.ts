@@ -93,6 +93,7 @@ export class Embedding extends Construct {
       {
         cpu: props.embeddingContainerVcpu,
         memoryLimitMiB: props.embeddingContainerMemory,
+        ephemeralStorageGiB: 100,
         runtimePlatform: {
           cpuArchitecture: ecs.CpuArchitecture.X86_64,
           operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,

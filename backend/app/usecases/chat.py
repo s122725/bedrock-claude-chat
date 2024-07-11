@@ -249,7 +249,9 @@ def insert_knowledge(
     logger.info(f"Inserted prompt: {inserted_prompt}")
 
     conversation_with_context = deepcopy(conversation)
-    conversation_with_context.message_map["instruction"].content[0].body = inserted_prompt
+    conversation_with_context.message_map["instruction"].content[
+        0
+    ].body = inserted_prompt
 
     return conversation_with_context
 
@@ -308,7 +310,9 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             price = token_cb.total_cost
             if bot.display_retrieved_chunks and chunk_cb.used_chunks:
                 used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(agent_response.get("intermediate_steps", []))
+            thinking_log = format_log_to_str(
+                agent_response.get("intermediate_steps", [])
+            )
             logger.info(f"Thinking log: {thinking_log}")
 
         reply_txt = agent_response["output"]
@@ -322,9 +326,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             # NOTE: Currently embedding not support multi-modal. For now, use the last content.
             query = conversation.message_map[user_msg_id].content[-1].body
 
-            search_results = search_related_docs(
-                bot=bot, limit=bot.search_params.max_results, query=query
-            )
+            search_results = search_related_docs(bot=bot, query=query)
             logger.info(f"Search results from vector store: {search_results}")
 
             # Insert contexts to instruction
@@ -612,7 +614,6 @@ def fetch_related_documents(
 
     chunks = search_related_docs(
         bot=bot,
-        limit=bot.search_params.max_results,
         query=chat_input.message.content[-1].body,
     )
 

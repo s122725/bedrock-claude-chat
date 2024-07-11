@@ -267,12 +267,10 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 for starter in bot_input.conversation_quick_starters
             ]
         ),
-        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(
-            **(
-                bot_input.bedrock_knowledge_base.model_dump()
-                if bot_input.bedrock_knowledge_base
-                else {}
-            )
+        bedrock_knowledge_base=(
+            BedrockKnowledgeBaseOutput(**(bot_input.bedrock_knowledge_base.model_dump()))
+            if bot_input.bedrock_knowledge_base
+            else None
         ),
     )
 
@@ -434,12 +432,12 @@ def modify_owned_bot(
                 for starter in modify_input.conversation_quick_starters
             ]
         ),
-        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(
-            **(
-                modify_input.bedrock_knowledge_base.model_dump()
-                if modify_input.bedrock_knowledge_base
-                else {}
+        bedrock_knowledge_base=(
+            BedrockKnowledgeBaseOutput(
+                **(modify_input.bedrock_knowledge_base.model_dump())
             )
+            if modify_input.bedrock_knowledge_base
+            else None
         ),
     )
 

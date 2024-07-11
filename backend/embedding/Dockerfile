@@ -41,10 +41,12 @@ WORKDIR /src
 
 COPY ./embedding/pyproject.toml ./embedding/poetry.lock ./
 
-ENV POETRY_REQUESTS_TIMEOUT=600
-RUN pip install poetry --no-cache-dir && \
+ENV POETRY_REQUESTS_TIMEOUT=10800
+RUN python -m pip install --upgrade pip && \
+    pip install poetry --no-cache-dir && \
     poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi
+    poetry install --no-interaction --no-ansi --only main && \
+    poetry cache clear --all pypi
 
 RUN playwright install chromium
 

@@ -99,11 +99,17 @@ LIMIT %s
     ]
 
 
-def _bedrock_knowledge_base_search(
-    bot: BotModel, limit: int, query: str, enable_hybrid: bool = True
-) -> list[SearchResult]:
-    search_type = "HYBRID" if enable_hybrid else "SEMANTIC"
-    knowledge_base_id = bot.bedrock_knowledge_base.knowledge_base_id  # type:ignore
+def _bedrock_knowledge_base_search(bot: BotModel, query: str) -> list[SearchResult]:
+    assert bot.bedrock_knowledge_base is not None
+    if bot.bedrock_knowledge_base.search_params.search_type == "semantic":
+        search_type = "SEMANTIC"
+    elif bot.bedrock_knowledge_base.search_params.search_type == "hybrid":
+        search_type = "HYBRID"
+    else:
+        raise ValueError("Invalid search type")
+
+    limit = bot.bedrock_knowledge_base.search_params.max_results
+    knowledge_base_id = bot.bedrock_knowledge_base.knowledge_base_id
 
     try:
         response = agent_client.retrieve(
@@ -121,7 +127,9 @@ def _bedrock_knowledge_base_search(
         for i, retrieval_result in enumerate(response.get("retrievalResults", [])):
             content = retrieval_result.get("content", {}).get("text", "")
             source = (
-                retrieval_result.get("location", {}).get("s3Location", {}).get("uri", "")
+                retrieval_result.get("location", {})
+                .get("s3Location", {})
+                .get("uri", "")
             )
 
             search_results.append(
@@ -135,7 +143,9 @@ def _bedrock_knowledge_base_search(
         raise e
 
 
-def search_related_docs(bot: BotModel, limit: int, query: str) -> list[SearchResult]:
+def search_related_docs(bot: BotModel, query: str) -> list[SearchResult]:
     if bot.has_bedrock_knowledge_base():
-        return _bedrock_knowledge_base_search(bot, limit, query)
-    return _pgvector_search(bot.id, limit, query)
+        logger.info("Searching related documents using Bedrock Knowledge Base.")
+        return _bedrock_knowledge_base_search(bot, query)
+    logger.info("Searching related documents using pgvector.")
+    return _pgvector_search(bot.id, bot.search_params.max_results, query)

@@ -97,7 +97,9 @@ def handler(event, context):
             f"Updating sync status for bot {bot_id} of user {user_id} to {sync_status} with reason: {sync_status_reason}"
         )
 
-        update_sync_status(user_id, bot_id, sync_status, sync_status_reason, last_exec_id)
+        update_sync_status(
+            user_id, bot_id, sync_status, sync_status_reason, last_exec_id
+        )
 
         return {
             "statusCode": 200,

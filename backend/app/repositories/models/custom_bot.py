@@ -3,6 +3,7 @@ from app.routes.schemas.bot import type_sync_status
 from pydantic import BaseModel
 from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 
+
 class EmbeddingParamsModel(BaseModel):
     chunk_size: int
     chunk_overlap: int
@@ -83,7 +84,6 @@ class BotModel(BaseModel):
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarterModel]
     bedrock_knowledge_base: BedrockKnowledgeBaseModel | None
-    
 
     def has_knowledge(self) -> bool:
         return (
@@ -95,7 +95,7 @@ class BotModel(BaseModel):
 
     def is_agent_enabled(self) -> bool:
         return len(self.agent.tools) > 0
-    
+
     def has_bedrock_knowledge_base(self) -> bool:
         return self.bedrock_knowledge_base is not None
 

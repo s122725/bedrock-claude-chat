@@ -19,7 +19,7 @@ from app.repositories.custom_bot import (
     update_bot_last_used_time,
     update_bot_publication,
     update_bot_visibility,
-    update_knowledge_base_id
+    update_knowledge_base_id,
 )
 from app.repositories.models.custom_bot import (
     AgentModel,
@@ -32,9 +32,12 @@ from app.repositories.models.custom_bot import (
     SearchParamsModel,
 )
 from app.repositories.models.custom_bot_kb import (
-    BedrockKnowledgeBaseModel,
     AnalyzerParamsModel,
+    BedrockKnowledgeBaseModel,
     OpenSearchParamsModel,
+)
+from app.repositories.models.custom_bot_kb import (
+    SearchParamsModel as SearchParamsModelKB,
 )
 from app.usecases.bot import fetch_all_bots_by_user_id
 from tests.test_repositories.utils.bot_factory import (
@@ -65,11 +68,15 @@ class TestCustomBotRepository(unittest.TestCase):
                         token_filters=["kuromoji_baseform"],
                     )
                 ),
+                search_params=SearchParamsModelKB(
+                    max_results=20,
+                    search_type="hybrid",
+                ),
                 chunking_strategy="default",
                 max_tokens=2000,
                 overlap_percentage=0,
                 instruction="Test KB Prompt",
-            )
+            ),
         )
         store_bot("user1", bot)
 
@@ -116,9 +123,20 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
         self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
         self.assertEqual(bot.bedrock_knowledge_base.instruction, "Test KB Prompt")
-        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.character_filters, ["icu_normalizer"])
-        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.tokenizer, "kuromoji_tokenizer")
-        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.token_filters, ["kuromoji_baseform"])
+        self.assertEqual(
+            bot.bedrock_knowledge_base.open_search.analyzer.character_filters,
+            ["icu_normalizer"],
+        )
+        self.assertEqual(
+            bot.bedrock_knowledge_base.open_search.analyzer.tokenizer,
+            "kuromoji_tokenizer",
+        )
+        self.assertEqual(
+            bot.bedrock_knowledge_base.open_search.analyzer.token_filters,
+            ["kuromoji_baseform"],
+        )
+        self.assertEqual(bot.bedrock_knowledge_base.search_params.max_results, 20)
+        self.assertEqual(bot.bedrock_knowledge_base.search_params.search_type, "hybrid")
 
         # Assert bot is stored in user1's bot list
         bot = find_private_bots_by_user_id("user1")
@@ -169,7 +187,11 @@ class TestCustomBotRepository(unittest.TestCase):
         delete_bot_by_id("user1", "1")
 
     def test_update_knowledge_base_id(self):
-        bot = create_test_private_bot("1", False, "user1",bedrock_knowledge_base=BedrockKnowledgeBaseModel(
+        bot = create_test_private_bot(
+            "1",
+            False,
+            "user1",
+            bedrock_knowledge_base=BedrockKnowledgeBaseModel(
                 embeddings_model="titan_v1",
                 open_search=OpenSearchParamsModel(
                     analyzer=AnalyzerParamsModel(
@@ -178,11 +200,16 @@ class TestCustomBotRepository(unittest.TestCase):
                         token_filters=["kuromoji_baseform"],
                     )
                 ),
+                search_params=SearchParamsModelKB(
+                    max_results=20,
+                    search_type="hybrid",
+                ),
                 chunking_strategy="default",
                 max_tokens=2000,
                 overlap_percentage=0,
                 instruction="Test KB Prompt",
-            ))
+            ),
+        )
         store_bot("user1", bot)
         update_knowledge_base_id("user1", "1", "kb1", ["ds1", "ds2"])
         bot = find_private_bot_by_id("user1", "1")
@@ -240,11 +267,15 @@ class TestCustomBotRepository(unittest.TestCase):
                         token_filters=["kuromoji_baseform"],
                     )
                 ),
+                search_params=SearchParamsModelKB(
+                    max_results=20,
+                    search_type="hybrid",
+                ),
                 chunking_strategy="default",
                 max_tokens=2000,
                 overlap_percentage=0,
                 instruction="Test KB Prompt",
-            )
+            ),
         )
 
         bot = find_private_bot_by_id("user1", "1")
@@ -279,10 +310,18 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
         self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
         self.assertEqual(bot.bedrock_knowledge_base.instruction, "Test KB Prompt")
-        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.character_filters, ["icu_normalizer"])
-        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.tokenizer, "kuromoji_tokenizer")
-        self.assertEqual(bot.bedrock_knowledge_base.open_search.analyzer.token_filters, ["kuromoji_baseform"])
-
+        self.assertEqual(
+            bot.bedrock_knowledge_base.open_search.analyzer.character_filters,
+            ["icu_normalizer"],
+        )
+        self.assertEqual(
+            bot.bedrock_knowledge_base.open_search.analyzer.tokenizer,
+            "kuromoji_tokenizer",
+        )
+        self.assertEqual(
+            bot.bedrock_knowledge_base.open_search.analyzer.token_filters,
+            ["kuromoji_baseform"],
+        )
 
         delete_bot_by_id("user1", "1")
 
@@ -436,7 +475,9 @@ class TestUpdateBotVisibility(unittest.TestCase):
                 max_results=20,
             ),
             agent=AgentModel(tools=[]),
-            knowledge=KnowledgeModel(source_urls=[], sitemap_urls=[], filenames=[], s3_urls=[]),
+            knowledge=KnowledgeModel(
+                source_urls=[], sitemap_urls=[], filenames=[], s3_urls=[]
+            ),
             sync_status="RUNNING",
             sync_status_reason="",
             display_retrieved_chunks=True,
