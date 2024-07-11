@@ -40,6 +40,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /src
 
 COPY ./embedding/pyproject.toml ./embedding/poetry.lock ./
+
+ENV POETRY_REQUESTS_TIMEOUT=600
 RUN pip install poetry --no-cache-dir && \
     poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi
