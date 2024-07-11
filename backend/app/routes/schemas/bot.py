@@ -76,6 +76,9 @@ class Knowledge(BaseSchema):
         if not bucket_name:
             raise ValueError(f"Invalid S3 URL format: {v}")
 
+        if not v.endswith("/"):
+            raise ValueError(f"Invalid S3 URL format (must end with a '/'): {v}")
+
         return v
 
 
