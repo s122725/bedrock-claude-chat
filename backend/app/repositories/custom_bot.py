@@ -142,9 +142,9 @@ def update_bot(
     }
     if bedrock_knowledge_base:
         update_expression += ", BedrockKnowledgeBase = :bedrock_knowledge_base"
-        expression_attribute_values[
-            ":bedrock_knowledge_base"
-        ] = bedrock_knowledge_base.model_dump()
+        expression_attribute_values[":bedrock_knowledge_base"] = (
+            bedrock_knowledge_base.model_dump()
+        )
 
     try:
         response = table.update_item(
