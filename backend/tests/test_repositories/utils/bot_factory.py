@@ -7,14 +7,14 @@ from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.custom_bot import (
     AgentModel,
     AgentToolModel,
+    BedrockKnowledgeBaseModel,
     BotAliasModel,
     BotModel,
+    ConversationQuickStarterModel,
     EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
-    ConversationQuickStarterModel,
-    BedrockKnowledgeBaseModel
 )
 from app.routes.schemas.bot import type_sync_status
 
@@ -89,6 +89,8 @@ def create_test_public_bot(
     owner_user_id,
     public_bot_id=None,
     instruction="Test Public Bot Prompt",
+    conversation_quick_starters: list[ConversationQuickStarterModel] | None = None,
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
 ):
     return BotModel(
         id=id,
@@ -134,4 +136,8 @@ def create_test_public_bot(
         published_api_datetime=None,
         published_api_codebuild_id=None,
         display_retrieved_chunks=True,
+        conversation_quick_starters=(
+            conversation_quick_starters if conversation_quick_starters else []
+        ),
+        bedrock_knowledge_base=bedrock_knowledge_base,
     )

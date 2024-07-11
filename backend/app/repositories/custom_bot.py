@@ -25,15 +25,13 @@ from app.repositories.models.custom_bot import (
     BotMeta,
     BotMetaWithStackInfo,
     BotModel,
+    ConversationQuickStarterModel,
     EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
-    ConversationQuickStarterModel,
 )
-from app.repositories.models.custom_bot_kb import (
-    BedrockKnowledgeBaseModel,
-)
+from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
 from boto3.dynamodb.conditions import Attr, Key
@@ -103,7 +101,7 @@ def update_bot(
     sync_status_reason: str,
     display_retrieved_chunks: bool,
     conversation_quick_starters: list[ConversationQuickStarterModel],
-    bedrock_knowledge_base: BedrockKnowledgeBaseModel = None
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
 ):
     """Update bot title, description, and instruction.
     NOTE: Use `update_bot_visibility` to update visibility.
@@ -144,7 +142,9 @@ def update_bot(
     }
     if bedrock_knowledge_base:
         update_expression += ", BedrockKnowledgeBase = :bedrock_knowledge_base"
-        expression_attribute_values[":bedrock_knowledge_base"] = bedrock_knowledge_base.model_dump()
+        expression_attribute_values[":bedrock_knowledge_base"] = (
+            bedrock_knowledge_base.model_dump()
+        )
 
     try:
         response = table.update_item(
@@ -263,7 +263,10 @@ def update_alias_pin_status(user_id: str, alias_id: str, pinned: bool):
             raise e
     return response
 
-def update_knowledge_base_id(user_id: str, bot_id: str, knowledge_base_id: str, data_source_ids: list[str]):
+
+def update_knowledge_base_id(
+    user_id: str, bot_id: str, knowledge_base_id: str, data_source_ids: list[str]
+):
     table = _get_table_client(user_id)
     logger.info(f"Updating knowledge base id for bot: {bot_id}")
 
@@ -273,10 +276,10 @@ def update_knowledge_base_id(user_id: str, bot_id: str, knowledge_base_id: str, 
             UpdateExpression="SET BedrockKnowledgeBase.knowledge_base_id = :kb_id, BedrockKnowledgeBase.data_source_ids = :ds_ids",
             ExpressionAttributeValues={
                 ":kb_id": knowledge_base_id,
-                ":ds_ids": data_source_ids
+                ":ds_ids": data_source_ids,
             },
             ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
-            ReturnValues="ALL_NEW"
+            ReturnValues="ALL_NEW",
         )
         logger.info(f"Updated knowledge base id for bot: {bot_id} successfully")
     except ClientError as e:
@@ -288,10 +291,7 @@ def update_knowledge_base_id(user_id: str, bot_id: str, knowledge_base_id: str, 
     return response
 
 
-
-def find_private_bots_by_user_id(
-    user_id: str, limit: int | None = None
-) -> list[BotMeta]:
+def find_private_bots_by_user_id(user_id: str, limit: int | None = None) -> list[BotMeta]:
     """Find all private bots owned by user.
     This does not include public bots.
     The order is descending by `last_used_time`.
@@ -321,6 +321,9 @@ def find_private_bots_by_user_id(
             description=item["Description"],
             is_public="PublicBotId" in item,
             sync_status=item["SyncStatus"],
+            has_bedrock_knowledge_base=(
+                True if item.get("BedrockKnowledgeBase", None) else False
+            ),
         )
         for item in response["Items"]
     ]
@@ -343,6 +346,9 @@ def find_private_bots_by_user_id(
                     description=item["Description"],
                     is_public="PublicBotId" in item,
                     sync_status=item["SyncStatus"],
+                    has_bedrock_knowledge_base=(
+                        True if item.get("BedrockKnowledgeBase", None) else False
+                    ),
                 )
                 for item in response["Items"]
             ]
@@ -442,13 +448,15 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
         ),
         published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
+            None if "ApiPublishCodeBuildId" not in item else item["ApiPublishCodeBuildId"]
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
-        bedrock_knowledge_base=BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"]) if "BedrockKnowledgeBase" in item else None,
+        bedrock_knowledge_base=(
+            BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"])
+            if "BedrockKnowledgeBase" in item
+            else None
+        ),
     )
 
     logger.info(f"Found bot: {bot}")
@@ -531,13 +539,15 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
         ),
         published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
+            None if "ApiPublishCodeBuildId" not in item else item["ApiPublishCodeBuildId"]
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
-        bedrock_knowledge_base=BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"]) if "BedrockKnowledgeBase" in item else None,
+        bedrock_knowledge_base=(
+            BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"])
+            if "BedrockKnowledgeBase" in item
+            else None
+        ),
     )
     logger.info(f"Found public bot: {bot}")
     return bot
@@ -729,6 +739,9 @@ async def find_public_bots_by_ids(bot_ids: list[str]) -> list[BotMetaWithStackIn
                     sync_status=item["SyncStatus"],
                     published_api_stack_name=item.get("ApiPublishmentStackName", None),
                     published_api_datetime=item.get("ApiPublishedDatetime", None),
+                    has_bedrock_knowledge_base=(
+                        True if item.get("BedrockKnowledgeBase", None) else False
+                    ),
                 )
             )
 
@@ -769,6 +782,9 @@ def find_all_published_bots(
             sync_status=item["SyncStatus"],
             published_api_stack_name=item["ApiPublishmentStackName"],
             published_api_datetime=item.get("ApiPublishedDatetime", None),
+            has_bedrock_knowledge_base=(
+                True if item.get("BedrockKnowledgeBase", None) else False
+            ),
         )
         for item in response["Items"]
     ]

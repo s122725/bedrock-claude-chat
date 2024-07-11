@@ -252,7 +252,7 @@ if __name__ == "__main__":
     event_json = os.getenv("EVENT")
     logger.debug(f"event_json: {event_json}")
 
-    keys = json.loads(event_json)
+    keys = json.loads(event_json)  # type:ignore
     sk = keys["SK"]["S"]
 
     bot_id = decompose_bot_id(sk)

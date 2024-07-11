@@ -90,6 +90,7 @@ class BotModel(BaseModel):
             len(self.knowledge.source_urls) > 0
             or len(self.knowledge.sitemap_urls) > 0
             or len(self.knowledge.filenames) > 0
+            or len(self.knowledge.s3_urls) > 0
         )
 
     def is_agent_enabled(self) -> bool:
@@ -127,6 +128,7 @@ class BotMeta(BaseModel):
     # This can be `False` if the bot is not owned by the user and original bot is removed.
     available: bool
     sync_status: type_sync_status
+    has_bedrock_knowledge_base: bool
 
 
 class BotMetaWithStackInfo(BotMeta):

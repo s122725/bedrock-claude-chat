@@ -81,7 +81,7 @@ console.log("overlapPercentage: ", overlapPercentage);
 
 const knowledgeBaseStack = new BedrockKnowledgeBaseStack(
   app,
-  `KBStack${botId}`,
+  `BrChatKbStack${botId}`,
   {
     ownerUserId,
     botId,

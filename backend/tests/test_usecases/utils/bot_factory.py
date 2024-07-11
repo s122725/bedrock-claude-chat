@@ -25,6 +25,7 @@ def create_test_private_bot(
     sync_status="RUNNING",
     include_internet_tool=False,
     set_dummy_knowledge=True,
+    bedrock_knowledge_base=None,
 ):
     return BotModel(
         id=id,
@@ -69,13 +70,10 @@ def create_test_private_bot(
                 source_urls=["https://aws.amazon.com/"],
                 sitemap_urls=["https://aws.amazon.sitemap.xml"],
                 filenames=["test.txt"],
+                s3_urls=["s3://example/doc/"],
             )
             if set_dummy_knowledge
-            else KnowledgeModel(
-                source_urls=[],
-                sitemap_urls=[],
-                filenames=[],
-            )
+            else KnowledgeModel(source_urls=[], sitemap_urls=[], filenames=[], s3_urls=[])
         ),
         sync_status=sync_status,
         sync_status_reason="reason",
@@ -85,6 +83,7 @@ def create_test_private_bot(
         published_api_codebuild_id=None,
         display_retrieved_chunks=True,
         conversation_quick_starters=[],
+        bedrock_knowledge_base=bedrock_knowledge_base,
     )
 
 
@@ -94,6 +93,7 @@ def create_test_public_bot(
     owner_user_id,
     public_bot_id=None,
     instruction="Test Public Bot Prompt",
+    bedrock_knowledge_base=None,
 ):
     return BotModel(
         id=id,
@@ -133,6 +133,7 @@ def create_test_public_bot(
             source_urls=["https://aws.amazon.com/"],
             sitemap_urls=["https://aws.amazon.sitemap.xml"],
             filenames=["test.txt"],
+            s3_urls=["s3://example/doc/"],
         ),
         sync_status="RUNNING",
         sync_status_reason="reason",
@@ -142,6 +143,7 @@ def create_test_public_bot(
         published_api_codebuild_id=None,
         display_retrieved_chunks=True,
         conversation_quick_starters=[],
+        bedrock_knowledge_base=bedrock_knowledge_base,
     )
 
 

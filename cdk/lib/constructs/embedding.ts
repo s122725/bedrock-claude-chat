@@ -353,24 +353,22 @@ export class Embedding extends Construct {
       "RUNNING"
     );
 
-    const updateSyncStatusStackCreated = this.createUpdateSyncStatusTask(
-      "UpdateSyncStatusCreated",
-      "KNOWLEDGE_BASE_STACK_CREATED",
-      "Knowledge base cfn stack created",
-      "$.Build.Build.Arn"
-    );
-
     const updateSyncStatusSucceeded = this.createUpdateSyncStatusTask(
       "UpdateSyncStatusSuccess",
       "SUCCEEDED",
       "Knowledge base sync succeeded"
     );
 
-    const updateSyncStatusFailed = this.createUpdateSyncStatusTask(
+    const updateSyncStatusFailed = new tasks.LambdaInvoke(
+      this,
       "UpdateSyncStatusFailed",
-      "FAILED",
-      "Knowledge base sync failed",
-      "$.Build.Build.Arn"
+      {
+        lambdaFunction: this._updateSyncStatusHandler,
+        payload: sfn.TaskInput.fromObject({
+          "cause.$": "$.Cause",
+        }),
+        resultPath: sfn.JsonPath.DISCARD,
+      }
     );
 
     const fallback = updateSyncStatusFailed.next(
@@ -384,6 +382,7 @@ export class Embedding extends Construct {
     const fetchStackOutput = new tasks.LambdaInvoke(this, "FetchStackOutput", {
       lambdaFunction: this._fetchStackOutputHandler,
       payload: sfn.TaskInput.fromObject({
+        "pk.$": "$.dynamodb.NewImage.PK.S",
         "sk.$": "$.dynamodb.NewImage.SK.S",
       }),
       resultPath: "$.StackOutput",
@@ -422,7 +421,7 @@ export class Embedding extends Construct {
             Stack.of(this).account
           }:knowledge-base/*`,
         ],
-        resultPath: "$",
+        resultPath: "$.IngestionJob",
       }
     );
 
@@ -431,11 +430,15 @@ export class Embedding extends Construct {
       action: "getIngestionJob",
       iamAction: "bedrock:GetIngestionJob",
       parameters: {
-        DataSourceId: sfn.JsonPath.stringAt("$.IngestionJob.DataSourceId"),
-        KnowledgeBaseId: sfn.JsonPath.stringAt(
-          "$.IngestionJob.KnowledgeBaseId"
+        DataSourceId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.IngestionJob.DataSourceId"
         ),
-        IngestionJobId: sfn.JsonPath.stringAt("$.IngestionJob.IngestionJobId"),
+        KnowledgeBaseId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.IngestionJob.KnowledgeBaseId"
+        ),
+        IngestionJobId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.IngestionJob.IngestionJobId"
+        ),
       },
       // Ref: https://docs.aws.amazon.com/ja_jp/service-authorization/latest/reference/list_amazonbedrock.html#amazonbedrock-knowledge-base
       iamResources: [
@@ -443,7 +446,7 @@ export class Embedding extends Construct {
           Stack.of(this).account
         }:knowledge-base/*`,
       ],
-      resultPath: "$",
+      resultPath: "$.IngestionJob",
     });
 
     const waitTask = new sfn.Wait(this, "WaitSeconds", {
@@ -455,8 +458,31 @@ export class Embedding extends Construct {
       "CheckIngestionJobStatus"
     )
       .when(
-        sfn.Condition.stringEquals("$.IngestionJob.Status", "COMPLETE"),
+        sfn.Condition.stringEquals(
+          "$.IngestionJob.IngestionJob.Status",
+          "COMPLETE"
+        ),
         new sfn.Pass(this, "IngestionJobCompleted")
+      )
+      .when(
+        sfn.Condition.stringEquals(
+          "$.IngestionJob.IngestionJob.Status",
+          "FAILED"
+        ),
+        new tasks.LambdaInvoke(this, "UpdateSyncStatusFailedForIngestion", {
+          lambdaFunction: this._updateSyncStatusHandler,
+          payload: sfn.TaskInput.fromObject({
+            pk: sfn.JsonPath.stringAt("$.PK"),
+            sk: sfn.JsonPath.stringAt("$.SK"),
+            ingestion_job: sfn.JsonPath.stringAt("$.IngestionJob"),
+          }),
+          resultPath: sfn.JsonPath.DISCARD,
+        }).next(
+          new sfn.Fail(this, "IngestionFail", {
+            cause: "Ingestion job failed",
+            error: "Ingestion job failed",
+          })
+        )
       )
       .otherwise(waitTask.next(getIngestionJob));
 
@@ -474,7 +500,6 @@ export class Embedding extends Construct {
         extractFirstElement
           .next(updateSyncStatusRunning)
           .next(startKnowledgeBaseBuild)
-          .next(updateSyncStatusStackCreated)
           .next(fetchStackOutput)
           .next(storeKnowledgeBaseId)
           .next(mapIngestionJobs)
@@ -571,6 +596,13 @@ export class Embedding extends Construct {
       )
     );
     removeHandlerRole.addToPolicy(
+      // Assume the table access role for row-level access control.
+      new iam.PolicyStatement({
+        actions: ["sts:AssumeRole"],
+        resources: [props.tableAccessRole.roleArn],
+      })
+    );
+    removeHandlerRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: [
@@ -611,6 +643,10 @@ export class Embedding extends Construct {
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       timeout: Duration.minutes(1),
       environment: {
+        ACCOUNT: Stack.of(this).account,
+        REGION: Stack.of(this).region,
+        TABLE_NAME: props.database.tableName,
+        TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
         DB_SECRETS_ARN: props.dbSecrets.secretArn,
         DOCUMENT_BUCKET: props.documentBucket.bucketName,
       },

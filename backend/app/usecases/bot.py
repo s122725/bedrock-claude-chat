@@ -37,6 +37,7 @@ from app.repositories.models.custom_bot import (
     KnowledgeModel,
     SearchParamsModel,
 )
+from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.routes.schemas.bot import (
     Agent,
     AgentTool,
@@ -52,6 +53,7 @@ from app.routes.schemas.bot import (
     SearchParams,
     type_sync_status,
 )
+from app.routes.schemas.bot_kb import BedrockKnowledgeBaseOutput
 from app.utils import (
     compose_upload_document_s3_path,
     compose_upload_temp_s3_path,
@@ -64,9 +66,6 @@ from app.utils import (
 )
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
-
-from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
-from app.routes.schemas.bot_kb import BedrockKnowledgeBaseOutput
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +104,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         len(bot_input.knowledge.source_urls) > 0
         or len(bot_input.knowledge.sitemap_urls) > 0
         or len(bot_input.knowledge.filenames) > 0
+        or len(bot_input.knowledge.s3_urls) > 0
     )
     sync_status: type_sync_status = "QUEUED" if has_knowledge else "SUCCEEDED"
 
@@ -191,7 +191,10 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             search_params=SearchParamsModel(**search_params),
             agent=agent,
             knowledge=KnowledgeModel(
-                source_urls=source_urls, sitemap_urls=sitemap_urls, filenames=filenames, s3_urls=s3_urls
+                source_urls=source_urls,
+                sitemap_urls=sitemap_urls,
+                filenames=filenames,
+                s3_urls=s3_urls,
             ),
             sync_status=sync_status,
             sync_status_reason="",
@@ -211,7 +214,13 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                     for starter in bot_input.conversation_quick_starters
                 ]
             ),
-            bedrock_knowledge_base=BedrockKnowledgeBaseModel(**bot_input.bedrock_knowledge_base.model_dump() if bot_input.bedrock_knowledge_base else None),
+            bedrock_knowledge_base=(
+                BedrockKnowledgeBaseModel(
+                    **(bot_input.bedrock_knowledge_base.model_dump())
+                )
+                if bot_input.bedrock_knowledge_base
+                else None
+            ),
         ),
     )
     return BotOutput(
@@ -238,7 +247,10 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             ]
         ),
         knowledge=Knowledge(
-            source_urls=source_urls, sitemap_urls=sitemap_urls, filenames=filenames, s3_urls=s3_urls
+            source_urls=source_urls,
+            sitemap_urls=sitemap_urls,
+            filenames=filenames,
+            s3_urls=s3_urls,
         ),
         sync_status=sync_status,
         sync_status_reason="",
@@ -255,7 +267,13 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 for starter in bot_input.conversation_quick_starters
             ]
         ),
-        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(**bot_input.bedrock_knowledge_base.model_dump() if bot_input.bedrock_knowledge_base else {}),
+        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(
+            **(
+                bot_input.bedrock_knowledge_base.model_dump()
+                if bot_input.bedrock_knowledge_base
+                else {}
+            )
+        ),
     )
 
 
@@ -266,11 +284,13 @@ def modify_owned_bot(
     source_urls = []
     sitemap_urls = []
     filenames = []
+    s3_urls = []
     sync_status: type_sync_status = "QUEUED"
 
     if modify_input.knowledge:
         source_urls = modify_input.knowledge.source_urls
         sitemap_urls = modify_input.knowledge.sitemap_urls
+        s3_urls = modify_input.knowledge.s3_urls
 
         # Commit changes to S3
         _update_s3_documents_by_diff(
@@ -324,8 +344,7 @@ def modify_owned_bot(
             tools=[
                 AgentToolModel(name=t.name, description=t.description)
                 for t in [
-                    get_tool_by_name(tool_name)
-                    for tool_name in modify_input.agent.tools
+                    get_tool_by_name(tool_name) for tool_name in modify_input.agent.tools
                 ]
             ]
         )
@@ -357,6 +376,7 @@ def modify_owned_bot(
             source_urls=source_urls,
             sitemap_urls=sitemap_urls,
             filenames=filenames,
+            s3_urls=s3_urls,
         ),
         sync_status=sync_status,
         sync_status_reason="",
@@ -372,7 +392,11 @@ def modify_owned_bot(
                 for starter in modify_input.conversation_quick_starters
             ]
         ),
-        bedrock_knowledge_base=BedrockKnowledgeBaseModel(**modify_input.bedrock_knowledge_base.model_dump()),
+        bedrock_knowledge_base=(
+            BedrockKnowledgeBaseModel(**modify_input.bedrock_knowledge_base.model_dump())
+            if modify_input.bedrock_knowledge_base
+            else None
+        ),
     )
 
     return BotModifyOutput(
@@ -397,6 +421,7 @@ def modify_owned_bot(
             source_urls=source_urls,
             sitemap_urls=sitemap_urls,
             filenames=filenames,
+            s3_urls=s3_urls,
         ),
         conversation_quick_starters=(
             []
@@ -409,7 +434,13 @@ def modify_owned_bot(
                 for starter in modify_input.conversation_quick_starters
             ]
         ),
-        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(**modify_input.bedrock_knowledge_base.model_dump() if modify_input.bedrock_knowledge_base else {}),
+        bedrock_knowledge_base=BedrockKnowledgeBaseOutput(
+            **(
+                modify_input.bedrock_knowledge_base.model_dump()
+                if modify_input.bedrock_knowledge_base
+                else {}
+            )
+        ),
     )
 
 
@@ -480,6 +511,7 @@ def fetch_all_bots_by_user_id(
                     description=bot.description,
                     is_public=True,
                     sync_status=bot.sync_status,
+                    has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base(),
                 )
             except RecordNotFoundError:
                 # Original bot is removed
@@ -497,6 +529,7 @@ def fetch_all_bots_by_user_id(
                     description="This item is no longer available",
                     is_public=False,
                     sync_status="ORIGINAL_NOT_FOUND",
+                    has_bedrock_knowledge_base=False,
                 )
 
             if is_original_available and (
@@ -544,6 +577,9 @@ def fetch_all_bots_by_user_id(
                     description=item["Description"],
                     is_public="PublicBotId" in item,
                     sync_status=item["SyncStatus"],
+                    has_bedrock_knowledge_base=(
+                        True if item.get("BedrockKnowledgeBase", None) else False
+                    ),
                 )
             )
 

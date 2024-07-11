@@ -68,6 +68,7 @@ export class BedrockKnowledgeBaseStack extends Stack {
 
     const dataSources = docBucketsAndPrefixes.map(({ bucket, prefix }) => {
       bucket.grantRead(kb.role);
+      const inclusionPrefixes = prefix === "" ? undefined : [prefix];
       return new S3DataSource(this, `DataSource${prefix}`, {
         bucket: bucket,
         knowledgeBase: kb,
@@ -75,21 +76,9 @@ export class BedrockKnowledgeBaseStack extends Stack {
         chunkingStrategy: props.chunkingStrategy,
         maxTokens: props.maxTokens,
         overlapPercentage: props.overlapPercentage,
-        inclusionPrefixes: [prefix],
+        inclusionPrefixes: inclusionPrefixes,
       });
     });
-    // docBucketsAndPrefixes.forEach(({ bucket, prefix }, index) => {
-    //   bucket.grantRead(kb.role);
-    //   new S3DataSource(this, `DataSource${index}`, {
-    //     bucket: bucket,
-    //     knowledgeBase: kb,
-    //     dataSourceName: bucket.bucketName,
-    //     chunkingStrategy: props.chunkingStrategy,
-    //     maxTokens: props.maxTokens,
-    //     overlapPercentage: props.overlapPercentage,
-    //     inclusionPrefixes: [prefix],
-    //   });
-    // });
 
     new CfnOutput(this, "KnowledgeBaseId", {
       value: kb.knowledgeBaseId,
@@ -149,6 +138,7 @@ export class BedrockKnowledgeBaseStack extends Stack {
   }
 
   private parseS3Url(url: string): { bucketName: string; prefix: string } {
+    console.info(`Parsing S3 URL: ${url}`);
     if (!url.startsWith("s3://")) {
       throw new Error(`Invalid S3 URL format: ${url}`);
     }
@@ -160,6 +150,7 @@ export class BedrockKnowledgeBaseStack extends Stack {
 
     const bucketName = urlParts.shift()!;
     const prefix = urlParts.join("/");
+    console.info(`Parsed S3 URL: bucketName=${bucketName}, prefix=${prefix}`);
     return { bucketName, prefix };
   }
 }

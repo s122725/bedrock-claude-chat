@@ -114,6 +114,7 @@ def get_all_bots(
             description=bot.description,
             is_public=bot.is_public,
             sync_status=bot.sync_status,
+            has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base
         )
         for bot in bots
     ]

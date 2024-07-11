@@ -54,7 +54,7 @@ export class BedrockKnowledgeBaseCodebuild extends Construct {
               `export BOT_ID=$(echo $SK | awk -F'#' '{print $3}')`,
               // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
               "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
-              `cdk deploy --require-approval never KBStack$BOT_ID`,
+              `cdk deploy --require-approval never BrChatKbStack$BOT_ID`,
             ],
           },
         },

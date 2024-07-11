@@ -249,9 +249,7 @@ def insert_knowledge(
     logger.info(f"Inserted prompt: {inserted_prompt}")
 
     conversation_with_context = deepcopy(conversation)
-    conversation_with_context.message_map["instruction"].content[
-        0
-    ].body = inserted_prompt
+    conversation_with_context.message_map["instruction"].content[0].body = inserted_prompt
 
     return conversation_with_context
 
@@ -310,12 +308,11 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             price = token_cb.total_cost
             if bot.display_retrieved_chunks and chunk_cb.used_chunks:
                 used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(
-                agent_response.get("intermediate_steps", [])
-            )
+            thinking_log = format_log_to_str(agent_response.get("intermediate_steps", []))
             logger.info(f"Thinking log: {thinking_log}")
 
         reply_txt = agent_response["output"]
+        conversation.should_continue = False
     else:
         message_map = conversation.message_map
         search_results = []
@@ -390,6 +387,8 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             input_tokens = metrics.input_tokens
             output_tokens = metrics.output_tokens
         price = calculate_price(chat_input.message.model, input_tokens, output_tokens)
+        # Published API does not support continued generation
+        conversation.should_continue = False
 
     # Issue id for new assistant message
     assistant_msg_id = str(ULID())
@@ -422,9 +421,6 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
         conversation.last_message_id = assistant_msg_id
 
     conversation.total_price += price
-
-    # If continued, save the state
-    conversation.should_continue = response.stop_reason == "max_tokens"
 
     # Store updated conversation
     store_conversation(user_id, conversation)
