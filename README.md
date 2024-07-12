@@ -77,14 +77,14 @@ You can specify the following parameters during deployment to enhance security a
 - **--disable-self-register**: Disable self-registration (default: enabled). If this flag is set, you will need to create all users on cognito and it will not allow users to self register their accounts.
 - **--ipv4-ranges**: Comma-separated list of allowed IPv4 ranges. (default: allow all ipv4 addresses)
 - **--ipv6-ranges**: Comma-separated list of allowed IPv6 ranges. (default: allow all ipv6 addresses)
-- **---disable-ipv6**: Disable connections over IPv6. (default: enabled)
+- **--disable-ipv6**: Disable connections over IPv6. (default: enabled)
 - **--allowed-signup-email-domains**: Comma-separated list of allowed email domains for sign-up. (default: no domain restriction)
-- **--region**: Define the region where bedrock is available. (default: us-east-1)
+- **--bedrock-region**: Define the region where bedrock is available. (default: us-east-1)
 
 #### Example command with parameters:
 
 ```sh
-./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --region "us-west-2"
+./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2"
 ```
 
 - After about 35 minutes, you will get the following output, which you can access from your browser
