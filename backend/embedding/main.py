@@ -206,8 +206,6 @@ def main(
             if len(filenames) > 0:
                 # イメージ変換ありの場合はStepFunctionsで処理
                 if enable_pdf_image_scan == True:
-
-                    # イメージ変換なしの場合は、マルチプロセスで処理
                     with multiprocessing.Pool(processes=None) as pool:
                         futures = [
                             pool.apply_async(

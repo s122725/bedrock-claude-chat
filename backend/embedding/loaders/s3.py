@@ -49,7 +49,10 @@ class S3FileLoader(BaseLoader):
                 return partition(filename=file_path)
 
     def _get_metadata(self) -> dict:
-        return {"source": f"s3://{self.bucket}/{self.key}"}
+        return {
+            "source": f"s3://{self.bucket}/{self.key}",
+            "metadata": {}, # metadataはDBのmetadataにJSON型で格納される想定
+        }
 
     def load(self) -> list[Document]:
         """Load file."""
