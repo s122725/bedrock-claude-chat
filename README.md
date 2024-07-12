@@ -85,7 +85,7 @@ You can specify the following parameters during deployment to enhance security a
 #### Example command with parameters:
 
 ```sh
-./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2" --version "v1.2.5"
+./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2" --version "v1.2.6"
 ```
 
 - After about 35 minutes, you will get the following output, which you can access from your browser
@@ -93,6 +93,16 @@ You can specify the following parameters during deployment to enhance security a
 ```
 Frontend URL: https://xxxxxxxxx.cloudfront.net
 ```
+
+> [!TIP]
+> If you see the following output and cannot get the `Frontend URL`, it may be a problem with the latest version. In this case, please add `--version "v1.2.6"` to the parameters and try deployment again.
+> ```
+> CodeBuild project completed with status: FAILED
+> Build Log Group Name: /aws/codebuild/Project-xxxxxxxx
+> Build Log Stream Name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+> Fetch CDK deployment logs...
+> Frontend URL: 
+> ```
 
 ![](./docs/imgs/signin.png)
 

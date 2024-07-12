@@ -65,12 +65,13 @@ chmod +x bin.sh
 - **--ipv6-ranges**: 許可する IPv6 範囲のカンマ区切りリスト。（デフォルト: 全ての IPv6 アドレスを許可）
 - **--disable-ipv6**: IPv6 での接続を無効にします (デフォルト: 有効)
 - **--allowed-signup-email-domains**: サインアップ時に許可するメールドメインのカンマ区切りリスト。（デフォルト: ドメイン制限なし）
+- **--bedrock-region**: Bedrock が利用可能なリージョンを指定します。（デフォルト: us-east-1）
 - **--version**: デプロイする Bedrock Claude Chat のバージョン。 (デフォルト: v1)
 
 #### パラメータを指定したコマンド例:
 
 ```sh
-./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "ap-northeast-1" --version "v1.2.5"
+./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "ap-northeast-1" --version "v1.2.6"
 ```
 
 - 30 分ほど経過後、下記の出力が得られるのでブラウザからアクセスします
@@ -78,6 +79,16 @@ chmod +x bin.sh
 ```
 Frontend URL: https://xxxxxxxxx.cloudfront.net
 ```
+
+> [!TIP]
+> 以下のような出力が表示されて `Frontend URL` が得られなかった場合、最新バージョンの不具合の可能性がありますので、パラメータに `--version "v1.2.6"` を追加して再度デプロイを試してみてください。
+> ```
+> CodeBuild project completed with status: FAILED
+> Build Log Group Name: /aws/codebuild/Project-xxxxxxxx
+> Build Log Stream Name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+> Fetch CDK deployment logs...
+> Frontend URL: 
+> ```
 
 ![](./imgs/signin.png)
 
