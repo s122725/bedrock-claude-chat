@@ -1,11 +1,7 @@
-import {
-  aws_stepfunctions as sfn
-} from 'aws-cdk-lib'
-
 export const functionDefinitionParam = {
   build: false,
   // dockerileName: "docker/task1/Dockerfile",
-  entry: './stepFunctions/images',
+  entry: '../backend/embedding_statemachine/pdf_ai_ocr/images',
   index: 'task2.py',
   handler: "lambda_handler",
   functionName: 'task2',

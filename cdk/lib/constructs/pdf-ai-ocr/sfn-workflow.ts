@@ -9,7 +9,7 @@ import {
   Stack
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import { type SfnLambdaInvoke } from '../constructs/sfn-lambda-invoke'
+import { type SfnLambdaInvoke } from './sfn-lambda-invoke'
 import { NagSuppressions } from 'cdk-nag'
 
 interface CustomProps extends StackProps {
@@ -173,9 +173,9 @@ export class SfnWorkFlow extends Construct {
     // ワークフローの起点
     this.firstTask = statusUpdateRunning;
 
-    this.stateMachine = new sfn.StateMachine(this, `StateMachineNode`, {
+    this.stateMachine = new sfn.StateMachine(this, `EmbeddingPdfAiOcr`, {
       definitionBody: sfn.DefinitionBody.fromChainable(this.firstTask),
-      stateMachineName: 'EmbeddingWorkflow',
+      stateMachineName: 'EmbeddingPdfAiOcr',
       role,
       logs: {
         destination: logGroup,

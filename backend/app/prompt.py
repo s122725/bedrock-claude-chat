@@ -35,7 +35,7 @@ Each result has a corresponding source ID that you should reference.
 
 Note that <sources> may contain multiple <source> if you include information from multiple results in your answer.
 
-Do NOT directly quote the <search_results> in your answer. Your job is to answer the user's question as much detail and accurately as possible.
+Do NOT directly quote the <search_results> in your answer. Your job is to answer the user's question as concisely as possible.
 Do NOT outputs sources at the end of your answer.
 
 Followings are examples of how to reference sources in your answer. Note that the source ID is embedded in the answer in the format [^<source_id>].

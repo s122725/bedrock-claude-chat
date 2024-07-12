@@ -20,8 +20,8 @@ import { UsageAnalysis } from "./constructs/usage-analysis";
 import { TIdentityProvider, identityProvider } from "./utils/identity-provider";
 import { ApiPublishCodebuild } from "./constructs/api-publish-codebuild";
 import { WebAclForPublishedApi } from "./constructs/webacl-for-published-api";
-import { SfnLambdaInvoke } from './constructs/sfn-lambda-invoke';
-import { SfnWorkFlow } from './constructs/sfn-workflow';
+import { SfnLambdaInvoke } from './constructs/pdf-ai-ocr/sfn-lambda-invoke';
+import { SfnWorkFlow } from './constructs/pdf-ai-ocr/sfn-workflow';
 import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
@@ -112,6 +112,10 @@ export class BedrockChatStack extends cdk.Stack {
             "**/.git/**",
             "**/.github/**",
             "**/.mypy_cache/**",
+            "**/examples/**",
+            "**/docs/**",
+            "**/.env",
+            "**/.gitignore",
           ],
         }),
       ],

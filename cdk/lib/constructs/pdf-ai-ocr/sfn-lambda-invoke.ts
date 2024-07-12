@@ -155,13 +155,13 @@ export class SfnLambdaInvoke extends Construct {
 
     // /////
     // lambda/pythonフォルダに含まれるファイル名をすべて取得
-    const pythonFunctionDefinitionFileNames = fs.readdirSync(path.resolve(__dirname, '../../stepFunctions/functionDefinitions'))
+    const pythonFunctionDefinitionFileNames = fs.readdirSync(path.resolve(__dirname, '../../../../backend/embedding_statemachine/pdf_ai_ocr/functionDefinitions'))
     // FileNamesをループする
     pythonFunctionDefinitionFileNames.forEach((functionDefinitionFilename) => {
       // 拡張子なしのファイル名
       const filenameWithoutType = functionDefinitionFilename.split('.')[0]
       // lambdaInvokeの生成
-      const lambdaInvoke = createLambdaPythonInvoke(`../../stepFunctions/functionDefinitions/${functionDefinitionFilename}`)
+      const lambdaInvoke = createLambdaPythonInvoke(`../../../../backend/embedding_statemachine/pdf_ai_ocr/functionDefinitions/${functionDefinitionFilename}`)
 
       // ファイル名をキーに、配列にlambdaInvokeを保存
       this.lambdaInvoke = {
