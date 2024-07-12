@@ -41,7 +41,7 @@ class S3FileLoader(BaseLoader):
                 return partition_pdf(
                     filename=file_path,
                     strategy="hi_res",
-                    infer_table_structure=True,
+                    infer_table_structure=False,
                     extract_images_in_pdf=False,
                 )
             else:

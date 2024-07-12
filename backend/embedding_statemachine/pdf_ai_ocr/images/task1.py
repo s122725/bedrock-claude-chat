@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 import base64
-import boto3
 import logging
 import tempfile
 import os
 from pdf2image import convert_from_path
 
-from lib.s3 import base64_image_upload_to_s3, check_s3_folder_and_list_files
+from lib.s3 import base64_image_upload_to_s3, check_s3_folder_and_list_files, download_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-# S3クライアントの作成
-s3 = boto3.client('s3')
 
 def _pdf_to_images(pdf_path, output_folder):
   # PDFの各ページを画像に変換
@@ -37,8 +33,6 @@ def _pdf_to_images(pdf_path, output_folder):
   return image_paths
 
 
-# s3 upload image
-
 def lambda_handler(event, context):
   
   logger.debug(f"event: {event}")
@@ -52,12 +46,12 @@ def lambda_handler(event, context):
   enable_pdf_image_scan = event['body']['enable_pdf_image_scan']
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    file_path = f"{temp_dir}/{key}"
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    s3.download_file(bucket, key, file_path)
-    extension = os.path.splitext(file_path)[1]
+    local_path = f"{temp_dir}/{key}"
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    download_file(bucket, key, local_path)
+    extension = os.path.splitext(local_path)[1]
 
-    logger.debug(f"file_path: {file_path}")
+    logger.debug(f"local_path: {local_path}")
 
     if extension == ".pdf" and enable_pdf_image_scan == True:
 

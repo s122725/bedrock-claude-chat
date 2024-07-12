@@ -372,15 +372,16 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                 used_chunks = []
                 for r in filter_used_results(reply_txt, search_results):
                     content_type, source_link = get_source_link(r.source)
-                    if ( r.metadata and "parentSource" in r.metadata):
-                        _, parentSource_link = get_source_link(r.metadata["parentSource"])
-                        r.metadata['parentSourceLink'] = parentSource_link
+                    metadata = r.metadata if isinstance(r.metadata, dict) else {}
+                    if "parentSource" in metadata:
+                        _, parent_source_link = get_source_link(metadata["parentSource"])
+                        metadata["parentSourceLink"] = parent_source_link
                     used_chunks.append(
                         ChunkModel(
                             content=r.content,
                             content_type=content_type,
                             source=source_link,
-                            metadata=r["metadata"] if "metadata" in r else {},
+                            metadata=metadata,
                             rank=r.rank,
                         )
                     )

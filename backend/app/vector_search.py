@@ -132,9 +132,10 @@ def _bedrock_knowledge_base_search(bot: BotModel, query: str) -> list[SearchResu
                 .get("s3Location", {})
                 .get("uri", "")
             )
+            metadata = retrieval_result.get("metadata", {})
 
             search_results.append(
-                SearchResult(rank=i, bot_id=bot.id, content=content, source=source)
+                SearchResult(rank=i, bot_id=bot.id, content=content, source=source, metadata=metadata)
             )
 
         return search_results
