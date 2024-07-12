@@ -1,9 +1,4 @@
-FROM public.ecr.aws/docker/library/python:3.11.6-slim-bookworm
-
-# Install lambda web adapter
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.7.0 /lambda-adapter /opt/extensions/lambda-adapter
-
-WORKDIR /backend
+FROM public.ecr.aws/lambda/python:3.11
 
 COPY ./pyproject.toml ./poetry.lock ./
 
@@ -15,7 +10,6 @@ RUN python -m pip install --upgrade pip && \
     poetry cache clear --all pypi
 
 COPY ./app ./app
+COPY ./embedding_statemachine ./embedding_statemachine
 
-ENV PORT=8000
-EXPOSE ${PORT}
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["app.websocket.handler"]

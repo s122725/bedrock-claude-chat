@@ -6,6 +6,7 @@
       "README.md",
       "../backend/**/__pycache__",
       "../backend/tests/**",
+      "../backend/.mypy_cache/**",
       "cdk*.json",
       "**/*.d.ts",
       "**/*.js",

@@ -27,11 +27,11 @@ from app.repositories.models.custom_bot import (
     AgentModel,
     AgentToolModel,
     BotModel,
+    ConversationQuickStarterModel,
     EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
-    ConversationQuickStarterModel,
 )
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
@@ -128,12 +128,16 @@ class TestConversationRepository(unittest.TestCase):
                     role="user",
                     content=[
                         ContentModel(
-                            content_type="text", body="Hello", media_type=None
+                            content_type="text",
+                            body="Hello",
+                            media_type=None,
+                            file_name=None,
                         ),
                         ContentModel(
                             content_type="image",
                             body="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
                             media_type="image/png",
+                            file_name=None,
                         ),
                     ],
                     model="claude-instant-v1",
@@ -142,7 +146,12 @@ class TestConversationRepository(unittest.TestCase):
                     create_time=1627984879.9,
                     feedback=None,
                     used_chunks=[
-                        ChunkModel(content="chunk1", source="source1", rank=1),
+                        ChunkModel(
+                            content="chunk1",
+                            source="source1",
+                            rank=1,
+                            content_type="url",
+                        ),
                     ],
                     thinking_log="test thinking log",
                 )
@@ -241,6 +250,7 @@ class TestConversationRepository(unittest.TestCase):
                         body="This is a large message."
                         * 1000,  # Repeating to make it large
                         media_type=None,
+                        file_name=None,
                     )
                 ],
                 model="claude-instant-v1",
@@ -415,6 +425,7 @@ class TestConversationBotRepository(unittest.TestCase):
                 source_urls=["https://aws.amazon.com/"],
                 sitemap_urls=["https://aws.amazon.sitemap.xml"],
                 filenames=["aws.pdf"],
+                s3_urls=["s3://example/path/"],
             ),
             sync_status="RUNNING",
             sync_status_reason="reason",
@@ -426,6 +437,7 @@ class TestConversationBotRepository(unittest.TestCase):
             conversation_quick_starters=[
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
+            bedrock_knowledge_base=None,
         )
         bot2 = BotModel(
             id="2",
@@ -462,6 +474,7 @@ class TestConversationBotRepository(unittest.TestCase):
                 source_urls=["https://aws.amazon.com/"],
                 sitemap_urls=["https://aws.amazon.sitemap.xml"],
                 filenames=["aws.pdf"],
+                s3_urls=[],
             ),
             sync_status="RUNNING",
             sync_status_reason="reason",
@@ -473,6 +486,7 @@ class TestConversationBotRepository(unittest.TestCase):
             conversation_quick_starters=[
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
+            bedrock_knowledge_base=None,
         )
 
         store_conversation("user", conversation1)
