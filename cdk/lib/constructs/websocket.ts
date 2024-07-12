@@ -93,7 +93,7 @@ export class WebSocket extends Construct {
         {
           assetName: "WebsocketHandlerImage",
           platform: Platform.LINUX_AMD64,
-          file: "websocket.Dockerfile",
+          file: "lambda.Dockerfile",
         }
       ),
       vpc: props.vpc,

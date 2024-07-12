@@ -480,6 +480,7 @@ const BotEditPage: React.FC = () => {
         sourceUrls: urls.filter((s) => s !== ''),
         // Sitemap cannot be used yet.
         sitemapUrls: [],
+        s3Urls: [],
         filenames: files.map((f) => f.filename),
       },
       displayRetrievedChunks,
@@ -548,6 +549,7 @@ const BotEditPage: React.FC = () => {
           sourceUrls: urls.filter((s) => s !== ''),
           // Sitemap cannot be used yet.
           sitemapUrls: [],
+          s3Urls: [],
           addedFilenames,
           deletedFilenames,
           unchangedFilenames,

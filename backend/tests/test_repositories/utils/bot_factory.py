@@ -7,13 +7,14 @@ from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.custom_bot import (
     AgentModel,
     AgentToolModel,
+    BedrockKnowledgeBaseModel,
     BotAliasModel,
     BotModel,
+    ConversationQuickStarterModel,
     EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
-    ConversationQuickStarterModel,
 )
 from app.routes.schemas.bot import type_sync_status
 
@@ -29,6 +30,7 @@ def create_test_private_bot(
     published_api_codebuild_id: str | None = None,
     display_retrieved_chunks: bool = True,
     conversation_quick_starters: list[ConversationQuickStarterModel] | None = None,
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
 ):
     return BotModel(
         id=id,
@@ -66,6 +68,7 @@ def create_test_private_bot(
             source_urls=["https://aws.amazon.com/"],
             sitemap_urls=["https://aws.amazon.sitemap.xml"],
             filenames=["test.txt"],
+            s3_urls=["s3://test-user/test-bot/"],
         ),
         sync_status=sync_status,
         sync_status_reason="reason",
@@ -77,6 +80,7 @@ def create_test_private_bot(
         conversation_quick_starters=(
             [] if conversation_quick_starters is None else conversation_quick_starters
         ),
+        bedrock_knowledge_base=bedrock_knowledge_base,
     )
 
 
@@ -86,6 +90,8 @@ def create_test_public_bot(
     owner_user_id,
     public_bot_id=None,
     instruction="Test Public Bot Prompt",
+    conversation_quick_starters: list[ConversationQuickStarterModel] | None = None,
+    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
 ):
     return BotModel(
         id=id,
@@ -123,6 +129,7 @@ def create_test_public_bot(
             source_urls=["https://aws.amazon.com/"],
             sitemap_urls=["https://aws.amazon.sitemap.xml"],
             filenames=["test.txt"],
+            s3_urls=["s3://test-user/test-bot/"],
         ),
         sync_status="RUNNING",
         sync_status_reason="reason",
@@ -131,4 +138,8 @@ def create_test_public_bot(
         published_api_datetime=None,
         published_api_codebuild_id=None,
         display_retrieved_chunks=True,
+        conversation_quick_starters=(
+            conversation_quick_starters if conversation_quick_starters else []
+        ),
+        bedrock_knowledge_base=bedrock_knowledge_base,
     )

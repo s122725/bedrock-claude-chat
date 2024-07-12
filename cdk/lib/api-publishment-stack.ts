@@ -127,7 +127,7 @@ export class ApiPublishmentStack extends Stack {
           {
             assetName: "SqsConsumeHandlerImage",
             platform: Platform.LINUX_AMD64,
-            file: "websocket.Dockerfile",
+            file: "lambda.Dockerfile",
             cmd: ["app.sqs_consumer.handler"],
           }
         ),
