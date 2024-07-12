@@ -36,9 +36,7 @@ from app.repositories.models.custom_bot_kb import (
     BedrockKnowledgeBaseModel,
     OpenSearchParamsModel,
 )
-from app.repositories.models.custom_bot_kb import (
-    SearchParamsModel as SearchParamsModelKB,
-)
+from app.repositories.models.custom_bot_kb import SearchParamsModel as SearchParamsModelKB
 from app.usecases.bot import fetch_all_bots_by_user_id
 from tests.test_repositories.utils.bot_factory import (
     create_test_private_bot,
@@ -75,7 +73,6 @@ class TestCustomBotRepository(unittest.TestCase):
                 chunking_strategy="default",
                 max_tokens=2000,
                 overlap_percentage=0,
-                instruction="Test KB Prompt",
             ),
         )
         store_bot("user1", bot)
@@ -122,7 +119,6 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.bedrock_knowledge_base.chunking_strategy, "default")
         self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
         self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
-        self.assertEqual(bot.bedrock_knowledge_base.instruction, "Test KB Prompt")
         self.assertEqual(
             bot.bedrock_knowledge_base.open_search.analyzer.character_filters,
             ["icu_normalizer"],
@@ -207,7 +203,6 @@ class TestCustomBotRepository(unittest.TestCase):
                 chunking_strategy="default",
                 max_tokens=2000,
                 overlap_percentage=0,
-                instruction="Test KB Prompt",
             ),
         )
         store_bot("user1", bot)
@@ -274,7 +269,6 @@ class TestCustomBotRepository(unittest.TestCase):
                 chunking_strategy="default",
                 max_tokens=2000,
                 overlap_percentage=0,
-                instruction="Test KB Prompt",
             ),
         )
 
@@ -309,7 +303,6 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.bedrock_knowledge_base.chunking_strategy, "default")
         self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
         self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
-        self.assertEqual(bot.bedrock_knowledge_base.instruction, "Test KB Prompt")
         self.assertEqual(
             bot.bedrock_knowledge_base.open_search.analyzer.character_filters,
             ["icu_normalizer"],
@@ -421,9 +414,7 @@ class TestUpdateBotVisibility(unittest.TestCase):
     def setUp(self) -> None:
         bot1 = create_test_private_bot("1", is_pinned=True, owner_user_id="user1")
         bot2 = create_test_private_bot("2", is_pinned=True, owner_user_id="user1")
-        public1 = create_test_public_bot(
-            "public1", is_pinned=True, owner_user_id="user2"
-        )
+        public1 = create_test_public_bot("public1", is_pinned=True, owner_user_id="user2")
         alias1 = BotAliasModel(
             id="4",
             title="Test Alias",

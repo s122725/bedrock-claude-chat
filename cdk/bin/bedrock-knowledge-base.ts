@@ -9,16 +9,6 @@ import {
 
 const app = new cdk.App();
 
-// const PK: string = app.node.tryGetContext("pk");
-// const SK: string = app.node.tryGetContext("sk");
-// const BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: string = app.node.tryGetContext(
-//   "bedrockClaudeChatDocumentBucketName"
-// );
-// const KNOWLEDGE: string = app.node.tryGetContext("knowledge");
-// const BEDROCK_KNOWLEDGE_BASE: string = app.node.tryGetContext(
-//   "bedrockKnowledgeBase"
-// );
-
 const PK: string = process.env.PK!;
 const SK: string = process.env.SK!;
 const BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: string =
