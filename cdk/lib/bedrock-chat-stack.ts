@@ -104,6 +104,7 @@ export class BedrockChatStack extends cdk.Stack {
           exclude: [
             "**/node_modules/**",
             "**/dist/**",
+            "**/dev-dist/**",
             "**/.venv/**",
             "**/__pycache__/**",
             "**/cdk.out/**",
@@ -115,7 +116,10 @@ export class BedrockChatStack extends cdk.Stack {
             "**/examples/**",
             "**/docs/**",
             "**/.env",
+            "**/.env.local",
             "**/.gitignore",
+            "**/test/**",
+            "**/tests/**",
           ],
         }),
       ],
