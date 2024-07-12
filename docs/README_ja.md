@@ -54,7 +54,7 @@ chmod +x bin.sh
 ./bin.sh
 ```
 
-- 新規ユーザーまたは v1 ユーザーかどうかを聞かれます。その場合は `y` を入力してください。
+- 新規ユーザーまたは v1 ユーザーかどうかを聞かれます。v0 からの継続利用でない場合は `y` を入力してください。
 
 ### オプションのパラメータ
 
@@ -65,12 +65,12 @@ chmod +x bin.sh
 - **--ipv6-ranges**: 許可する IPv6 範囲のカンマ区切りリスト。（デフォルト: 全ての IPv6 アドレスを許可）
 - **--disable-ipv6**: IPv6 での接続を無効にします (デフォルト: 有効)
 - **--allowed-signup-email-domains**: サインアップ時に許可するメールドメインのカンマ区切りリスト。（デフォルト: ドメイン制限なし）
-- **--bedrock-region**: Bedrock が利用可能なリージョンを指定します。（デフォルト: us-east-1）
+- **--version**: デプロイする Bedrock Claude Chat のバージョン。 (デフォルト: v1)
 
 #### パラメータを指定したコマンド例:
 
 ```sh
-./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "ap-northeast-1"
+./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "ap-northeast-1" --version "v1.2.5"
 ```
 
 - 30 分ほど経過後、下記の出力が得られるのでブラウザからアクセスします

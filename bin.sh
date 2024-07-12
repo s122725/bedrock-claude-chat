@@ -42,6 +42,7 @@ IPV6_RANGES=""
 DISABLE_IPV6="false"
 ALLOWED_SIGN_UP_EMAIL_DOMAINS=""
 BEDROCK_REGION="us-east-1"
+VERSION="v1"
 
 # Parse command-line arguments for customization
 while [[ "$#" -gt 0 ]]; do
@@ -52,6 +53,7 @@ while [[ "$#" -gt 0 ]]; do
         --ipv6-ranges) IPV6_RANGES="$2"; shift ;;
         --bedrock-region) BEDROCK_REGION="$2"; shift ;;
         --allowed-signup-email-domains) ALLOWED_SIGN_UP_EMAIL_DOMAINS="$2"; shift ;;
+        --version) VERSION="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
     shift
@@ -72,7 +74,14 @@ aws cloudformation deploy \
   --stack-name $StackName \
   --template-file deploy.yml \
   --capabilities CAPABILITY_IAM \
-  --parameter-overrides AllowSelfRegister=$ALLOW_SELF_REGISTER DisableIpv6=$DISABLE_IPV6 Ipv4Ranges="$IPV4_RANGES" Ipv6Ranges="$IPV6_RANGES" AllowedSignUpEmailDomains="$ALLOWED_SIGN_UP_EMAIL_DOMAINS" BedrockRegion="$BEDROCK_REGION"
+  --parameter-overrides \
+    AllowSelfRegister=$ALLOW_SELF_REGISTER \
+    DisableIpv6=$DISABLE_IPV6 \
+    Ipv4Ranges="$IPV4_RANGES" \
+    Ipv6Ranges="$IPV6_RANGES" \
+    AllowedSignUpEmailDomains="$ALLOWED_SIGN_UP_EMAIL_DOMAINS" \
+    BedrockRegion="$BEDROCK_REGION" \
+    Version="$VERSION"
 
 echo "Waiting for the stack creation to complete..."
 echo "NOTE: this stack contains CodeBuild project which will be used for cdk deploy."

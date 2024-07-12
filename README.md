@@ -68,7 +68,7 @@ chmod +x bin.sh
 ./bin.sh
 ```
 
-- You will be asked if a new user or using v1. If so, enter `y`.
+- You will be asked if a new user or using v1. If you are not a continuing user from v0, please enter `y`.
 
 ### Optional Parameters
 
@@ -80,11 +80,12 @@ You can specify the following parameters during deployment to enhance security a
 - **--disable-ipv6**: Disable connections over IPv6. (default: enabled)
 - **--allowed-signup-email-domains**: Comma-separated list of allowed email domains for sign-up. (default: no domain restriction)
 - **--bedrock-region**: Define the region where bedrock is available. (default: us-east-1)
+- **--version**: The version of Bedrock Claude Chat to deploy. (default: v1)
 
 #### Example command with parameters:
 
 ```sh
-./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2"
+./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2" --version "v1.2.5"
 ```
 
 - After about 35 minutes, you will get the following output, which you can access from your browser
