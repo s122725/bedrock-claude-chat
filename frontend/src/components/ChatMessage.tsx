@@ -268,10 +268,13 @@ const ChatMessage: React.FC<Props> = (props) => {
               messageId={chatContent.id}>
               {chatContent.content[0].body}
             </ChatMessageMarkdown>
-            <RelatedImageGallery 
-              relatedDocuments={relatedDocuments}
-            />
-            {/* <img src={relatedDocuments[0].sourceLink} alt="Related Document" /> */}
+
+            {/* 生成AIの回答が完了したタイミングで画像を出す。回答中はrelated documentの全ての画像が表示されて、その後表示件数が絞るという挙動をするので、それを防ぐため。 */}
+            { chatContent?.usedChunks && (
+              <RelatedImageGallery 
+                relatedDocuments={relatedDocuments}
+              />
+            )}
           </div>
           )}
         </div>

@@ -16,7 +16,7 @@ export const functionDefinitionParam = {
   initialPolicy: [
   ],
   retry: true,
-  retryCount: 2,
+  retryCount: 5,
   outputPath: '$.Payload.body',
   resultPath: '$',
 }

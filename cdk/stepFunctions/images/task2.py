@@ -3,6 +3,7 @@ import boto3
 import logging
 import tempfile
 import os
+import json
 from lib.prompt import promptTest
 from lib.s3 import get_image_base64, get_text_from_s3, get_text_from_s3, text_upload_to_s3
 from lib.bedrock import get_base64_image_for_bedrock_content, run_multi_modal_prompt, get_model_id
@@ -62,7 +63,9 @@ def lambda_handler(event, context):
         base64_image = get_image_base64(bucket, image_object_key)
         image_contents = get_base64_image_for_bedrock_content(base64_image)
       
-        prompt = promptTest.format(ocrText)
+        # image_file_name からページ番号を抽出
+        page_number = int(image_file_name.split("page")[1].split(".")[0])
+        prompt = promptTest.format(ocrText, page_number)
 
         messages = [
           {
@@ -80,7 +83,7 @@ def lambda_handler(event, context):
             "content": [
               {
                 "type": "text",
-                "text": '\n\nAssistant:'
+                "text": '\n\nAssistant: <output> {'
               },
             ],
           },
@@ -92,12 +95,18 @@ def lambda_handler(event, context):
           max_tokens=4096
         )
 
-        logger.debug(f"response: {response["content"][0]['text']}")
-        logger.debug(f"length of response: {len(response["content"][0]['text'])}")
+        # logger.debug(response)
+        response['content'][0]['text'] = response['content'][0]['text'].replace("\n</output>", "").replace("</output>", "").replace("\n</ai_ocr_result>", "").replace("</ai_ocr_result>", "")
+        logger.info(response['content'][0]['text'])
+
+        json_result = json.loads(
+          "{" + response['content'][0]['text']
+        )
+        logger.info(json_result["ai_ocr_result"])
 
         # 結果をS3に保存
         text_object_key = f"{user_id}/{bot_id}/pdf_to_image/{filename}/text/{image_file_name.split(".")[0]}.txt"
-        text_upload_to_s3(bucket, response["content"][0]['text'], text_object_key)
+        text_upload_to_s3(bucket, json_result["ai_ocr_result"], text_object_key)
 
         # 返り値を返す
         return {

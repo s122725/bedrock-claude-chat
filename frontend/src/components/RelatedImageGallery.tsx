@@ -60,11 +60,22 @@ const ImageModal: React.FC<Props> = ({ imageUrls, idx }) => {
 const RelatedImageGallery: React.FC<{ relatedDocuments: { sourceLink: string }[] }> = ({
   relatedDocuments,
 }) => {
+
+  // 重複する sourceLink を取り除く
+  // "?"の前までの部分を取り出す
+  const uniqueSourceLinks = Array.from(
+    new Set(
+      relatedDocuments.map(
+        (doc) => doc.sourceLink.split('?')[0]
+      )
+    )
+  );
+
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-      {relatedDocuments.map((doc, idx) => (
+      {uniqueSourceLinks.map((sourceLink, idx) => (
         <div key={idx} style={{ margin: '0.5rem' }}>
-          <ImageModal imageUrls={doc.sourceLink} idx={idx} />
+          <ImageModal imageUrls={relatedDocuments.find(doc => doc.sourceLink.startsWith(sourceLink))?.sourceLink || ''} idx={idx} />
         </div>
       ))}
     </div>
