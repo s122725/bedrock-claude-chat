@@ -91,8 +91,6 @@ class StepFunctionsLoader(BaseLoader):
         """Wait for StepFunctions execution to complete."""
         sfn = boto3.client('stepfunctions')
         start_time = time.time()
-        logger.info(f"execution_arn: {execution_arn}")
-        logger.info(f"type(execution_arn): {type(execution_arn)}")
         while True:
             response = sfn.describe_execution(executionArn=execution_arn)
             logger.info(f"response: {response}")
@@ -139,7 +137,7 @@ class StepFunctionsLoader(BaseLoader):
         # PDFからテキストを抽出
         elements = self._get_elements()
         ocrText = "\n\n".join([str(el) for el in elements])
-        logger.info(f"ocrText: {ocrText}")
+        logger.debug(f"ocrText: {ocrText}")
 
         # PDFから抽出したテキストをS3にアップロード
         ocrResultObjectKey = f"{self.user_id}/{self.bot_id}/pdf_to_image/{self.filename}/text/ocrText.txt"
@@ -178,15 +176,15 @@ class StepFunctionsLoader(BaseLoader):
         # S3から結果を結果を取得する
         output = json.loads(sfn_exec_result['output'])
         resultObjectKeyList = output['resultObjectKeyList']
-        logger.info(f"resultObjectKeyList: {resultObjectKeyList}")
+        logger.debug(f"resultObjectKeyList: {resultObjectKeyList}")
         docs = []
         for resultObjectKey in resultObjectKeyList:
-            logger.info(f"resultObjectKey: {resultObjectKey}")
+            logger.debug(f"resultObjectKey: {resultObjectKey}")
             text_file_name = resultObjectKey["text_file_name"]
             image_file_name = resultObjectKey["image_file_name"]
 
             resultObject = self._get_text_from_s3(self.bucket, f"{self.user_id}/{self.bot_id}/pdf_to_image/{self.filename}/text/{text_file_name}")
-            logger.info(f"resultObject: {resultObject}")
+            logger.debug(f"resultObject: {resultObject}")
 
             docs.append(
                 Document(
