@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import ChatListDrawer from './ChatListDrawer';
 import { BaseProps } from '../@types/common';
 import LazyOutputText from './LazyOutputText';
@@ -16,6 +16,45 @@ type Props = BaseProps & {
   signOut?: () => void;
 };
 
+type ConversationRoutes = { path: (typeof allPaths)[number] }[];
+
+const usePathPattern = () => {
+  const location = useLocation();
+
+  const conversationRoutes: ConversationRoutes = useMemo(
+    () => [
+      { path: '/:conversationId' },
+      { path: '/bot/:botId' },
+      { path: '/' },
+      { path: '*' },
+    ],
+    []
+  );
+  const notConversationRoutes = useMemo(
+    () =>
+      allPaths
+        .filter(
+          (pattern) => !conversationRoutes.find(({ path }) => path === pattern)
+        )
+        .map((pattern) => ({ path: pattern })),
+    [conversationRoutes]
+  );
+  const matchedRoutes = useMemo(() => {
+    return matchRoutes(notConversationRoutes, location);
+  }, [location]);
+
+  const pathPattern = useMemo(
+    () => matchedRoutes?.[0]?.route.path ?? '/',
+    [matchedRoutes]
+  );
+
+  const isConversationOrNewChat = useMemo(
+    () => !matchedRoutes?.length,
+    [matchedRoutes]
+  );
+  return { isConversationOrNewChat, pathPattern };
+};
+
 const AppContent: React.FC<Props> = (props) => {
   const { getPageLabel } = usePageLabel();
   const { switchOpen: switchDrawer } = useDrawer();
@@ -23,26 +62,7 @@ const AppContent: React.FC<Props> = (props) => {
   const { conversationId } = useParams();
   const { getTitle } = useConversation();
   const { isGeneratedTitle } = useChat();
-
-  const location = useLocation();
-
-  const conversationOrNewChatRoutes: { path: (typeof allPaths)[number] }[] = [
-    { path: '/:conversationId' },
-    { path: '/bot/:botId' },
-    { path: '/' },
-    { path: '*' },
-  ];
-
-  const extractPathPattern = allPaths
-    .filter(
-      (pattern) =>
-        !conversationOrNewChatRoutes.find(({ path }) => path === pattern)
-    )
-    .map((pattern) => ({ path: pattern }));
-  const routes = matchRoutes(extractPathPattern, location);
-  const pathPattern = routes?.map(({ route }) => route.path)[0] ?? '/';
-
-  const isConversationOrNewChat = !routes?.length;
+  const { isConversationOrNewChat, pathPattern } = usePathPattern();
 
   const onClickNewChat = useCallback(() => {
     navigate('/');
