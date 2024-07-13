@@ -31,7 +31,9 @@ const useScroll = () => {
       });
     },
     scrollToBottom: () => {
-      if (disabled) return;
+      if (disabled) {
+        return;
+      }
       document.getElementById('messages')?.scrollTo({
         top: document.getElementById('messages')?.scrollHeight,
         behavior: 'instant',

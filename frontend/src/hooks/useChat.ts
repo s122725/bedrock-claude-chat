@@ -434,8 +434,9 @@ const useChat = () => {
     // post message
     const postPromise: Promise<string> = new Promise((resolve, reject) => {
       if (USE_STREAMING) {
-        if (bot?.hasAgent) send({ type: 'wakeup' });
-
+        if (bot?.hasAgent) {
+          send({ type: 'wakeup' });
+        }
         postStreaming({
           input,
           hasKnowledge: bot?.hasKnowledge,
@@ -626,8 +627,9 @@ const useChat = () => {
 
     setCurrentMessageId(NEW_MESSAGE_ID.ASSISTANT);
 
-    if (props?.bot?.hasAgent) send({ type: 'wakeup' });
-
+    if (props?.bot?.hasAgent) {
+      send({ type: 'wakeup' });
+    }
     postStreaming({
       input,
       dispatch: (c: string) => {

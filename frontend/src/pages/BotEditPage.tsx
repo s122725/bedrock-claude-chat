@@ -452,7 +452,9 @@ const BotEditPage: React.FC = () => {
   ]);
 
   const onClickCreate = useCallback(() => {
-    if (!isValid()) return;
+    if (!isValid()) {
+      return;
+    }
     setIsLoading(true);
     registerBot({
       agent: {
@@ -517,8 +519,9 @@ const BotEditPage: React.FC = () => {
   ]);
 
   const onClickEdit = useCallback(() => {
-    if (!isValid()) return;
-
+    if (!isValid()) {
+      return;
+    }
     if (!isNewBot) {
       setIsLoading(true);
       updateBot(botId, {

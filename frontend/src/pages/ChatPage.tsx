@@ -174,9 +174,9 @@ const ChatPage: React.FC = () => {
     });
   }, [inputBotParams, regenerate]);
 
-  const onContinueGenerate = useCallback(()=>{
-    continueGenerate({bot: inputBotParams});
-  }, [inputBotParams, continueGenerate])
+  const onContinueGenerate = useCallback(() => {
+    continueGenerate({ bot: inputBotParams });
+  }, [inputBotParams, continueGenerate]);
 
   useLayoutEffect(() => {
     if (messages.length > 0) {
@@ -267,7 +267,9 @@ const ChatPage: React.FC = () => {
               activeCodes['KeyO'];
       })();
 
-      if (!hasKeyDownCommand) return;
+      if (!hasKeyDownCommand) {
+        return;
+      }
       event.preventDefault();
       navigate('/');
     };
@@ -312,8 +314,9 @@ const ChatPage: React.FC = () => {
                     {bot?.owned && (
                       <PopoverItem
                         onClick={() => {
-                          if (!bot) return;
-                          onClickBotEdit(bot.id);
+                          if (bot) {
+                            onClickBotEdit(bot.id);
+                          }
                         }}>
                         <PiPencilLine />
                         {t('bot.titleSubmenu.edit')}
@@ -322,8 +325,9 @@ const ChatPage: React.FC = () => {
                     {bot?.isPublic && (
                       <PopoverItem
                         onClick={() => {
-                          if (!bot) return;
-                          onClickCopyUrl(bot.id);
+                          if (bot) {
+                            onClickCopyUrl(bot.id);
+                          }
                         }}>
                         <PiLink />
                         {copyLabel}
