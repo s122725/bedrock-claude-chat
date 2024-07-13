@@ -173,6 +173,11 @@ const translation = {
         description: '説明文',
         instruction: 'インストラクション',
       },
+      explore: {
+        label: {
+          pageTitle: 'ボットコンソール',
+        },
+      },
       apiSettings: {
         pageTitle: '共有されたボットのAPI公開設定',
         label: {

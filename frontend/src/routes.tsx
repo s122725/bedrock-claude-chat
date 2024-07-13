@@ -75,12 +75,15 @@ export const allPaths = getAllPaths(rootChildren);
 export const usePageLabel = () => {
   const { t } = useTranslation();
   const pageLabel: { path: (typeof allPaths)[number]; label: string }[] = [
-    { path: '/bot/explore', label: t('button.botConsole') },
+    { path: '/bot/explore', label: t('bot.explore.label.pageTitle') },
     {
       path: '/admin/shared-bot-analytics',
-      label: t('button.sharedBotAnalytics'),
+      label: t('admin.sharedBotAnalytics.label.pageTitle'),
     },
-    { path: '/admin/api-management', label: t('button.apiManagement') },
+    {
+      path: '/admin/api-management',
+      label: t('admin.apiManagement.label.pageTitle'),
+    },
   ];
 
   const getPageLabel = (pagePath: (typeof allPaths)[number]) =>
