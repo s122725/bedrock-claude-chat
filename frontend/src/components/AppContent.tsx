@@ -1,58 +1,19 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import ChatListDrawer from './ChatListDrawer';
 import { BaseProps } from '../@types/common';
 import LazyOutputText from './LazyOutputText';
 import { PiList, PiPlus } from 'react-icons/pi';
 import ButtonIcon from './ButtonIcon';
 import SnackbarProvider from '../providers/SnackbarProvider';
-import { Outlet, matchRoutes, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import useDrawer from '../hooks/useDrawer';
 import useConversation from '../hooks/useConversation';
 import useChat from '../hooks/useChat';
-import { allPaths, usePageLabel } from '../routes';
+import { usePageLabel, usePageTitlePathPattern } from '../routes';
 
 type Props = BaseProps & {
   signOut?: () => void;
-};
-
-type ConversationRoutes = { path: (typeof allPaths)[number] }[];
-
-const usePathPattern = () => {
-  const location = useLocation();
-
-  const conversationRoutes: ConversationRoutes = useMemo(
-    () => [
-      { path: '/:conversationId' },
-      { path: '/bot/:botId' },
-      { path: '/' },
-      { path: '*' },
-    ],
-    []
-  );
-  const notConversationRoutes = useMemo(
-    () =>
-      allPaths
-        .filter(
-          (pattern) => !conversationRoutes.find(({ path }) => path === pattern)
-        )
-        .map((pattern) => ({ path: pattern })),
-    [conversationRoutes]
-  );
-  const matchedRoutes = useMemo(() => {
-    return matchRoutes(notConversationRoutes, location);
-  }, [location]);
-
-  const pathPattern = useMemo(
-    () => matchedRoutes?.[0]?.route.path ?? '/',
-    [matchedRoutes]
-  );
-
-  const isConversationOrNewChat = useMemo(
-    () => !matchedRoutes?.length,
-    [matchedRoutes]
-  );
-  return { isConversationOrNewChat, pathPattern };
 };
 
 const AppContent: React.FC<Props> = (props) => {
@@ -62,7 +23,7 @@ const AppContent: React.FC<Props> = (props) => {
   const { conversationId } = useParams();
   const { getTitle } = useConversation();
   const { isGeneratedTitle } = useChat();
-  const { isConversationOrNewChat, pathPattern } = usePathPattern();
+  const { isConversationOrNewChat, pathPattern } = usePageTitlePathPattern();
 
   const onClickNewChat = useCallback(() => {
     navigate('/');

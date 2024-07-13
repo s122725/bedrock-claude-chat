@@ -8,7 +8,13 @@ import AdminSharedBotAnalyticsPage from './pages/AdminSharedBotAnalyticsPage.tsx
 import AdminApiManagementPage from './pages/AdminApiManagementPage.tsx';
 import AdminBotManagementPage from './pages/AdminBotManagementPage.tsx';
 import { useTranslation } from 'react-i18next';
-import { createBrowserRouter, RouteObject } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  matchRoutes,
+  RouteObject,
+  useLocation,
+} from 'react-router-dom';
+import { useMemo } from 'react';
 
 const rootChildren = [
   {
@@ -57,7 +63,7 @@ const rootChildren = [
   },
 ] as const;
 
-export const routes = [
+const routes = [
   {
     path: '/',
     element: <App />,
@@ -92,3 +98,42 @@ export const usePageLabel = () => {
 };
 
 export const router = createBrowserRouter(routes as unknown as RouteObject[]);
+
+type ConversationRoutes = { path: (typeof allPaths)[number] }[];
+
+export const usePageTitlePathPattern = () => {
+  const location = useLocation();
+
+  const conversationRoutes: ConversationRoutes = useMemo(
+    () => [
+      { path: '/:conversationId' },
+      { path: '/bot/:botId' },
+      { path: '/' },
+      { path: '*' },
+    ],
+    []
+  );
+  const notConversationRoutes = useMemo(
+    () =>
+      allPaths
+        .filter(
+          (pattern) => !conversationRoutes.find(({ path }) => path === pattern)
+        )
+        .map((pattern) => ({ path: pattern })),
+    [conversationRoutes]
+  );
+  const matchedRoutes = useMemo(() => {
+    return matchRoutes(notConversationRoutes, location);
+  }, [location]);
+
+  const pathPattern = useMemo(
+    () => matchedRoutes?.[0]?.route.path ?? '/',
+    [matchedRoutes]
+  );
+
+  const isConversationOrNewChat = useMemo(
+    () => !matchedRoutes?.length,
+    [matchedRoutes]
+  );
+  return { isConversationOrNewChat, pathPattern };
+};
