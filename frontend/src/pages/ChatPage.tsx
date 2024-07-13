@@ -267,11 +267,10 @@ const ChatPage: React.FC = () => {
               activeCodes['KeyO'];
       })();
 
-      if (!hasKeyDownCommand) {
-        return;
+      if (hasKeyDownCommand) {
+        event.preventDefault();
+        navigate('/');
       }
-      event.preventDefault();
-      navigate('/');
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
