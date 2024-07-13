@@ -35,7 +35,7 @@ const AppContent: React.FC<Props> = (props) => {
         }}
       />
 
-      <main className="min-h-dvh relative flex-1 overflow-y-hidden transition-width">
+      <main className="min-h-dvh relative flex flex-col flex-1 overflow-y-hidden transition-width">
         <header className="visible flex h-12 w-full items-center bg-aws-squid-ink p-3 text-lg text-aws-font-color-white lg:hidden lg:h-0">
           <button
             className="mr-2 rounded-full p-2 hover:brightness-50 focus:outline-none focus:ring-1 "
@@ -45,7 +45,7 @@ const AppContent: React.FC<Props> = (props) => {
             <PiList />
           </button>
 
-          <div className="flex grow justify-center">
+          <div className="flex-1 justify-center">
             {isGeneratedTitle ? (
               <>
                 <LazyOutputText text={getTitle(conversationId ?? '')} />
