@@ -31,13 +31,12 @@ const useScroll = () => {
       });
     },
     scrollToBottom: () => {
-      if (disabled) {
-        return;
+      if (!disabled) {
+        document.getElementById('messages')?.scrollTo({
+          top: document.getElementById('messages')?.scrollHeight,
+          behavior: 'instant',
+        });
       }
-      document.getElementById('messages')?.scrollTo({
-        top: document.getElementById('messages')?.scrollHeight,
-        behavior: 'instant',
-      });
     },
   };
 };
