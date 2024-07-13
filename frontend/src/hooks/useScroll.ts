@@ -5,7 +5,9 @@ const useScroll = () => {
 
   useEffect(() => {
     const elem = document.getElementById('messages');
-    if (!elem) return;
+    if (!elem) {
+      return;
+    }
     const listener = () => {
       // 最下部までスクロールしている場合は、自動スクロールする
       if (elem.scrollTop + elem.clientHeight === elem.scrollHeight) {
