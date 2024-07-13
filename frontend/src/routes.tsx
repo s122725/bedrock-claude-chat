@@ -124,7 +124,7 @@ export const usePageTitlePathPattern = () => {
   );
   const matchedRoutes = useMemo(() => {
     return matchRoutes(notConversationRoutes, location);
-  }, [location]);
+  }, [location, notConversationRoutes]);
 
   const pathPattern = useMemo(
     () => matchedRoutes?.[0]?.route.path ?? '/',
