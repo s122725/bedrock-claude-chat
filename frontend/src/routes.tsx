@@ -8,6 +8,7 @@ import AdminSharedBotAnalyticsPage from './pages/AdminSharedBotAnalyticsPage.tsx
 import AdminApiManagementPage from './pages/AdminApiManagementPage.tsx';
 import AdminBotManagementPage from './pages/AdminBotManagementPage.tsx';
 import { useTranslation } from 'react-i18next';
+import { createBrowserRouter, RouteObject } from 'react-router-dom';
 
 const rootChildren = [
   {
@@ -86,3 +87,5 @@ export const usePageLabel = () => {
     pageLabel.find(({ path }) => path === pagePath)?.label;
   return { pageLabel, getPageLabel };
 };
+
+export const router = createBrowserRouter(routes as unknown as RouteObject[]);

@@ -1,17 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import {
-  RouteObject,
-  RouterProvider,
-  createBrowserRouter,
-} from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
 
 import './i18n';
-import { routes } from './routes';
-
-// unsafe
-const router = createBrowserRouter(routes as unknown as RouteObject[]);
+import { router } from './routes';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
