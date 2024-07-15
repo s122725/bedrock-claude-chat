@@ -78,6 +78,21 @@ def insert_to_postgres(
             ):
                 id_ = str(ULID())
                 logger.info(f"Preview of content {i}: {content[:200]}")
+
+                logger.info(f"Type of embedding: {type(embedding)} ")
+                logger.info(f"Type of source: {type(source)} ")
+                logger.info(f"Type of content: {type(content)} ")
+
+                if b'\x00' in source:
+                    logger.info(f"Source contains null byte: {source}")
+                    source = source.replace(b'\x00', b'')
+                if b'\x00' in content:
+                    logger.info(f"Content contains null byte: {content}")
+                    content = content.replace(b'\x00', b'')
+                if b'\x00' in embedding:
+                    logger.info(f"Embedding contains null byte: {embedding}")
+                    embedding = embedding.replace(b'\x00', b'')
+
                 values_to_insert.append(
                     (id_, bot_id, content, source, json.dumps(embedding))
                 )
