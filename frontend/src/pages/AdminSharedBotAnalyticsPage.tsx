@@ -11,6 +11,7 @@ import { PiArrowDown } from 'react-icons/pi';
 import Skeleton from '../components/Skeleton';
 import { twMerge } from 'tailwind-merge';
 import { useNavigate } from 'react-router-dom';
+import { TooltipDirection } from '../constants';
 
 const DATA_FORMAT = 'YYYYMMDD';
 
@@ -63,7 +64,7 @@ const AdminSharedBotAnalyticsPage: React.FC = () => {
                   {t('admin.sharedBotAnalytics.label.pageTitle')}
                 </div>
                 <Help
-                  direction="right"
+                  direction={TooltipDirection.RIGHT}
                   message={t('admin.sharedBotAnalytics.help.overview')}
                 />
               </div>

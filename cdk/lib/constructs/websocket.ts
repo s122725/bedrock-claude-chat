@@ -91,7 +91,7 @@ export class WebSocket extends Construct {
         path.join(__dirname, "../../../backend"),
         {
           platform: Platform.LINUX_AMD64,
-          file: "websocket.Dockerfile",
+          file: "lambda.Dockerfile",
         }
       ),
       vpc: props.vpc,

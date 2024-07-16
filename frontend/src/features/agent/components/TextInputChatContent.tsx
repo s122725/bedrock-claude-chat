@@ -18,7 +18,6 @@ type Props = BaseProps & {
   disabledSend?: boolean;
   disabled?: boolean;
   placeholder?: string;
-  dndMode?: boolean;
   onSend: (content: string, base64EncodedImages?: string[]) => void;
   onRegenerate: () => void;
 };

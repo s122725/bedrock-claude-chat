@@ -19,6 +19,7 @@ export interface FrontendProps {
   readonly webAclId: string;
   readonly enableMistral: boolean;
   readonly accessLogBucket?: IBucket;
+  readonly enableIpV6: boolean;
 }
 
 export class Frontend extends Construct {
@@ -76,6 +77,7 @@ export class Frontend extends Construct {
         },
       }),
       webACLId: props.webAclId,
+      enableIpV6: props.enableIpV6,
     });
 
     NagSuppressions.addResourceSuppressions(distribution, [

@@ -40,6 +40,11 @@ def get_anthropic_client(region=BEDROCK_REGION):
     return client
 
 
+def get_bedrock_agent_client(region=REGION):
+    client = boto3.client("bedrock-agent-runtime", region)
+    return client
+
+
 def get_current_time():
     # Get current time as milliseconds epoch time
     return int(datetime.now().timestamp() * 1000)

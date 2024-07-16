@@ -17,6 +17,7 @@ export type BotKnowledge = {
   // Sitemap cannot be used yet.
   sitemapUrls: string[];
   filenames: string[];
+  s3Urls: string[];
 };
 
 export type ConversationQuickStarter = {
@@ -37,6 +38,7 @@ export type BotKnowledgeDiff = {
   addedFilenames: string[];
   deletedFilenames: string[];
   unchangedFilenames: string[];
+  s3Urls: string[];
 };
 
 export type BotSyncStatus = 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';

@@ -6,9 +6,13 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.7.0 /lambda-adapter /opt
 WORKDIR /backend
 
 COPY ./pyproject.toml ./poetry.lock ./
-RUN pip install poetry --no-cache-dir && \
+
+ENV POETRY_REQUESTS_TIMEOUT=10800
+RUN python -m pip install --upgrade pip && \
+    pip install poetry --no-cache-dir && \
     poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi
+    poetry install --no-interaction --no-ansi --only main && \
+    poetry cache clear --all pypi
 
 COPY ./app ./app
 

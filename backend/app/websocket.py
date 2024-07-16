@@ -120,7 +120,10 @@ def process_chat_input(
             role="assistant",
             content=[
                 ContentModel(
-                    content_type="text", body=response["output"], media_type=None
+                    content_type="text",
+                    body=response["output"],
+                    media_type=None,
+                    file_name=None,
                 )
             ],
             model=chat_input.message.model,
@@ -166,9 +169,7 @@ def process_chat_input(
         # Fetch most related documents from vector store
         # NOTE: Currently embedding not support multi-modal. For now, use the last text content.
         query = conversation.message_map[user_msg_id].content[-1].body
-        search_results = search_related_docs(
-            bot_id=bot.id, limit=bot.search_params.max_results, query=query
-        )
+        search_results = search_related_docs(bot=bot, query=query)
         logger.info(f"Search results from vector store: {search_results}")
 
         # Insert contexts to instruction
@@ -232,7 +233,10 @@ def process_chat_input(
                 role="assistant",
                 content=[
                     ContentModel(
-                        content_type="text", body=arg.full_token, media_type=None
+                        content_type="text",
+                        body=arg.full_token,
+                        media_type=None,
+                        file_name=None,
                     )
                 ],
                 model=chat_input.message.model,

@@ -99,6 +99,7 @@ def prepare_conversation(
                         content_type="text",
                         media_type=None,
                         body="",
+                        file_name=None,
                     )
                 ],
                 model=chat_input.message.model,
@@ -123,6 +124,7 @@ def prepare_conversation(
                         content_type="text",
                         media_type=None,
                         body=bot.instruction,
+                        file_name=None,
                     )
                 ],
                 model=chat_input.message.model,
@@ -197,6 +199,7 @@ def prepare_conversation(
                     content_type=c.content_type,
                     media_type=c.media_type,
                     body=c.body,
+                    file_name=c.file_name,
                 )
                 for c in chat_input.message.content
             ],
@@ -313,6 +316,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             logger.info(f"Thinking log: {thinking_log}")
 
         reply_txt = agent_response["output"]
+        conversation.should_continue = False
     else:
         message_map = conversation.message_map
         search_results = []
@@ -322,9 +326,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             # NOTE: Currently embedding not support multi-modal. For now, use the last content.
             query = conversation.message_map[user_msg_id].content[-1].body
 
-            search_results = search_related_docs(
-                bot_id=bot.id, limit=bot.search_params.max_results, query=query
-            )
+            search_results = search_related_docs(bot=bot, query=query)
             logger.info(f"Search results from vector store: {search_results}")
 
             # Insert contexts to instruction
@@ -387,13 +389,19 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             input_tokens = metrics.input_tokens
             output_tokens = metrics.output_tokens
         price = calculate_price(chat_input.message.model, input_tokens, output_tokens)
+        # Published API does not support continued generation
+        conversation.should_continue = False
 
     # Issue id for new assistant message
     assistant_msg_id = str(ULID())
     # Append bedrock output to the existing conversation
     message = MessageModel(
         role="assistant",
-        content=[ContentModel(content_type="text", body=reply_txt, media_type=None)],
+        content=[
+            ContentModel(
+                content_type="text", body=reply_txt, media_type=None, file_name=None
+            )
+        ],
         model=chat_input.message.model,
         children=[],
         parent=user_msg_id,
@@ -416,9 +424,6 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
 
     conversation.total_price += price
 
-    # If continued, save the state
-    conversation.should_continue = response.stop_reason == "max_tokens"
-
     # Store updated conversation
     store_conversation(user_id, conversation)
     # Update bot last used time
@@ -437,6 +442,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                     content_type=c.content_type,
                     body=c.body,
                     media_type=c.media_type,
+                    file_name=None,
                 )
                 for c in message.content
             ],
@@ -503,6 +509,7 @@ def propose_conversation_title(
                 content_type="text",
                 body=PROMPT,
                 media_type=None,
+                file_name=None,
             )
         ],
         model=model,
@@ -540,6 +547,7 @@ def fetch_conversation(user_id: str, conversation_id: str) -> Conversation:
                     content_type=c.content_type,
                     body=c.body,
                     media_type=c.media_type,
+                    file_name=c.file_name,
                 )
                 for c in message.content
             ],
@@ -605,8 +613,7 @@ def fetch_related_documents(
         return None
 
     chunks = search_related_docs(
-        bot_id=bot.id,
-        limit=bot.search_params.max_results,
+        bot=bot,
         query=chat_input.message.content[-1].body,
     )
 
