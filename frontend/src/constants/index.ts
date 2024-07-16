@@ -21,7 +21,7 @@ export const EDGE_EMBEDDING_PARAMS = {
 
 export const EDGE_GENERATION_PARAMS = {
   maxTokens: {
-    MAX: 4096,
+    MAX: 16384,
     MIN: 1,
     STEP: 1,
   },
