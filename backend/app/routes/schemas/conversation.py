@@ -42,14 +42,14 @@ class Content(BaseSchema):
     def check_body(cls, v, values):
         content_type = values.get("content_type")
 
-        if content_type in ["image", "textAttachment"]:
-            try:
-                # Check if the body is a valid base64 string
-                base64.b64decode(v, validate=True)
-            except Exception:
-                raise ValueError(
-                    "body must be a valid base64 string if `content_type` is `image` or `textAttachment`"
-                )
+        # if content_type in ["image", "textAttachment"]:
+        #     try:
+        #         # Check if the body is a valid base64 string
+        #         base64.b64decode(v, validate=True)
+        #     except Exception:
+        #         raise ValueError(
+        #             "body must be a valid base64 string if `content_type` is `image` or `textAttachment`"
+        #         )
 
         if content_type == "text" and not isinstance(v, str):
             raise ValueError("body must be str if `content_type` is `text`")
