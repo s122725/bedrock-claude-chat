@@ -4,7 +4,7 @@ import os
 import requests
 
 
-def get_pdf_info(url) -> tuple[str, str]:
+def get_pdf_info(url) -> tuple[str, bytes]:
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -15,13 +15,16 @@ def get_pdf_info(url) -> tuple[str, str]:
             filename = os.path.basename(url)
 
         file_content_byte = response.content
-        file_content = base64.b64encode(file_content_byte).decode("utf-8").strip()
 
-        return filename, file_content
+        return filename, file_content_byte
     else:
         raise Exception(f"Failed to fetch PDF from {url}")
 
 
-def get_aws_overview() -> tuple[str, str]:
+def get_aws_overview() -> tuple[str, bytes]:
     URL = "https://pages.awscloud.com/rs/112-TZM-766/images/Architecting%20on%20AWS.pdf"
     return get_pdf_info(URL)
+
+
+def get_test_markdown() -> str:
+    return "##\nThis is a test text."

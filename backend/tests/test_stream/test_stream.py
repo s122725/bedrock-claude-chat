@@ -9,7 +9,7 @@ from app.repositories.models.conversation import ContentModel, MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.stream import ConverseApiStreamHandler, OnStopInput
 from get_aws_logo import get_aws_logo, get_cdk_logo
-from get_pdf import get_aws_overview
+from get_pdf import get_aws_overview, get_test_markdown
 
 
 def on_stream(x: str) -> None:
@@ -150,8 +150,10 @@ class TestConverseApiStreamHandler(unittest.TestCase):
         self._run(message)
 
     def test_run_with_attachment(self):
-        _, aws_pdf_body = get_aws_overview()
-        aws_pdf_filename = "aws_arch_overview.pdf"
+        # _, aws_pdf_body = get_aws_overview()
+        # aws_pdf_filename = "aws_arch_overview.pdf"
+        body = get_test_markdown()
+        file_name = "test.md"
 
         message = MessageModel(
             role="user",
@@ -159,8 +161,8 @@ class TestConverseApiStreamHandler(unittest.TestCase):
                 ContentModel(
                     content_type="textAttachment",
                     media_type=None,
-                    body=aws_pdf_body,
-                    file_name=aws_pdf_filename,
+                    body=body,
+                    file_name=file_name,
                 ),
                 ContentModel(
                     content_type="text",

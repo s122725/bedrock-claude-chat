@@ -67,12 +67,30 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
+    logger.warn(
+        "compose_args is deprecated. Use compose_args_for_converse_api instead."
+    )
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
         )
     )
+
+
+def _get_converse_supported_format(ext: str) -> str:
+    supported_formats = {
+        "pdf": "pdf",
+        "csv": "csv",
+        "doc": "doc",
+        "docx": "docx",
+        "xls": "xls",
+        "xlsx": "xlsx",
+        "html": "html",
+        "txt": "txt",
+        "md": "md",
+    }
+    # If the extension is not supported, return "txt"
+    return supported_formats.get(ext, "txt")
 
 
 @no_type_check
@@ -100,6 +118,7 @@ def compose_args_for_converse_api(
                         {
                             "image": {
                                 "format": format,
+                                # decode base64 encoded image
                                 "source": {"bytes": base64.b64decode(c.body)},
                             }
                         }
@@ -108,12 +127,15 @@ def compose_args_for_converse_api(
                     content_blocks.append(
                         {
                             "document": {
-                                "format": Path(c.file_name).suffix[
-                                    1:
-                                ],  # e.g. "document.txt" -> "txt"
+                                "format": _get_converse_supported_format(
+                                    Path(c.file_name).suffix[
+                                        1:
+                                    ],  # e.g. "document.txt" -> "txt"
+                                ),
                                 "name": Path(
                                     c.file_name
                                 ).stem,  # e.g. "document.txt" -> "document"
+                                # encode text attachment body
                                 "source": {"bytes": c.body.encode("utf-8")},
                             }
                         }
