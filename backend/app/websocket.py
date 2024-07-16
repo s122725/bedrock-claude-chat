@@ -14,21 +14,20 @@ from app.agents.langchain import BedrockLLM
 from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
-from app.bedrock import compose_args
+from app.bedrock import compose_args_for_converse_api
 from app.repositories.conversation import RecordNotFoundError, store_conversation
 from app.repositories.models.conversation import ChunkModel, ContentModel, MessageModel
 from app.routes.schemas.conversation import ChatInput
-from app.stream import OnStopInput, get_stream_handler_type
+from app.stream import ConverseApiStreamHandler, OnStopInput
 from app.usecases.bot import modify_bot_last_used_time
 from app.usecases.chat import insert_knowledge, prepare_conversation, trace_to_root
-from app.utils import get_anthropic_client, get_current_time, is_anthropic_model
+from app.utils import get_current_time
 from app.vector_search import filter_used_results, get_source_link, search_related_docs
 from boto3.dynamodb.conditions import Attr, Key
 from ulid import ULID
 
 WEBSOCKET_SESSION_TABLE_NAME = os.environ["WEBSOCKET_SESSION_TABLE_NAME"]
 
-client = get_anthropic_client()
 dynamodb_client = boto3.resource("dynamodb")
 table = dynamodb_client.Table(WEBSOCKET_SESSION_TABLE_NAME)
 
@@ -168,7 +167,7 @@ def process_chat_input(
 
         # Fetch most related documents from vector store
         # NOTE: Currently embedding not support multi-modal. For now, use the last text content.
-        query = conversation.message_map[user_msg_id].content[-1].body
+        query: str = conversation.message_map[user_msg_id].content[-1].body  # type: ignore[assignment]
         search_results = search_related_docs(bot=bot, query=query)
         logger.info(f"Search results from vector store: {search_results}")
 
@@ -186,11 +185,11 @@ def process_chat_input(
     if not chat_input.continue_generate:
         messages.append(chat_input.message)  # type: ignore
 
-    args = compose_args(
+    args = compose_args_for_converse_api(
         messages,
         chat_input.message.model,
         instruction=(
-            message_map["instruction"].content[0].body
+            message_map["instruction"].content[0].body  # type: ignore[union-attr]
             if "instruction" in message_map
             else None
         ),
@@ -210,7 +209,7 @@ def process_chat_input(
             # For continue generate
             conversation.message_map[conversation.last_message_id].content[
                 0
-            ].body += arg.full_token
+            ].body += arg.full_token  # type: ignore[operator]
         else:
             used_chunks = None
             if bot and bot.display_retrieved_chunks:
@@ -266,7 +265,7 @@ def process_chat_input(
             ConnectionId=connection_id, Data=last_data_to_send
         )
 
-    stream_handler = get_stream_handler_type(chat_input.message.model)(
+    stream_handler = ConverseApiStreamHandler(
         model=chat_input.message.model,
         on_stream=on_stream,
         on_stop=on_stop,

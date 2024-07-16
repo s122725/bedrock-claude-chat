@@ -1,3 +1,4 @@
+import base64
 from typing import Literal
 
 from app.routes.schemas.base import BaseSchema
@@ -28,7 +29,32 @@ class Content(BaseSchema):
         None,
         description="File name of the attachment. Must be specified if `content_type` is `textAttachment`.",
     )
-    body: str = Field(..., description="Content body. Text or base64 encoded image.")
+    body: str = Field(..., description="Content body.")
+
+    @validator("media_type", pre=True)
+    def check_media_type(cls, v, values):
+        content_type = values.get("content_type")
+        if content_type == "image" and v is None:
+            raise ValueError("media_type is required if `content_type` is `image`")
+        return v
+
+    @validator("body", pre=True)
+    def check_body(cls, v, values):
+        content_type = values.get("content_type")
+
+        if content_type in ["image", "textAttachment"]:
+            try:
+                # Check if the body is a valid base64 string
+                base64.b64decode(v, validate=True)
+            except Exception:
+                raise ValueError(
+                    "body must be a valid base64 string if `content_type` is `image` or `textAttachment`"
+                )
+
+        if content_type == "text" and not isinstance(v, str):
+            raise ValueError("body must be str if `content_type` is `text`")
+
+        return v
 
 
 class FeedbackInput(BaseSchema):

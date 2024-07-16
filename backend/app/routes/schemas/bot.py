@@ -32,7 +32,6 @@ class EmbeddingParams(BaseSchema):
 
 class GenerationParams(BaseSchema):
     max_tokens: int
-    top_k: int
     top_p: float
     temperature: float
     stop_sequences: list[str]

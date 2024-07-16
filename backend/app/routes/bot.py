@@ -156,7 +156,6 @@ def get_private_bot(request: Request, bot_id: str):
         ),
         generation_params=GenerationParams(
             max_tokens=bot.generation_params.max_tokens,
-            top_k=bot.generation_params.top_k,
             top_p=bot.generation_params.top_p,
             temperature=bot.generation_params.temperature,
             stop_sequences=bot.generation_params.stop_sequences,

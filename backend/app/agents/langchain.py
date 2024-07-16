@@ -5,20 +5,17 @@ import logging
 import os
 from typing import Any, Iterator, Optional
 
-from anthropic.types import ContentBlockDeltaEvent, MessageDeltaEvent, MessageStopEvent
 from app.bedrock import (
-    calculate_price,
-    compose_args,
-    get_bedrock_response,
-    get_model_id,
+    ConverseApiRequest,
+    call_converse_api,
+    compose_args_for_converse_api,
 )
 from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
 from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import ContentModel, MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.routes.schemas.conversation import type_model_name
-from app.stream import BaseStreamHandler, OnStopInput, get_stream_handler_type
-from app.utils import get_anthropic_client, is_anthropic_model
+from app.stream import ConverseApiStreamHandler, OnStopInput
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from langchain_core.language_models import LLM
 from langchain_core.outputs import GenerationChunk
@@ -41,7 +38,7 @@ class BedrockLLM(LLM):
 
     model: type_model_name
     generation_params: GenerationParamsModel
-    stream_handler: BaseStreamHandler
+    stream_handler: ConverseApiStreamHandler
 
     @classmethod
     def from_model(
@@ -52,14 +49,16 @@ class BedrockLLM(LLM):
         generation_params = generation_params or GenerationParamsModel(
             **DEFAULT_GENERATION_CONFIG
         )
-        stream_handler = get_stream_handler_type(model).from_model(model)
+        stream_handler = ConverseApiStreamHandler.from_model(model)
         return cls(
             model=model,
             generation_params=generation_params,
             stream_handler=stream_handler,
         )
 
-    def __prepare_args_from_prompt(self, prompt: str, stream: bool) -> dict:
+    def __prepare_args_from_prompt(
+        self, prompt: str, stream: bool
+    ) -> ConverseApiRequest:
         """Prepare arguments from the given prompt."""
         message = MessageModel(
             role="user",
@@ -79,7 +78,7 @@ class BedrockLLM(LLM):
             used_chunks=None,
             thinking_log=None,
         )
-        args = compose_args(
+        args = compose_args_for_converse_api(
             [message],
             self.model,
             instruction=None,
@@ -96,13 +95,9 @@ class BedrockLLM(LLM):
         **kwargs: Any,
     ) -> str:
         args = self.__prepare_args_from_prompt(prompt, stream=False)
-        if self.is_anthropic_model:
-            client = get_anthropic_client()
-            response = client.messages.create(**args)
-            reply_txt = response.content[0].text
-        else:
-            response = get_bedrock_response(args)  # type: ignore
-            reply_txt = response["outputs"][0]["text"]  # type: ignore
+        response = call_converse_api(args)
+        reply_txt = response["output"]["message"]["content"][0]["text"]
+
         return reply_txt
 
     def _stream(
@@ -135,11 +130,7 @@ class BedrockLLM(LLM):
 
         self.stream_handler.bind(on_stream=_on_stream, on_stop=_on_stop)
 
-        yield from self.stream_handler.run(args)
-
-    @property
-    def is_anthropic_model(self) -> bool:
-        return is_anthropic_model(get_model_id(self.model))
+        yield from self.stream_handler.run(args)  # type: ignore[no-any-return]
 
     @property
     def _identifying_params(self) -> dict[str, Any]:

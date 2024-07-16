@@ -3,7 +3,6 @@ from typing import TypedDict
 
 class GenerationParams(TypedDict):
     max_tokens: int
-    top_k: int
     top_p: float
     temperature: float
     stop_sequences: list[str]
@@ -21,7 +20,6 @@ class EmbeddingConfig(TypedDict):
 # See: https://docs.anthropic.com/claude/reference/complete_post
 DEFAULT_GENERATION_CONFIG: GenerationParams = {
     "max_tokens": 2000,
-    "top_k": 250,
     "top_p": 0.999,
     "temperature": 0.6,
     "stop_sequences": ["Human: ", "Assistant: "],
@@ -30,7 +28,6 @@ DEFAULT_GENERATION_CONFIG: GenerationParams = {
 # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-mistral.html#model-parameters-mistral-request-response
 DEFAULT_MISTRAL_GENERATION_CONFIG: GenerationParams = {
     "max_tokens": 4096,
-    "top_k": 50,
     "top_p": 0.9,
     "temperature": 0.5,
     "stop_sequences": ["[INST]", "[/INST]"],

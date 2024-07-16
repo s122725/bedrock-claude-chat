@@ -49,7 +49,6 @@ def create_test_private_bot(
         ),
         generation_params=GenerationParamsModel(
             max_tokens=2000,
-            top_k=250,
             top_p=0.999,
             temperature=0.6,
             stop_sequences=["Human: ", "Assistant: "],
@@ -109,7 +108,6 @@ def create_test_public_bot(
         ),
         generation_params=GenerationParamsModel(
             max_tokens=2000,
-            top_k=250,
             top_p=0.999,
             temperature=0.6,
             stop_sequences=["Human: ", "Assistant: "],

@@ -198,7 +198,6 @@ Users can adjust the [text generation parameters](https://docs.anthropic.com/cla
 ```py
 DEFAULT_GENERATION_CONFIG = {
     "max_tokens": 2000,
-    "top_k": 250,
     "top_p": 0.999,
     "temperature": 0.6,
     "stop_sequences": ["Human: ", "Assistant: "],

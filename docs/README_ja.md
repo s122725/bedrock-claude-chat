@@ -185,7 +185,6 @@ cdk.json 内の`enableMistral`を`true`に更新し、`cdk deploy`を実行し�
 GENERATION_CONFIG = {
     "max_tokens_to_sample": 500,
     "temperature": 0.6,
-    "top_k": 250,
     "top_p": 0.999,
     "stop_sequences": ["Human: ", "Assistant: "],
 }

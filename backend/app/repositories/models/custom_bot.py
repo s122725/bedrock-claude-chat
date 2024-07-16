@@ -1,7 +1,7 @@
 from app.repositories.models.common import Float
+from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.routes.schemas.bot import type_sync_status
 from pydantic import BaseModel
-from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 
 
 class EmbeddingParamsModel(BaseModel):
@@ -35,7 +35,6 @@ class KnowledgeModel(BaseModel):
 
 class GenerationParamsModel(BaseModel):
     max_tokens: int
-    top_k: int
     top_p: Float
     temperature: Float
     stop_sequences: list[str]

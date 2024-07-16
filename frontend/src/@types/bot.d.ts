@@ -49,7 +49,6 @@ export type BotListItem = BotMeta & {
 
 export type GenerationParams = {
   maxTokens: number;
-  topK: number;
   topP: number;
   temperature: number;
   stopSequences: string[];
