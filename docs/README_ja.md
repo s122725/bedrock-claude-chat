@@ -45,7 +45,7 @@
 
 - [CloudShell](https://console.aws.amazon.com/cloudshell/home)をデプロイしたいリージョン (ap-northeast-1 など) で開きます
 
-- 下記のコマンドでデプロイ実行します。もし何らかのセキュリティポリシーがある場合は[オプションのパラメータ](#オプションのパラメータ)もご覧ください。
+- 下記のコマンドでデプロイを実行します。デプロイするバージョンを指定したい場合や、セキュリティポリシーを適用する必要がある場合は、[オプションのパラメータ](#オプションのパラメータ)から該当するものを指定してください。
 
 ```sh
 git clone https://github.com/aws-samples/bedrock-claude-chat.git
@@ -66,7 +66,7 @@ chmod +x bin.sh
 - **--disable-ipv6**: IPv6 での接続を無効にします (デフォルト: 有効)
 - **--allowed-signup-email-domains**: サインアップ時に許可するメールドメインのカンマ区切りリスト。（デフォルト: ドメイン制限なし）
 - **--bedrock-region**: Bedrock が利用可能なリージョンを指定します。（デフォルト: us-east-1）
-- **--version**: デプロイする Bedrock Claude Chat のバージョン。 (デフォルト: v1)
+- **--version**: デプロイする Bedrock Claude Chat のバージョン。 (デフォルト: 開発中の最新バージョン)
 
 #### パラメータを指定したコマンド例:
 
@@ -80,22 +80,15 @@ chmod +x bin.sh
 Frontend URL: https://xxxxxxxxx.cloudfront.net
 ```
 
-> [!TIP]
-> 以下のような出力が表示されて `Frontend URL` が得られなかった場合、最新バージョンの不具合の可能性がありますので、パラメータに `--version "v1.2.6"` を追加して再度デプロイを試してみてください。
-> ```
-> CodeBuild project completed with status: FAILED
-> Build Log Group Name: /aws/codebuild/Project-xxxxxxxx
-> Build Log Stream Name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-> Fetch CDK deployment logs...
-> Frontend URL: 
-> ```
-
 ![](./imgs/signin.png)
 
 上記のようなサインアップ画面が現れますので、E メールを登録・ログインしご利用ください。
 
 > [!Important]
 > オプションのパラメータを設定しない場合、このデプロイ方法では URL を知っている誰でもサインアップできてしまいます。本番環境で使用する場合は、セキュリティリスクを軽減するために、IP アドレスの制限を追加し、セルフサインアップを無効にすることを強くお勧めします（`allowed-signup-email-domains` を定義して、会社のドメインからのメールアドレスのみがサインアップできるようにすることで、ユーザーを制限できます）。IP アドレスの制限には `ipv4-ranges` と `ipv6-ranges` の両方を使用し、`./bin` を実行する際に `disable-self-register` を使用してセルフサインアップを無効にしてください。
+
+> [!TIP]
+> `Frontend URL` が正しく表示されない場合や、Bedrock Claude Chat が正常に動作しない場合は、最新バージョンの不具合である可能性がありますので、パラメータに `--version "v1.2.6"` を追加して再度デプロイを試してみてください。
 
 ## アーキテクチャ
 

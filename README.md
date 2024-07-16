@@ -59,7 +59,7 @@ By using the [Agent functionality](./docs/AGENT.md), your chatbot can automatica
 </details>
 
 - Open [CloudShell](https://console.aws.amazon.com/cloudshell/home) at the region where you want to deploy
-- Run deployment via following commands. If you have specific security policy, please also refer [Optional Parameters](#optional-parameters).
+- Run deployment via following commands. If you want to specify the version to deploy or need to apply security policies, please specify the appropriate parameters from [Optional Parameters](#optional-parameters).
 
 ```sh
 git clone https://github.com/aws-samples/bedrock-claude-chat.git
@@ -80,7 +80,7 @@ You can specify the following parameters during deployment to enhance security a
 - **--disable-ipv6**: Disable connections over IPv6. (default: enabled)
 - **--allowed-signup-email-domains**: Comma-separated list of allowed email domains for sign-up. (default: no domain restriction)
 - **--bedrock-region**: Define the region where bedrock is available. (default: us-east-1)
-- **--version**: The version of Bedrock Claude Chat to deploy. (default: v1)
+- **--version**: The version of Bedrock Claude Chat to deploy. (default: latest version in development)
 
 #### Example command with parameters:
 
@@ -94,22 +94,15 @@ You can specify the following parameters during deployment to enhance security a
 Frontend URL: https://xxxxxxxxx.cloudfront.net
 ```
 
-> [!TIP]
-> If you see the following output and cannot get the `Frontend URL`, it may be a problem with the latest version. In this case, please add `--version "v1.2.6"` to the parameters and try deployment again.
-> ```
-> CodeBuild project completed with status: FAILED
-> Build Log Group Name: /aws/codebuild/Project-xxxxxxxx
-> Build Log Stream Name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-> Fetch CDK deployment logs...
-> Frontend URL: 
-> ```
-
 ![](./docs/imgs/signin.png)
 
 The sign-up screen will appear as shown above, where you can register your email and log in.
 
 > [!Important]
 > Without setting the optional parameter, this deployment method allows anyone who knows the URL to sign up. For production use, it is strongly recommended to add IP address restrictions and disable self-signup to mitigate security risks (you can define allowed-signup-email-domains to restrict users so that only email addresses from your company’s domain can sign up). Use both ipv4-ranges and ipv6-ranges for IP address restrictions, and disable self-signup by using disable-self-register when executing ./bin.
+
+> [!TIP]
+> If the `Frontend URL` does not appear or Bedrock Claude Chat does not work properly, it may be a problem with the latest version. In this case, please add `--version "v1.2.6"` to the parameters and try deployment again.
 
 ## Architecture
 
