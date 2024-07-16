@@ -2,7 +2,6 @@ import logging
 from copy import deepcopy
 from typing import Literal
 
-from anthropic.types import Message as AnthropicMessage
 from app.agents.agent import AgentExecutor, create_react_agent, format_log_to_str
 from app.agents.handlers.token_count import get_token_count_callback
 from app.agents.handlers.used_chunk import get_used_chunk_callback

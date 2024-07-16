@@ -43,20 +43,6 @@ class StructuredTool(BaseTool):
     coroutine: Optional[Callable[..., Awaitable[Any]]] = None
     """The asynchronous version of the function."""
 
-    # --- Runnable ---
-
-    async def ainvoke(
-        self,
-        input: Union[str, Dict],
-        config: Optional[RunnableConfig] = None,
-        **kwargs: Any,
-    ) -> Any:
-        if not self.coroutine:
-            # If the tool does not implement async, fall back to default implementation
-            return await run_in_executor(config, self.invoke, input, config, **kwargs)
-
-        return await super().ainvoke(input, config, **kwargs)
-
     # --- Tool ---
 
     @property

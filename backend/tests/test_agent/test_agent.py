@@ -61,6 +61,7 @@ class TestReactAgent(unittest.TestCase):
                     "Sushi.pdf",
                     "Yakiniku.pdf",
                 ],
+                s3_urls=[],
             ),
             display_retrieved_chunks=True,
             sync_status="RUNNING",
@@ -69,6 +70,8 @@ class TestReactAgent(unittest.TestCase):
             published_api_stack_name=None,
             published_api_datetime=None,
             published_api_codebuild_id=None,
+            conversation_quick_starters=[],
+            bedrock_knowledge_base=None,
         )
         answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
             bot=bot,
