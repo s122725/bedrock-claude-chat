@@ -3,6 +3,7 @@ import { PostMessageRequest } from '../@types/conversation';
 import { create } from 'zustand';
 import i18next from 'i18next';
 import { AgentThinkingEventKeys } from '../features/agent/xstates/agentThinkProgress';
+import { PostStreamingStatus } from '../constants';
 
 const WS_ENDPOINT: string = import.meta.env.VITE_APP_WS_ENDPOINT;
 const CHUNK_SIZE = 32 * 1024; //32KB
@@ -47,7 +48,7 @@ const usePostMessageStreaming = create<{
         ws.onopen = () => {
           ws.send(
             JSON.stringify({
-              step: 'START',
+              step: PostStreamingStatus.START,
               token: token,
             })
           );
@@ -68,7 +69,7 @@ const usePostMessageStreaming = create<{
               chunkedPayloads.forEach((chunk, index) => {
                 ws.send(
                   JSON.stringify({
-                    step: 'BODY',
+                    step: PostStreamingStatus.BODY,
                     index,
                     part: chunk,
                   })
@@ -80,7 +81,7 @@ const usePostMessageStreaming = create<{
               if (receivedCount === chunkedPayloads.length) {
                 ws.send(
                   JSON.stringify({
-                    step: 'END',
+                    step: PostStreamingStatus.END,
                   })
                 );
               }
@@ -91,13 +92,13 @@ const usePostMessageStreaming = create<{
 
             if (data.status) {
               switch (data.status) {
-                case 'FETCHING_KNOWLEDGE':
+                case PostStreamingStatus.FETCHING_KNOWLEDGE:
                   dispatch(i18next.t('bot.label.retrievingKnowledge'));
                   break;
-                case 'THINKING':
+                case PostStreamingStatus.THINKING:
                   thinkingDispatch('go-on');
                   break;
-                case 'STREAMING':
+                case PostStreamingStatus.STREAMING:
                   if (data.completion || data.completion === '') {
                     if (
                       completion.endsWith(i18next.t('app.chatWaitingSymbol'))
@@ -109,7 +110,7 @@ const usePostMessageStreaming = create<{
                     dispatch(completion);
                   }
                   break;
-                case 'STREAMING_END':
+                case PostStreamingStatus.STREAMING_END:
                   thinkingDispatch('goodbye');
 
                   if (completion.endsWith(i18next.t('app.chatWaitingSymbol'))) {
@@ -118,7 +119,7 @@ const usePostMessageStreaming = create<{
                   }
                   ws.close();
                   break;
-                case 'ERROR':
+                case PostStreamingStatus.ERROR:
                   ws.close();
                   console.error(data);
                   throw new Error(i18next.t('error.predict.invalidResponse'));

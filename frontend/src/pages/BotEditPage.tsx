@@ -29,6 +29,7 @@ import {
   DEFAULT_MISTRAL_GENERATION_CONFIG,
   DEFAULT_SEARCH_CONFIG,
   EDGE_SEARCH_PARAMS,
+  TooltipDirection,
 } from '../constants';
 import { Slider } from '../components/Slider';
 import ExpandableDrawerGroup from '../components/ExpandableDrawerGroup';
@@ -451,7 +452,9 @@ const BotEditPage: React.FC = () => {
   ]);
 
   const onClickCreate = useCallback(() => {
-    if (!isValid()) return;
+    if (!isValid()) {
+      return;
+    }
     setIsLoading(true);
     registerBot({
       agent: {
@@ -517,8 +520,9 @@ const BotEditPage: React.FC = () => {
   ]);
 
   const onClickEdit = useCallback(() => {
-    if (!isValid()) return;
-
+    if (!isValid()) {
+      return;
+    }
     if (!isNewBot) {
       setIsLoading(true);
       updateBot(botId, {
@@ -867,7 +871,7 @@ const BotEditPage: React.FC = () => {
                       <div className="flex items-center gap-1">
                         {t('embeddingSettings.chunkSize.label')}
                         <Help
-                          direction="right"
+                          direction={TooltipDirection.RIGHT}
                           message={t('embeddingSettings.help.chunkSize')}
                         />
                       </div>
@@ -894,7 +898,7 @@ const BotEditPage: React.FC = () => {
                       <div className="flex items-center gap-1">
                         {t('embeddingSettings.chunkOverlap.label')}
                         <Help
-                          direction="right"
+                          direction={TooltipDirection.RIGHT}
                           message={t('embeddingSettings.help.chunkOverlap')}
                         />
                       </div>
