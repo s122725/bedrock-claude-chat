@@ -84,13 +84,13 @@ def insert_to_postgres(
                 logger.info(f"Type of content: {type(content)} ")
 
                 if b'\x00' in source:
-                    logger.info(f"Source contains null byte: {source}")
+                    logger.info(f"Source contains null byte: ")
                     source = source.replace(b'\x00', b'')
                 if b'\x00' in content:
-                    logger.info(f"Content contains null byte: {content}")
+                    logger.info(f"Content contains null byte: ")
                     content = content.replace(b'\x00', b'')
                 if b'\x00' in embedding:
-                    logger.info(f"Embedding contains null byte: {embedding}")
+                    logger.info(f"Embedding contains null byte: ")
                     embedding = embedding.replace(b'\x00', b'')
 
                 values_to_insert.append(
