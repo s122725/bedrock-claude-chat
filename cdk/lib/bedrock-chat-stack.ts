@@ -24,6 +24,7 @@ import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
 import { BedrockKnowledgeBaseCodebuild } from "./constructs/bedrock-knowledge-base-codebuild";
+import { Langfuse } from "./constructs/langfuse";
 
 export interface BedrockChatStackProps extends StackProps {
   readonly bedrockRegion: string;
@@ -148,6 +149,15 @@ export class BedrockChatStack extends cdk.Stack {
       autoJoinUserGroups: props.autoJoinUserGroups,
       selfSignUpEnabled: props.selfSignUpEnabled,
     });
+
+    // Langfuse
+    const langfuse = new Langfuse(this, "Langfuse", {
+      vpc,
+      auth,
+      dbSecret: vectorStore.secret,
+      dbSecurityGroup: vectorStore.securityGroup,
+    });
+
     const largeMessageBucket = new Bucket(this, "LargeMessageBucket", {
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
@@ -182,6 +192,7 @@ export class BedrockChatStack extends cdk.Stack {
       usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,
+      langfuseSecrets: langfuse.secret,
     });
     documentBucket.grantReadWrite(backendApi.handler);
 
@@ -196,6 +207,8 @@ export class BedrockChatStack extends cdk.Stack {
       auth,
       bedrockRegion: props.bedrockRegion,
       largeMessageBucket,
+      langfuseLocalUrl: langfuse.localUrl,
+      langfuseSecrets: langfuse.secret,
       documentBucket,
     });
     frontend.buildViteApp({

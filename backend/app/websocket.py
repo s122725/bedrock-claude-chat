@@ -25,6 +25,7 @@ from app.utils import get_anthropic_client, get_current_time, is_anthropic_model
 from app.vector_search import filter_used_results, get_source_link, search_related_docs
 from boto3.dynamodb.conditions import Attr, Key
 from ulid import ULID
+from app.langfuse import get_langfuse_callback_handler
 
 WEBSOCKET_SESSION_TABLE_NAME = os.environ["WEBSOCKET_SESSION_TABLE_NAME"]
 
@@ -105,6 +106,11 @@ def process_chat_input(
                         ApigwWebsocketCallbackHandler(gatewayapi, connection_id),
                         token_cb,
                         chunk_cb,
+                        get_langfuse_callback_handler(
+                            trace_name="agent",
+                            user_id=user_id,
+                            conversation_id=chat_input.conversation_id,
+                        )
                     ],
                 },
             )
@@ -272,7 +278,15 @@ def process_chat_input(
         on_stop=on_stop,
     )
     try:
-        for _ in stream_handler.run(args):
+        for _ in stream_handler.run(
+            args,
+            {
+                "user_id": user_id,
+                "bot_id": chat_input.bot_id,
+                "conversation_id": chat_input.conversation_id,
+                "message_id": chat_input.message.message_id
+                }
+            ):
             # `StreamHandler.run` returns a generator, so need to iterate
             ...
     except Exception as e:

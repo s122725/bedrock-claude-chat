@@ -58,6 +58,8 @@ from app.vector_search import (
 )
 from ulid import ULID
 
+from app.langfuse import get_langfuse_callback_handler
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -304,6 +306,11 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                     "callbacks": [
                         token_cb,
                         chunk_cb,
+                        get_langfuse_callback_handler(
+                            trace_name="agent",
+                            user_id=user_id,
+                            conversation_id=chat_input.conversation_id,
+                        )
                     ],
                 },
             )

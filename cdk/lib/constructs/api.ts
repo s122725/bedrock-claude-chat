@@ -37,6 +37,7 @@ export interface ApiProps {
   readonly bedrockKnowledgeBaseProject: codebuild.IProject;
   readonly usageAnalysis?: UsageAnalysis;
   readonly enableMistral: boolean;
+  readonly langfuseSecrets: ISecret;
 }
 
 export class Api extends Construct {
@@ -168,6 +169,13 @@ export class Api extends Construct {
         resources: [props.auth.userPool.userPoolArn],
       })
     );
+    handlerRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["secretsmanager:GetSecretValue"],
+        resources: [props.langfuseSecrets.secretArn],
+      })
+    );
     props.usageAnalysis?.resultOutputBucket.grantReadWrite(handlerRole);
     props.usageAnalysis?.ddbBucket.grantRead(handlerRole);
     props.largeMessageBucket.grantReadWrite(handlerRole);
@@ -206,6 +214,7 @@ export class Api extends Construct {
         USAGE_ANALYSIS_WORKGROUP: props.usageAnalysis?.workgroupName || "",
         USAGE_ANALYSIS_OUTPUT_LOCATION: usageAnalysisOutputLocation,
         ENABLE_MISTRAL: props.enableMistral.toString(),
+        LANGFUSE_SECRETS_ARN: props.langfuseSecrets.secretArn,
       },
       role: handlerRole,
     });

@@ -8,6 +8,7 @@ from app.routes.schemas.conversation import type_model_name
 from app.utils import get_anthropic_client, is_anthropic_model
 from langchain_core.outputs import GenerationChunk
 from pydantic import BaseModel
+from app.langfuse import AnthropicStreamTracer
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +64,17 @@ class BaseStreamHandler:
 
 class AnthropicStreamHandler(BaseStreamHandler):
     """Stream handler for Anthropic models."""
-
-    def run(self, args: dict):
+    def __init__(
+        self,
+        model: type_model_name,
+        on_stream: Callable[[str], GenerationChunk | None],
+        on_stop: Callable[[OnStopInput], GenerationChunk | None],
+    ):
+        super().__init__(model, on_stream, on_stop)
+        self.tracer = AnthropicStreamTracer()
+    
+    def run(self, args: dict, option:dict|None = None):
+        self.tracer.on_start(args, option)
         client = get_anthropic_client()
         response = client.messages.create(**args)
         completions = []
@@ -81,6 +91,8 @@ class AnthropicStreamHandler(BaseStreamHandler):
             if isinstance(event, ContentBlockDeltaEvent):
                 completions.append(event.delta.text)
                 response = self.on_stream(event.delta.text)
+                
+                self.tracer.on_stream(event.delta.text)
                 yield response
             elif isinstance(event, MessageDeltaEvent):
                 logger.debug(f"Received message delta event: {event.delta}")
@@ -93,6 +105,7 @@ class AnthropicStreamHandler(BaseStreamHandler):
                 price = calculate_price(
                     self.model, input_token_count, output_token_count
                 )
+                self.tracer.on_stop(metrics, price)
                 response = self.on_stop(
                     OnStopInput(
                         full_token=concatenated.rstrip(),

@@ -31,6 +31,8 @@ export interface WebSocketProps {
   readonly websocketSessionTable: ITable;
   readonly largeMessageBucket: s3.IBucket;
   readonly accessLogBucket?: s3.Bucket;
+  readonly langfuseLocalUrl?: string;
+  readonly langfuseSecrets: ISecret;
 }
 
 export class WebSocket extends Construct {
@@ -76,6 +78,12 @@ export class WebSocket extends Construct {
         resources: ["*"],
       })
     );
+    handlerRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["secretsmanager:GetSecretValue"],
+        resources: [props.langfuseSecrets.secretArn],
+      })
+    );
     handlerRole.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName(
         "service-role/AWSLambdaVPCAccessExecutionRole"
@@ -110,6 +118,9 @@ export class WebSocket extends Construct {
         DB_SECRETS_ARN: props.dbSecrets.secretArn,
         LARGE_PAYLOAD_SUPPORT_BUCKET: largePayloadSupportBucket.bucketName,
         WEBSOCKET_SESSION_TABLE_NAME: props.websocketSessionTable.tableName,
+        LANGFUSE_HOST: props.langfuseLocalUrl as string,
+        LANGFUSE_SECRETS_ARN: props.langfuseSecrets.secretArn,
+        LANGFUSE_DEBUG: "false",
       },
       role: handlerRole,
     });
