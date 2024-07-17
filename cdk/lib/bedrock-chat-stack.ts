@@ -120,6 +120,7 @@ export class BedrockChatStack extends cdk.Stack {
             "**/.gitignore",
             "**/test/**",
             "**/tests/**",
+            "**/backend/embedding_statemachine/pdf_ai_ocr**",
           ],
         }),
       ],

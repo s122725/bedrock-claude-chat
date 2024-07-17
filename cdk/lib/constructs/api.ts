@@ -180,6 +180,13 @@ export class Api extends Construct {
           assetName: "BackendHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
+          exclude: [
+            "**/.mypy_cache/**",
+            "**/.venv/**",
+            "**/backend/embedding_statemachine/**",
+            "**/test/**",
+            "**/tests/**",
+          ]
         }
       ),
       vpc: props.vpc,

@@ -94,7 +94,14 @@ export class WebSocket extends Construct {
           assetName: "WebsocketHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
-        }
+          exclude: [
+            "**/.mypy_cache/**",
+            "**/.venv/**",
+            "**/embedding_statemachine/**",
+            "**/test/**",
+            "**/tests/**",
+          ]
+        },
       ),
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
