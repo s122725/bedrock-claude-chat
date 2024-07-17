@@ -80,3 +80,29 @@ export const DEFAULT_MISTRAL_GENERATION_CONFIG: GenerationParams = {
 export const DEFAULT_SEARCH_CONFIG: SearchParams = {
   maxResults: 20,
 };
+
+export const SyncStatus = {
+  QUEUED: 'QUEUED',
+  FAILED: 'FAILED',
+  RUNNING: 'RUNNING',
+  SUCCEEDED: 'SUCCEEDED',
+} as const;
+
+export const TooltipDirection = {
+  LEFT: 'left',
+  RIGHT: 'right',
+} as const;
+
+export type Direction =
+  (typeof TooltipDirection)[keyof typeof TooltipDirection];
+
+export const PostStreamingStatus = {
+  START: 'START',
+  BODY: 'BODY',
+  FETCHING_KNOWLEDGE: 'FETCHING_KNOWLEDGE',
+  THINKING: 'THINKING',
+  STREAMING: 'STREAMING',
+  STREAMING_END: 'STREAMING_END',
+  ERROR: 'ERROR',
+  END: 'END',
+} as const;
