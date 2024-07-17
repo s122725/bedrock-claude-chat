@@ -171,6 +171,11 @@ How would you categorize this email?`,
         description: 'Description',
         instruction: 'Instructions',
       },
+      explore: {
+        label: {
+          pageTitle: 'Bot Console',
+        },
+      },
       apiSettings: {
         pageTitle: 'Shared Bot Publish API Settings',
         label: {
