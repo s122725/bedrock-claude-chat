@@ -26,7 +26,8 @@ from starlette.responses import Response
 from starlette.types import ASGIApp, Message
 
 CORS_ALLOW_ORIGINS = os.environ.get("CORS_ALLOW_ORIGINS", "*")
-PUBLISHED_API_ID = os.environ.get("PUBLISHED_API_ID", None)
+PUBLISHED_API_ID = os.environ.get("PUBLISHED_API_ID", None) 
+DEBUG_WITH_COGNITO = bool(os.environ.get("DEBUG_WITH_COGNITO", False))
 
 is_published_api = PUBLISHED_API_ID is not None
 
@@ -93,7 +94,8 @@ app.add_exception_handler(Exception, error_handler_factory(500))
 
 @app.middleware("http")
 def add_current_user_to_request(request: Request, call_next: ASGIApp):
-    if is_running_on_lambda():
+    logger.info(f"DEBUG_WITH_COGNITO: {DEBUG_WITH_COGNITO}")
+    if (is_running_on_lambda() or DEBUG_WITH_COGNITO == True):
         if not is_published_api:
             authorization = request.headers.get("Authorization")
             if authorization:

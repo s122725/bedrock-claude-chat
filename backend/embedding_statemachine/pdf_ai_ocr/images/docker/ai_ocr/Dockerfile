@@ -3,7 +3,7 @@ FROM public.ecr.aws/lambda/python:3.11
 RUN yum -y install poppler poppler-utils
 
 # COPY requirements.txt  .
-COPY ./docker/task1/pyproject.toml ./docker/task1/poetry.lock ./
+COPY ./docker/ai_ocr/pyproject.toml ./docker/ai_ocr/poetry.lock ./
 ENV POETRY_REQUESTS_TIMEOUT=10800
 RUN python -m pip install --upgrade pip && \
     pip install poetry --no-cache-dir && \
@@ -11,7 +11,7 @@ RUN python -m pip install --upgrade pip && \
     poetry install --no-interaction --no-ansi --only main && \
     poetry cache clear --all pypi
 
-COPY ../task1.py ${LAMBDA_TASK_ROOT}
+COPY ../ai_ocr.py ${LAMBDA_TASK_ROOT}
 COPY ../lib ${LAMBDA_TASK_ROOT}/lib
 
-CMD ["task1.lambda_handler"]
+CMD ["ai_ocr.lambda_handler"]

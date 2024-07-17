@@ -108,7 +108,7 @@ export class SfnWorkFlow extends Construct {
       }
     })
     fileMap.itemProcessor(
-      props.sfnLambdaInvoke.lambdaInvoke['task2']
+      props.sfnLambdaInvoke.lambdaInvoke['ai_ocr']
     )
     
     // 最後のdynamodbのステータス変更で使用するパラメータをバイパスする。
@@ -131,7 +131,7 @@ export class SfnWorkFlow extends Construct {
         // モードがpdfの場合の処理
         .when(
           sfn.Condition.stringEquals('$.mode', 'pdf'),
-          props.sfnLambdaInvoke.lambdaInvoke['task1'].next(
+          props.sfnLambdaInvoke.lambdaInvoke['pdf_to_image'].next(
             fileMap
           )
         )
@@ -141,7 +141,7 @@ export class SfnWorkFlow extends Construct {
         // )
     )
 
-    // task2完了後に、dynamodbのステータス更新と、task2の実行結果を後続に渡すタスクに分岐する
+    // ai_ocrの完了後に、dynamodbのステータス更新と、ai_ocrの実行結果を後続に渡すタスクに分岐する
     const parallel2 = new sfn.Parallel(this, 'Parallel2', {})
       .branch(
         new sfn.Pass(this, 'Pass2', {

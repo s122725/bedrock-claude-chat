@@ -2,15 +2,24 @@
 from aws_lambda_powertools import Logger
 import base64
 import boto3
-import botocore
-import os
+from botocore.exceptions import ClientError
+from botocore.config import Config
 import imghdr
 from typing import Union
 
 logger = Logger()
 
 # S3クライアントの作成
-s3_client = boto3.client('s3')
+s3_client = boto3.client('s3',
+  config=Config(
+    connect_timeout=600,
+    read_timeout=600,
+    retries={
+        "mode": "standard",
+        "total_max_attempts": 3,
+    }
+  )
+)
 
 # 画像データからcontent_typeを取得する
 def get_image_content_type(base64_image_data: str) -> Union[str, None]:
@@ -45,7 +54,7 @@ def get_text_from_s3(bucket: str, key: str) -> str:
     text = response['Body'].read().decode('utf-8')
     return text
 
-  except botocore.exceptions.ClientError as e:
+  except ClientError as e:
     error_code = e.response['Error']['Code']
     if error_code == 'NoSuchKey':
         logger.debug("指定したキーは存在しません。")
@@ -97,7 +106,7 @@ def check_s3_folder_and_list_files(bucket_name, folder_path) -> None | list:
             logger.debug(f"Folder '{folder_path}' does not exist in bucket '{bucket_name}'")
             return None
     
-    except botocore.ClientError as e:
+    except ClientError as e:
         logger.debug(f"An error occurred: {e}")
         return None
 

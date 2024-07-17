@@ -2,25 +2,30 @@
 from typing import Collection
 from aws_lambda_powertools import Logger
 import boto3
+from botocore.config import Config
 import json
 from lib.s3 import get_image_content_type
-from retry import retry
 
 logger = Logger()
 
-RETRIES_TO_BEDROCK = 4
-RETRY_DELAY_TO_BEDROCK = 2
+bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-west-2",
+  config=Config(
+    connect_timeout=600,
+    read_timeout=600,
+    retries={
+      "mode": "standard",
+      "total_max_attempts": 3,
+    }
+  )
+)
 
-bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
-  
-@retry(tries=RETRIES_TO_BEDROCK, delay=RETRY_DELAY_TO_BEDROCK)
 def run_multi_modal_prompt(model_id: str, messages, max_tokens: int):
   body = json.dumps(
     {
       "anthropic_version": "bedrock-2023-05-31",
       "max_tokens": max_tokens,
       "messages": messages,
-      "temperature": 0.1,
+      "temperature": 0.6,
       "top_p": 0.999,
       "top_k": 250
     }

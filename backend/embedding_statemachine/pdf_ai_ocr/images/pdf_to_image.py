@@ -60,7 +60,7 @@ def lambda_handler(event, context):
       if image_file_names == None:
         
         # PDFを１ページごとに画像変換
-        image_paths = _pdf_to_images(file_path, temp_dir)
+        image_paths = _pdf_to_images(local_path, temp_dir)
 
         # base64形式でimage_pathsのファイルを読み取る
         image_file_names = []
