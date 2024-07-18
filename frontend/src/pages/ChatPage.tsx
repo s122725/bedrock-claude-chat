@@ -134,7 +134,11 @@ const ChatPage: React.FC = () => {
   }, [bot?.hasKnowledge, botId, bot?.hasAgent]);
 
   const onSend = useCallback(
-    (content: string, base64EncodedImages?: string[], textAttachments?: TextAttachmentType[]) => {
+    (
+      content: string,
+      base64EncodedImages?: string[],
+      textAttachments?: TextAttachmentType[]
+    ) => {
       postChat({
         content,
         base64EncodedImages,
@@ -350,7 +354,7 @@ const ChatPage: React.FC = () => {
             <div
               id="messages"
               role="presentation"
-              className=" flex h-full flex-col overflow-auto pb-9">
+              className=" flex h-full flex-col overflow-auto pb-16">
               {messages?.length === 0 ? (
                 <div className="relative flex w-full justify-center">
                   {!loadingConversation && (
