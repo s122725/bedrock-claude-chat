@@ -304,9 +304,8 @@ See [here](./docs/RAG.md).
 
 ## Contacts
 
-- [Takehiro Suzuki](https://github.com/statefb)
-- [Yusuke Wada](https://github.com/wadabee)
-- [Yukinobu Mine](https://github.com/Yukinobu-Mine)
+## 🏆 Significant Contributors
+- [k70suK3-k06a7ash1](https://github.com/k70suK3-k06a7ash1)
 
 ## Contributors
 
