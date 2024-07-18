@@ -310,6 +310,8 @@ See [here](./docs/RAG.md).
 
 ## 🏆 Significant Contributors
 
+- [k70suK3-k06a7ash1](https://github.com/k70suK3-k06a7ash1)
+
 ## Contributors
 
 [![bedrock claude chat contributors](https://contrib.rocks/image?repo=aws-samples/bedrock-claude-chat&max=1000)](https://github.com/aws-samples/bedrock-claude-chat/graphs/contributors)
