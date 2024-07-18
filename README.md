@@ -308,6 +308,8 @@ See [here](./docs/RAG.md).
 - [Yusuke Wada](https://github.com/wadabee)
 - [Yukinobu Mine](https://github.com/Yukinobu-Mine)
 
+## 🏆 Significant Contributors
+
 ## Contributors
 
 [![bedrock claude chat contributors](https://contrib.rocks/image?repo=aws-samples/bedrock-claude-chat&max=1000)](https://github.com/aws-samples/bedrock-claude-chat/graphs/contributors)
