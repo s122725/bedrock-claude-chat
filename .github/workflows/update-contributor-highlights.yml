@@ -38,6 +38,7 @@ jobs:
           import logging
 
           EXCLUDED_USERS = ["statefb", "wadabee", "Yukinobu-Mine"]  # Core maintainers
+          EXCLUDED_USERS.append("dependabot[bot]")  # Dependabot
 
           logging.basicConfig(level=logging.INFO)
 
@@ -86,7 +87,11 @@ jobs:
               contributors.items(), key=lambda x: calculate_score(x[1]), reverse=True
           )
 
-          logging.info(f"Top 20 contributors: {highlighted_contributors[:20]}")
+          logging.info("Top 20 contributors:")
+          for username, stats in highlighted_contributors[:20]:
+            score = calculate_score(stats)
+            logging.info(f"{username}: {stats}, Score: {score}")
+
 
           PLATINUM_THRESHOLD = 40000
 
