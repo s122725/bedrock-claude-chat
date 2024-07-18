@@ -36,7 +36,7 @@ export const EDGE_GENERATION_PARAMS = {
     STEP: 0.001,
   },
   topK: {
-    MAX: 200,
+    MAX: 500,
     MIN: 0,
     STEP: 1,
   },
