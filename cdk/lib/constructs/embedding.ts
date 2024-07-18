@@ -144,11 +144,11 @@ export class Embedding extends Construct {
       file: "embedding/Dockerfile",
       platform: Platform.LINUX_AMD64,
       exclude: [
-        "**/.mypy_cache/**",
-        "**/.venv/**",
-        "**/embedding_statemachine/**",
-        "**/test/**",
-        "**/tests/**",
+        ".mypy_cache",
+        ".venv",
+        "embedding_statemachine",
+        "test",
+        "tests",
       ]
     });
     SociIndexBuild.fromDockerImageAsset(this, "Index", asset);
@@ -223,11 +223,11 @@ export class Embedding extends Construct {
               "embedding_statemachine.bedrock_knowledge_base.update_bot_status.handler",
             ],
             exclude: [
-              "**/.mypy_cache/**",
-              "**/.venv/**",
-              "**/backend/embedding_statemachine/pdf_ai_ocr/**",
-              "**/test/**",
-              "**/tests/**",
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine/pdf_ai_ocr",
+              "test",
+              "tests",
             ]
           }
         ),
@@ -256,11 +256,11 @@ export class Embedding extends Construct {
               "embedding_statemachine.bedrock_knowledge_base.fetch_stack_output.handler",
             ],
             exclude: [
-              "**/.mypy_cache/**",
-              "**/.venv/**",
-              "**/backend/embedding_statemachine/pdf_ai_ocr/**",
-              "**/test/**",
-              "**/tests/**",
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine/pdf_ai_ocr",
+              "test",
+              "tests",
             ]
           }
         ),
@@ -282,11 +282,11 @@ export class Embedding extends Construct {
               "embedding_statemachine.bedrock_knowledge_base.store_knowledge_base_id.handler",
             ],
             exclude: [
-              "**/.mypy_cache/**",
-              "**/.venv/**",
-              "**/backend/embedding_statemachine/pdf_ai_ocr/**",
-              "**/test/**",
-              "**/tests/**",
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine/pdf_ai_ocr",
+              "test",
+              "tests",
             ]
           }
         ),
@@ -682,11 +682,11 @@ export class Embedding extends Construct {
           file: "lambda.Dockerfile",
           cmd: ["app.bot_remove.handler"],
           exclude: [
-            "**/.mypy_cache/**",
-            "**/.venv/**",
-            "**/backend/embedding_statemachine/**",
-            "**/test/**",
-            "**/tests/**",
+            ".mypy_cache",
+            ".venv",
+            "backend/embedding_statemachine",
+            "test",
+            "tests",
           ]
         }
       ),

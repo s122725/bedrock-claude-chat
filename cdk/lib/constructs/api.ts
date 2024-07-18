@@ -181,11 +181,11 @@ export class Api extends Construct {
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
           exclude: [
-            "**/.mypy_cache/**",
-            "**/.venv/**",
-            "**/backend/embedding_statemachine/**",
-            "**/test/**",
-            "**/tests/**",
+            ".mypy_cache",
+            ".venv",
+            "backend/embedding_statemachine",
+            "test",
+            "tests",
           ]
         }
       ),

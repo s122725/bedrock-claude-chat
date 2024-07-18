@@ -5,7 +5,7 @@ import os
 import json
 from lib.prompt import prompt_ai_ocr
 from lib.s3 import get_image_base64, get_text_from_s3, get_text_from_s3, text_upload_to_s3
-from lib.bedrock import get_base64_image_for_bedrock_content, run_multi_modal_prompt, get_model_id
+from lib.bedrock import get_bedrock_image_contents_format, run_multi_modal_prompt, get_model_id
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,7 +15,7 @@ BEDROCK_MODEL_NAME = os.environ.get('BEDROCK_MODEL_NAME', 'claude-3-sonnet')
 # max_tokensがなくなるまで再起的に処理をする。
 def execute_ai_ocr(
     prompt: str,  # プロンプト
-    image_contents: dict[str, Collection[str]],  # Claude3に与える画像
+    image_contents: dict[str, Collection[str]] | None,  # Claude3に与える画像
     messages: list[dict] = [],   # Claude3のInputで使用するメッセージ
     responses: str = '' # Claude3のレスポンス
   ):
@@ -27,25 +27,35 @@ def execute_ai_ocr(
 
     # メッセージが空欄の場合は、初期メッセージを入れる。
     if messages == []:
-      messages.append(
-        {
-          "role": "user",
-          "content": [
-            image_contents,
-            {
-              "type": "text",
-              "text": prompt
-            },
-          ],
-        },
-      )
+      if image_contents != None:
+        messages.append(
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": prompt
+              },
+              image_contents,
+            ],
+          },
+        )
+      else:
+        messages.append(
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": prompt
+              },
+            ],
+          },
+        )
       messages.append(
         {
           "role": "assistant",
           "content": [
             {
-              "type": "text",
-              "text": '\n\nAssistant: <output> ' + responses
+              "text": '<output> ' + responses
             },
           ],
         },
@@ -56,9 +66,10 @@ def execute_ai_ocr(
       messages=messages,
       max_tokens=4096
     )
-    responses += response['content'][0]['text']
+    logger.debug(response)
+    responses += response['output']['message']['content'][0]['text']
 
-    if response['stop_reason'] == "max_tokens":
+    if response['stopReason'] == "max_tokens":
       # 1つ前の予め定義したassistantのメッセージをclaude3の回答に差し替える
       messages.pop()
       messages.append(
@@ -66,8 +77,7 @@ def execute_ai_ocr(
           "role": "assistant",
           "content": [
             {
-              "type": "text",
-              "text": '\n\nAssistant: ' + responses
+              "text": responses
             },
           ],
         },
@@ -80,14 +90,14 @@ def execute_ai_ocr(
         responses=responses
       )
     else:
-      logger.info(response)
       # メッセージから余分な文字列を削除する
       responses = responses.replace("\n</output>", "").replace("</output>", "").replace("\n</ai_ocr_result>", "").replace("</ai_ocr_result>", "").replace("\n", "")
+      logger.debug(f"bedore json load: {responses}")
       # 文字列からJSONに変換する
       responses = json.loads(
         responses
       )
-      logger.info(responses)
+      logger.debug(f"after json load: {responses}")
       logger.info(responses["ai_ocr_result"])
 
     return responses
@@ -132,13 +142,13 @@ def lambda_handler(event, context):
     image_object_key = f"{user_id}/{bot_id}/pdf_to_image/{filename}/image/{image_file_name}"
     logger.debug(f"image_object_key: {image_object_key}")
     base64_image = get_image_base64(bucket, image_object_key)
-    image_contents = get_base64_image_for_bedrock_content(base64_image)
+    image_contents = get_bedrock_image_contents_format(base64_image)
   
     # image_file_name からページ番号を抽出
     page_number = int(image_file_name.split("page")[1].split(".")[0])
     # プロンプトを組み立てる
     prompt = prompt_ai_ocr.format(ocr_text, page_number)
-    logger.debug(f"prompt: {prompt}")
+    # logger.debug(f"prompt: {prompt}")
 
     # AI-OCRを実行
     responses = execute_ai_ocr(

@@ -2,7 +2,6 @@ FROM public.ecr.aws/lambda/python:3.11
 
 RUN yum -y install poppler poppler-utils
 
-# COPY requirements.txt  .
 COPY ./docker/pdf_to_image/pyproject.toml ./docker/pdf_to_image/poetry.lock ./
 ENV POETRY_REQUESTS_TIMEOUT=10800
 RUN python -m pip install --upgrade pip && \

@@ -94,11 +94,11 @@ export class ApiPublishmentStack extends Stack {
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
           exclude: [
-            "**/.mypy_cache/**",
-            "**/.venv/**",
-            "**/backend/embedding_statemachine/**",
-            "**/test/**",
-            "**/tests/**",
+            ".mypy_cache",
+            ".venv",
+            "backend/embedding_statemachine",
+            "test",
+            "tests",
           ]
         }
       ),
@@ -137,11 +137,11 @@ export class ApiPublishmentStack extends Stack {
             file: "lambda.Dockerfile",
             cmd: ["app.sqs_consumer.handler"],
             exclude: [
-              "**/.mypy_cache/**",
-              "**/.venv/**",
-              "**/backend/embedding_statemachine/**",
-              "**/test/**",
-              "**/tests/**",
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine",
+              "test",
+              "tests",
             ]
           }
         ),

@@ -26,11 +26,14 @@ export DOCUMENT_BUCKET=bedrockchatstack-documentbucketxxxxxxx
 export LARGE_MESSAGE_BUCKET=bedrockchatstack-largemessagebucketxxx
 export USER_POOL_ID=xxxxxxxxx
 export CLIENT_ID=xxxxxxxxx
+export DB_SECRETS_ARN=arn:aws:secretsmanager:ap-northeast-1:xxxxxxxxxxxx:secret:VectorStoreClusterSecretXXX-xxxxxxxxxxxx-xxxxxx
+export DEBUG_WITH_COGNITO=True
 ```
 
 ## Launch local server
 
 ```sh
+pip install poetry --no-cache-dir
 poetry run uvicorn app.main:app  --reload --host 0.0.0.0 --port 8000
 ```
 

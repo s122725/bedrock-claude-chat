@@ -3,8 +3,8 @@ from typing import Collection
 from aws_lambda_powertools import Logger
 import boto3
 from botocore.config import Config
-import json
-from lib.s3 import get_image_content_type
+import base64
+import imghdr
 
 logger = Logger()
 
@@ -20,38 +20,44 @@ bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-west-2",
 )
 
 def run_multi_modal_prompt(model_id: str, messages, max_tokens: int):
-  body = json.dumps(
-    {
-      "anthropic_version": "bedrock-2023-05-31",
-      "max_tokens": max_tokens,
-      "messages": messages,
-      "temperature": 0.6,
-      "top_p": 0.999,
-      "top_k": 250
-    }
+  inference_config = {
+    "temperature": 0.6
+  }
+  additional_model_fields = {
+     "top_k": 250
+  }
+
+  response = bedrock.converse(
+    modelId=model_id,
+    messages=messages,
+    inferenceConfig=inference_config,
+    additionalModelRequestFields=additional_model_fields,
   )
+  output_message = response
 
-  response = bedrock.invoke_model(
-    body=body, modelId=model_id)
-  response_body = json.loads(response.get('body').read())
+  return output_message
 
-  return response_body
+def get_bedrock_image_contents_format(base64_image: str) -> dict[str, Collection[str]] | None:
 
-def get_base64_image_for_bedrock_content(base64_image: str) -> dict[str, Collection[str]]:
-    # コンテンツタイプの自動判定
-    content_type: str = get_image_content_type(base64_image)
+    # base64イメージのデコード
+    decoded_base64_image = base64.b64decode(base64_image)
+    # formatの自動判定
+    format: str = imghdr.what(None, decoded_base64_image)
 
-    return (
-      {
-        "type": "image",
-        "source": {
-          "type": "base64",
-          "media_type": content_type,
-          "data": base64_image
+    allowed_formats = ["png", "jpeg"]
+    if format in allowed_formats:
+      return (
+        {
+          "image": {
+            "format": format,
+            "source": {
+              "bytes": decoded_base64_image
+            }   
+          }
         }
-      }
-    )
-
+      )
+    else:
+      return None
 
 def get_model_id(model: str) -> str:
   # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids-arns.html
