@@ -1,10 +1,6 @@
 name: Update Contributor Highlights
 
 on:
-  pull_request:
-    branches:
-      - main
-      - v1
   schedule:
     - cron: "0 0 1 * *" # Every Month'
   workflow_dispatch:
