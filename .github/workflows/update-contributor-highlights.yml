@@ -48,46 +48,45 @@ jobs:
               WEIGHT_PRS = 1000
               return stats["lines_changed"] * WEIGHT_LINES_CHANGED + stats["prs"] * WEIGHT_PRS        
 
-          #g = Github(os.environ['GITHUB_TOKEN'])
-          #repo = g.get_repo('${{ github.repository }}')
+          g = Github(os.environ['GITHUB_TOKEN'])
+          repo = g.get_repo('${{ github.repository }}')
 
-          #contributors = defaultdict(lambda: {'lines_changed': 0, 'prs': 0})
+          contributors = defaultdict(lambda: {'lines_changed': 0, 'prs': 0})
 
 
-          #logging.info("Fetching commits...")
-          #commits = repo.get_commits()
-          #commit_count = 0
-          #for commit in commits:
-          #    if commit.author:
-          #        stats = commit.stats
-          #        contributors[commit.author.login]["lines_changed"] += (
-          #            stats.additions + stats.deletions
-          #        )
-          #    commit_count += 1
-          #    if commit_count % 100 == 0:
-          #        logging.info(f"Processed {commit_count} commits...")
+          logging.info("Fetching commits...")
+          commits = repo.get_commits()
+          commit_count = 0
+          for commit in commits:
+              if commit.author:
+                  stats = commit.stats
+                  contributors[commit.author.login]["lines_changed"] += (
+                      stats.additions + stats.deletions
+                  )
+              commit_count += 1
+              if commit_count % 100 == 0:
+                  logging.info(f"Processed {commit_count} commits...")
 
-          #logging.info("Fetching pull requests...")
-          #prs = repo.get_pulls(state="closed", sort="created", direction="desc")
-          #pr_count = 0
-          #for pr in prs:
-          #    if pr.merged and pr.user:
-          #        contributors[pr.user.login]["prs"] += 1
-          #    pr_count += 1
-          #    if pr_count % 10 == 0:
-          #        logging.info(f"Processed {pr_count} pull requests...")
+          logging.info("Fetching pull requests...")
+          prs = repo.get_pulls(state="closed", sort="created", direction="desc")
+          pr_count = 0
+          for pr in prs:
+              if pr.merged and pr.user:
+                  contributors[pr.user.login]["prs"] += 1
+              pr_count += 1
+              if pr_count % 10 == 0:
+                  logging.info(f"Processed {pr_count} pull requests...")
 
-          #logging.info(f"Total pull requests processed: {pr_count}")
+          logging.info(f"Total pull requests processed: {pr_count}")
 
-          #logging.info(f"Total contributors: {len(contributors)}")
+          logging.info(f"Total contributors: {len(contributors)}")
 
 
           logging.info("Calculating contributor scores...")
-          #highlighted_contributors = sorted(
-          #    contributors.items(), key=lambda x: calculate_score(x[1]), reverse=True
-          #)
+          highlighted_contributors = sorted(
+              contributors.items(), key=lambda x: calculate_score(x[1]), reverse=True
+          )
 
-          highlighted_contributors = [('statefb', {'lines_changed': 82437, 'prs': 89}), ('wadabee', {'lines_changed': 41962, 'prs': 15}), ('k70suK3-k06a7ash1', {'lines_changed': 40662, 'prs': 14}), ('dependabot[bot]', {'lines_changed': 401, 'prs': 20}), ('Taikono-Himazin', {'lines_changed': 12096, 'prs': 4}), ('kyosuke-kobayashi-lvgs', {'lines_changed': 2533, 'prs': 5}), ('amaynez', {'lines_changed': 7919, 'prs': 1}), ('tmokmss', {'lines_changed': 60, 'prs': 5}), ('satoxiw', {'lines_changed': 2038, 'prs': 3}), ('fsatsuki', {'lines_changed': 465, 'prs': 4}), ('Yukinobu-Mine', {'lines_changed': 362, 'prs': 3}), ('hustshawn', {'lines_changed': 649, 'prs': 2}), ('kennell', {'lines_changed': 212, 'prs': 2}), ('mats16', {'lines_changed': 168, 'prs': 2}), ('gabrielkoo', {'lines_changed': 36, 'prs': 2}), ('skeppeler', {'lines_changed': 32, 'prs': 2}), ('alandao', {'lines_changed': 22, 'prs': 2}), ('eltociear', {'lines_changed': 4, 'prs': 2}), ('jessieweiyi', {'lines_changed': 1028, 'prs': 1})]
           logging.info("Top 20 contributors:")
           for username, stats in highlighted_contributors[:20]:
             score = calculate_score(stats)
