@@ -66,7 +66,6 @@ def execute_ai_ocr(
       messages=messages,
       max_tokens=4096
     )
-    logger.debug(response)
     responses += response['output']['message']['content'][0]['text']
 
     if response['stopReason'] == "max_tokens":
@@ -92,13 +91,10 @@ def execute_ai_ocr(
     else:
       # メッセージから余分な文字列を削除する
       responses = responses.replace("\n</output>", "").replace("</output>", "").replace("\n</ai_ocr_result>", "").replace("</ai_ocr_result>", "").replace("\n", "")
-      logger.debug(f"bedore json load: {responses}")
       # 文字列からJSONに変換する
       responses = json.loads(
         responses
       )
-      logger.debug(f"after json load: {responses}")
-      logger.info(responses["ai_ocr_result"])
 
     return responses
 

@@ -111,18 +111,13 @@ class StepFunctionsLoader(BaseLoader):
     docs = []
 
     ocrResultObjectKey = f"{self.user_id}/{self.bot_id}/pdf_to_image/{self.filename}/text/ocrText.txt"
-    elements = self._get_text_from_s3(self.bucket, ocrResultObjectKey)
+    ocrText = self._get_text_from_s3(self.bucket, ocrResultObjectKey)
 
     # OCR済みのテキストが既にあれば、partition_pdf, partitionはスキップする
-    ocrText = None
-    if elements == "":
+    if ocrText == "":
       # PDFからテキストを抽出
-      elements = self._get_elements()
-      ocrText = "\n\n".join([str(el) for el in elements])
-      logger.debug(f"ocrText: {ocrText}")
-    else:
-      ocrText = elements
-      logger.debug(f"ocrText: {ocrText}")
+      emelents: list = self._get_elements()
+      ocrText = "\n\n".join([str(el) for el in emelents])
 
     # # OCR結果だけもベクトル化対象にする。
     # docs.append(

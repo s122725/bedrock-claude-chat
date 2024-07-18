@@ -42,7 +42,7 @@ def get_bedrock_image_contents_format(base64_image: str) -> dict[str, Collection
     # base64イメージのデコード
     decoded_base64_image = base64.b64decode(base64_image)
     # formatの自動判定
-    format: str = imghdr.what(None, decoded_base64_image)
+    format: str | None = imghdr.what(None, decoded_base64_image)
 
     allowed_formats = ["png", "jpeg"]
     if format in allowed_formats:
