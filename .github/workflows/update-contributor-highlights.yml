@@ -2,7 +2,7 @@ name: Update Contributor Highlights
 
 on:
   schedule:
-    - cron: "0 0 * * 0" # Every Sunday at midnight
+    - cron: "0 0 1 * *" # Every Month'
   workflow_dispatch:
 
 jobs:
@@ -34,6 +34,7 @@ jobs:
           import logging
 
           EXCLUDED_USERS = ["statefb", "wadabee", "Yukinobu-Mine"]  # Core maintainers
+          EXCLUDED_USERS.append("dependabot[bot]")  # Dependabot
 
           logging.basicConfig(level=logging.INFO)
 
@@ -46,7 +47,7 @@ jobs:
           g = Github(os.environ['GITHUB_TOKEN'])
           repo = g.get_repo('${{ github.repository }}')
 
-          contributors = defaultdict(lambda: {'commits': 0, 'prs': 0})
+          contributors = defaultdict(lambda: {'lines_changed': 0, 'prs': 0})
 
 
           logging.info("Fetching commits...")
@@ -82,7 +83,11 @@ jobs:
               contributors.items(), key=lambda x: calculate_score(x[1]), reverse=True
           )
 
-          logging.info(f"Top 20 contributors: {highlighted_contributors[:20]}")
+          logging.info("Top 20 contributors:")
+          for username, stats in highlighted_contributors[:20]:
+            score = calculate_score(stats)
+            logging.info(f"{username}: {stats}, Score: {score}")
+
 
           PLATINUM_THRESHOLD = 40000
 
@@ -94,8 +99,7 @@ jobs:
 
           logging.info(f"Platinum contributors: {platinum_contributors}")
 
-          platinum_icon = "🏆"
-          section_title = f"## {platinum_icon} Significant Contributors\n"
+          section_title = f"## 🏆 Significant Contributors\n\n"
 
           platinum_md = section_title + "\n".join(
               [
@@ -104,43 +108,52 @@ jobs:
               ]
           )
 
-
           readme_path = "README.md"
           with open(readme_path, "r") as file:
               readme_content = file.read()
 
-          # Find the "## Contacts" section
-          contacts_start = readme_content.find("## Contacts")
-          contacts_end = readme_content.find("\n\n", contacts_start)
+          start = readme_content.find(section_title)
+          end = readme_content.find("## Contributors")
 
-          # Find the "## Contributors" section
-          contributors_start = readme_content.find("## Contributors", contacts_end)
           # Insert the platinum contributors section between "## Contacts" and "## Contributors"
           new_readme_content = (
-              readme_content[:contacts_end]
-              + "\n\n"
+              readme_content[:start]
               + platinum_md
               + "\n\n"
-              + readme_content[contributors_start:]
+              + readme_content[end:]
           )
 
           with open(readme_path, "w") as file:
             file.write(new_readme_content)
           EOF
-
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add README.md
-          git commit -m "Update contributor highlights" || echo "No changes to commit"
-          git push
-
+      - name: Set git identity
+        run: |-
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+        id: create-pr
+        uses: peter-evans/create-pull-request@b1ddad2c994a25fbc81a28b3ec0e368bb2021c50
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update contributor highlights"
-          branch: update-contributor-highlights
-          title: "Update Contributor Highlights"
-          body: "This pull request updates the contributor highlights in the README.md file."
+          commit-message: |-
+            update(readme): update contributor highlights
+
+            [Workflow Run]: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ------
+
+            *Automatically created by projen via the "upgrade-contributor-highlights" workflow*
+          branch: github-actions/update-contributor-highlights
+          title: "update(readme): update contributor highlights"
+          body: |-
+            update(readme): update contributor highlights
+
+            [Workflow Run]: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ------
+
+                *Automatically created by projen via the "upgrade-contributor-highlights" workflow*
+          author: github-actions <github-actions@github.com>
+          committer: github-actions <github-actions@github.com>
+          signoff: true
+          base: v1
