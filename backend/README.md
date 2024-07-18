@@ -27,7 +27,6 @@ export LARGE_MESSAGE_BUCKET=bedrockchatstack-largemessagebucketxxx
 export USER_POOL_ID=xxxxxxxxx
 export CLIENT_ID=xxxxxxxxx
 export DB_SECRETS_ARN=arn:aws:secretsmanager:ap-northeast-1:xxxxxxxxxxxx:secret:VectorStoreClusterSecretXXX-xxxxxxxxxxxx-xxxxxx
-export DEBUG_WITH_COGNITO=True
 ```
 
 ## Launch local server
