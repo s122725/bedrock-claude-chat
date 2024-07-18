@@ -136,20 +136,33 @@ jobs:
           with open(readme_path, "w") as file:
             file.write(new_readme_content)
           EOF
-
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add README.md
-          git commit -m "Update contributor highlights" || echo "No changes to commit"
-          git push
-
+      - name: Set git identity
+        run: |-
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+        id: create-pr
+        uses: peter-evans/create-pull-request@b1ddad2c994a25fbc81a28b3ec0e368bb2021c50
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update contributor highlights"
-          branch: update-contributor-highlights
-          title: "Update Contributor Highlights"
-          body: "This pull request updates the contributor highlights in the README.md file."
+          commit-message: |-
+            update(readme): update contributor highlights
+
+            [Workflow Run]: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ------
+
+            *Automatically created by projen via the "upgrade-contributor-highlights" workflow*
+          branch: github-actions/update-contributor-highlights
+          title: "update(readme): update contributor highlights"
+          body: |-
+            update(readme): update contributor highlights
+
+            [Workflow Run]: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ------
+
+                *Automatically created by projen via the "upgrade-contributor-highlights" workflow*
+          author: github-actions <github-actions@github.com>
+          committer: github-actions <github-actions@github.com>
+          signoff: true
