@@ -6,7 +6,7 @@ on:
       - main
       - v1
   schedule:
-    - cron: "0 0 * * 0" # Every Sunday at midnight'
+    - cron: "0 0 1 * *" # Every Month'
   workflow_dispatch:
 
 jobs:
@@ -104,8 +104,7 @@ jobs:
 
           logging.info(f"Platinum contributors: {platinum_contributors}")
 
-          platinum_icon = "🏆"
-          section_title = f"## {platinum_icon} Significant Contributors\n"
+          section_title = f"## 🏆 Significant Contributors\n\n"
 
           platinum_md = section_title + "\n".join(
               [
@@ -114,29 +113,19 @@ jobs:
               ]
           )
 
-
           readme_path = "README.md"
           with open(readme_path, "r") as file:
               readme_content = file.read()
 
-          # Find the "## Contacts" section
-          contacts_start = readme_content.find("## Contacts")
-          contacts_end = readme_content.find("\n\n", readme_content.find("\n\n", contacts_start))
-
-          logging.info(f"Contacts start: {contacts_start}, Contacts end: {contacts_end}")
-
-          # Find the "## Contributors" section
-          contributors_start = readme_content.find("## Contributors", contacts_end)
-
-          logging.info(f"Contributors start: {contributors_start}")
+          start = readme_content.find(section_title)
+          end = readme_content.find("## Contributors")
 
           # Insert the platinum contributors section between "## Contacts" and "## Contributors"
           new_readme_content = (
-              readme_content[:contacts_end]
-              + "\n\n"
+              readme_content[:start]
               + platinum_md
               + "\n\n"
-              + readme_content[contributors_start:]
+              + readme_content[end:]
           )
 
           with open(readme_path, "w") as file:
