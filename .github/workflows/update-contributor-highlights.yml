@@ -1,8 +1,12 @@
 name: Update Contributor Highlights
 
 on:
+  pull_request:
+    branches:
+      - main
+      - v1
   schedule:
-    - cron: "0 0 * * 0" # Every Sunday at midnight
+    - cron: "0 0 * * 0" # Every Sunday at midnight'
   workflow_dispatch:
 
 jobs:
@@ -46,7 +50,7 @@ jobs:
           g = Github(os.environ['GITHUB_TOKEN'])
           repo = g.get_repo('${{ github.repository }}')
 
-          contributors = defaultdict(lambda: {'commits': 0, 'prs': 0})
+          contributors = defaultdict(lambda: {'lines_changed': 0, 'prs': 0})
 
 
           logging.info("Fetching commits...")
