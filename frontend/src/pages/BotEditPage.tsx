@@ -842,8 +842,8 @@ const BotEditPage: React.FC = () => {
                 className="py-2">
                 <GenerationConfig
                   topK={topK}
-                  topP={topP}
                   setTopK={setTopK}
+                  topP={topP}
                   setTopP={setTopP}
                   temperature={temperature}
                   setTemperature={setTemperature}
