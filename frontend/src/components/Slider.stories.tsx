@@ -10,6 +10,7 @@ export const Ideal = () => {
     chunkSize: DEFAULT_EMBEDDING_CONFIG.chunkSize,
     chunkOverlap: DEFAULT_EMBEDDING_CONFIG.chunkOverlap,
     enablePartitionPdf: DEFAULT_EMBEDDING_CONFIG.enablePartitionPdf,
+    enablePdfImageScan: DEFAULT_EMBEDDING_CONFIG.enablePdfImageScan,
   });
   return (
     <Slider
@@ -37,6 +38,7 @@ export const Error = () => {
     chunkSize: DEFAULT_EMBEDDING_CONFIG.chunkSize,
     chunkOverlap: DEFAULT_EMBEDDING_CONFIG.chunkOverlap,
     enablePartitionPdf: DEFAULT_EMBEDDING_CONFIG.enablePartitionPdf,
+    enablePdfImageScan: DEFAULT_EMBEDDING_CONFIG.enablePdfImageScan,
   });
   return (
     <Slider
