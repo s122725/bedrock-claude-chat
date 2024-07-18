@@ -121,10 +121,15 @@ jobs:
 
           # Find the "## Contacts" section
           contacts_start = readme_content.find("## Contacts")
-          contacts_end = readme_content.find("\n\n", contacts_start)
+          contacts_end = readme_content.find("\n\n", readme_content.find("\n\n", contacts_start))
+
+          logging.info(f"Contacts start: {contacts_start}, Contacts end: {contacts_end}")
 
           # Find the "## Contributors" section
           contributors_start = readme_content.find("## Contributors", contacts_end)
+
+          logging.info(f"Contributors start: {contributors_start}")
+
           # Insert the platinum contributors section between "## Contacts" and "## Contributors"
           new_readme_content = (
               readme_content[:contacts_end]
