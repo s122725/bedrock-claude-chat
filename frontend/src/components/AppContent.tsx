@@ -10,17 +10,20 @@ import { useNavigate, useParams } from 'react-router-dom';
 import useDrawer from '../hooks/useDrawer';
 import useConversation from '../hooks/useConversation';
 import useChat from '../hooks/useChat';
+import { usePageLabel, usePageTitlePathPattern } from '../routes';
 
 type Props = BaseProps & {
   signOut?: () => void;
 };
 
 const AppContent: React.FC<Props> = (props) => {
+  const { getPageLabel } = usePageLabel();
   const { switchOpen: switchDrawer } = useDrawer();
   const navigate = useNavigate();
   const { conversationId } = useParams();
   const { getTitle } = useConversation();
   const { isGeneratedTitle } = useChat();
+  const { isConversationOrNewChat, pathPattern } = usePageTitlePathPattern();
 
   const onClickNewChat = useCallback(() => {
     navigate('/');
@@ -28,14 +31,16 @@ const AppContent: React.FC<Props> = (props) => {
   }, []);
 
   return (
-    <div className="h-dvh relative flex w-screen bg-aws-paper">
+    <div className="relative flex h-dvh w-screen bg-aws-paper">
       <ChatListDrawer
         onSignOut={() => {
           props.signOut ? props.signOut() : null;
         }}
       />
 
-      <main className="min-h-dvh relative flex-1 overflow-y-hidden transition-width">
+
+      <main className="min-h-dvh relative flex flex-col flex-1 overflow-y-hidden transition-width">
+
         <header className="visible flex h-12 w-full items-center bg-aws-squid-ink p-3 text-lg text-aws-font-color-white lg:hidden lg:h-0">
           <button
             className="mr-2 rounded-full p-2 hover:brightness-50 focus:outline-none focus:ring-1 "
@@ -45,13 +50,17 @@ const AppContent: React.FC<Props> = (props) => {
             <PiList />
           </button>
 
-          <div className="flex grow justify-center">
+          <div className="flex-1 justify-center">
             {isGeneratedTitle ? (
               <>
                 <LazyOutputText text={getTitle(conversationId ?? '')} />
               </>
             ) : (
-              <>{getTitle(conversationId ?? '')}</>
+              <>
+                {isConversationOrNewChat
+                  ? getTitle(conversationId ?? '')
+                  : getPageLabel(pathPattern)}
+              </>
             )}
           </div>
 

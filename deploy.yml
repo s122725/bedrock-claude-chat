@@ -17,9 +17,12 @@ Parameters:
   AllowedSignUpEmailDomains:
     Type: String
     Default: "[]"
-  Region:
+  BedrockRegion:
     Type: String
     Default: "us-east-1"
+  Version:
+    Type: String
+    Default: "v1"
 
 Resources:
   ProjectRole:
@@ -118,8 +121,10 @@ Resources:
             Value: !Ref DisableIpv6
           - Name: ALLOWED_SIGN_UP_EMAIL_DOMAINS
             Value: !Ref AllowedSignUpEmailDomains
-          - Name: REGION
-            Value: !Ref Region
+          - Name: BEDROCK_REGION
+            Value: !Ref BedrockRegion
+          - Name: VERSION
+            Value: !Ref Version
       ServiceRole:
         Fn::GetAtt:
           - ProjectRole
@@ -127,7 +132,7 @@ Resources:
       Source:
         BuildSpec: |-
           {
-            "version": "0.2",
+            "version": 0.2,
             "phases": {
               "install": {
                 "runtime-versions": {
@@ -141,13 +146,13 @@ Resources:
               "build": {
                 "commands": [
                   "echo 'Build phase...'",
-                  "git clone --branch v1 https://github.com/aws-samples/bedrock-claude-chat.git",
+                  "git clone --branch $VERSION https://github.com/aws-samples/bedrock-claude-chat.git",
                   "cd bedrock-claude-chat",
                   "if [ \"$ALLOW_SELF_REGISTER\" = \"false\" ]; then sed -i 's/\"selfSignUpEnabled\": true,/\"selfSignUpEnabled\": false,/' cdk/cdk.json; fi",
                   "if [ ! -z \"$IPV4_RANGES\" ]; then jq --arg ipv4 \"$IPV4_RANGES\" '.context.allowedIpV4AddressRanges = ($ipv4 | split(\",\"))' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; fi",
-                  "if [ "$DISABLE_IPV6" = "true" ]; then jq '.context.allowedIpV6AddressRanges = []' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; elif [ ! -z "$IPV6_RANGES" ]; then jq --arg ipv6 "$IPV6_RANGES" '.context.allowedIpV6AddressRanges = ($ipv6 | split(","))' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; fi",
+                  "if [ \"$DISABLE_IPV6\" = \"true\" ]; then jq '.context.allowedIpV6AddressRanges = []' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; elif [ ! -z \"$IPV6_RANGES\" ]; then jq --arg ipv6 \"$IPV6_RANGES\" '.context.allowedIpV6AddressRanges = ($ipv6 | split(\",\"))' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; fi",
                   "if [ ! -z \"$ALLOWED_SIGN_UP_EMAIL_DOMAINS\" ]; then jq --arg domains \"$ALLOWED_SIGN_UP_EMAIL_DOMAINS\" '.context.allowedSignUpEmailDomains = ($domains | split(\",\"))' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; fi",
-                  "sed -i \"s/\\\"bedrockRegion\\\": \\\"[^\\\"]*\\\"/\\\"bedrockRegion\\\": \\\"${REGION}\\\"/\" cdk/cdk.json",
+                  "sed -i \"s/\\\"bedrockRegion\\\": \\\"[^\\\"]*\\\"/\\\"bedrockRegion\\\": \\\"${BEDROCK_REGION}\\\"/\" cdk/cdk.json",
                   "cd cdk",
                   "npm ci",
                   "cdk bootstrap",

@@ -38,8 +38,11 @@ import useModel from '../hooks/useModel';
 import { TextInputChatContent } from '../features/agent/components/TextInputChatContent';
 import { AgentProcessingIndicator } from '../features/agent/components/AgentProcessingIndicator';
 import { AgentState } from '../features/agent/xstates/agentThinkProgress';
+import { SyncStatus } from '../constants';
+
 import { BottomHelper } from '../features/helper/components/BottomHelper';
 import { useIsWindows } from '../hooks/useIsWindows';
+
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
 
@@ -131,7 +134,11 @@ const ChatPage: React.FC = () => {
   }, [bot?.hasKnowledge, botId, bot?.hasAgent]);
 
   const onSend = useCallback(
-    (content: string, base64EncodedImages?: string[], textAttachments?: TextAttachmentType[]) => {
+    (
+      content: string,
+      base64EncodedImages?: string[],
+      textAttachments?: TextAttachmentType[]
+    ) => {
       postChat({
         content,
         base64EncodedImages,
@@ -173,9 +180,9 @@ const ChatPage: React.FC = () => {
     });
   }, [inputBotParams, regenerate]);
 
-  const onContinueGenerate = useCallback(()=>{
-    continueGenerate({bot: inputBotParams});
-  }, [inputBotParams, continueGenerate])
+  const onContinueGenerate = useCallback(() => {
+    continueGenerate({ bot: inputBotParams });
+  }, [inputBotParams, continueGenerate]);
 
   useLayoutEffect(() => {
     if (messages.length > 0) {
@@ -266,9 +273,10 @@ const ChatPage: React.FC = () => {
               activeCodes['KeyO'];
       })();
 
-      if (!hasKeyDownCommand) return;
-      event.preventDefault();
-      navigate('/');
+      if (hasKeyDownCommand) {
+        event.preventDefault();
+        navigate('/');
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -346,7 +354,7 @@ const ChatPage: React.FC = () => {
             <div
               id="messages"
               role="presentation"
-              className=" flex h-full flex-col overflow-auto pb-9">
+              className=" flex h-full flex-col overflow-auto pb-16">
               {messages?.length === 0 ? (
                 <div className="relative flex w-full justify-center">
                   {!loadingConversation && (
@@ -412,7 +420,7 @@ const ChatPage: React.FC = () => {
       </div>
 
       <div className="bottom-0 z-0 flex w-full flex-col items-center justify-center">
-        {bot && bot.syncStatus !== 'SUCCEEDED' && (
+        {bot && bot.syncStatus !== SyncStatus.SUCCEEDED && (
           <div className="mb-8 w-1/2">
             <Alert
               severity="warning"
@@ -441,7 +449,6 @@ const ChatPage: React.FC = () => {
 
         {bot?.hasAgent ? (
           <TextInputChatContent
-            dndMode={dndMode}
             disabledSend={postingMessage}
             disabled={disabledInput}
             placeholder={
