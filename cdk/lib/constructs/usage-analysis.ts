@@ -233,7 +233,6 @@ export class UsageAnalysis extends Construct {
     });
 
     const exportHandler = new python.PythonFunction(this, "ExportHandler", {
-      functionName: "ExportHandler",
       entry: path.join(__dirname, "../../../backend/s3_exporter/"),
       runtime: Runtime.PYTHON_3_11,
       environment: {

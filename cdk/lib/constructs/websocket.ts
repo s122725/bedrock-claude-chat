@@ -87,7 +87,6 @@ export class WebSocket extends Construct {
     props.documentBucket.grantRead(handlerRole);
 
     const handler = new DockerImageFunction(this, "Handler", {
-      functionName: "WebsocketHandler",
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
@@ -97,7 +96,7 @@ export class WebSocket extends Construct {
           exclude: [
             ".mypy_cache",
             ".venv",
-            "embedding_statemachine",
+            "embedding_statemachine/pdf_ai_ocr",
             "test",
             "tests",
           ]

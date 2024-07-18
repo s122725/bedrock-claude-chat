@@ -86,7 +86,6 @@ export class ApiPublishmentStack extends Stack {
 
     // Handler for FastAPI
     const apiHandler = new DockerImageFunction(this, "ApiHandler", {
-      functionName: "ApiHandler",
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../backend"),
         {
@@ -128,7 +127,6 @@ export class ApiPublishmentStack extends Stack {
       this,
       "SqsConsumeHandler",
       {
-        functionName: "SqsConsumeHandler",
         code: DockerImageCode.fromImageAsset(
           path.join(__dirname, "../../backend"),
           {
