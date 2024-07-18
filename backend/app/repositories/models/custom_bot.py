@@ -35,6 +35,7 @@ class KnowledgeModel(BaseModel):
 
 class GenerationParamsModel(BaseModel):
     max_tokens: int
+    top_k: int
     top_p: Float
     temperature: Float
     stop_sequences: list[str]

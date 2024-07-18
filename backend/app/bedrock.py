@@ -151,6 +151,7 @@ def compose_args_for_converse_api(
                 {
                     "maxTokens": generation_params.max_tokens,
                     "temperature": generation_params.temperature,
+                    "topK": generation_params.top_k,
                     "topP": generation_params.top_p,
                     "stopSequences": generation_params.stop_sequences,
                 }

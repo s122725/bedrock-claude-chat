@@ -14,6 +14,8 @@ const generationConfigParam =
     : EDGE_GENERATION_PARAMS;
 
 interface GenerationConfigProps {
+  topK: number;
+  setTopK: React.Dispatch<React.SetStateAction<number>>;
   topP: number;
   setTopP: React.Dispatch<React.SetStateAction<number>>;
   maxTokens: number;
@@ -72,6 +74,28 @@ const GenerationConfig: React.FC<GenerationConfigProps> = ({
           }}
           onChange={props.setTemperature}
           errorMessage={errorMessages['temperature']}
+        />
+      </div>
+      <div className="mt-2">
+        <Slider
+          value={props.topK}
+          hint={t('generationConfig.topK.hint')}
+          label={
+            <div className="flex items-center gap-1">
+              {t('generationConfig.topK.label')}
+              <Help
+                direction="right"
+                message={t('generationConfig.topK.help')}
+              />
+            </div>
+          }
+          range={{
+            min: generationConfigParam.topK.MIN,
+            max: generationConfigParam.topK.MAX,
+            step: generationConfigParam.topK.STEP,
+          }}
+          onChange={props.setTopK}
+          errorMessage={errorMessages['topK']}
         />
       </div>
       <div className="mt-2">

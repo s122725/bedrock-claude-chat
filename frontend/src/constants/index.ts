@@ -35,6 +35,11 @@ export const EDGE_GENERATION_PARAMS = {
     MIN: 0,
     STEP: 0.001,
   },
+  topK: {
+    MAX: 200,
+    MIN: 0,
+    STEP: 1,
+  },
 };
 
 export const EDGE_MISTRAL_GENERATION_PARAMS = {
@@ -53,6 +58,11 @@ export const EDGE_MISTRAL_GENERATION_PARAMS = {
     MIN: 0,
     STEP: 0.001,
   },
+  topK: {
+    MAX: 200,
+    MIN: 0,
+    STEP: 1,
+  },
 };
 
 export const EDGE_SEARCH_PARAMS = {
@@ -65,6 +75,7 @@ export const EDGE_SEARCH_PARAMS = {
 
 export const DEFAULT_GENERATION_CONFIG: GenerationParams = {
   maxTokens: 2000,
+  topK: 250,
   topP: 0.999,
   temperature: 0.6,
   stopSequences: ['Human: ', 'Assistant: '],
@@ -72,6 +83,7 @@ export const DEFAULT_GENERATION_CONFIG: GenerationParams = {
 
 export const DEFAULT_MISTRAL_GENERATION_CONFIG: GenerationParams = {
   maxTokens: 4096,
+  topK: 50,
   topP: 0.9,
   temperature: 0.5,
   stopSequences: ['[INST]', '[/INST]'],

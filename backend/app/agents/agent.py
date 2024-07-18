@@ -276,6 +276,7 @@ def create_react_agent(
     stop = ["<observation>"]
     generation_params = generation_config or GenerationParamsModel(
         max_tokens=DEFAULT_GENERATION_CONFIG["max_tokens"],
+        top_k=DEFAULT_GENERATION_CONFIG["top_k"],
         top_p=DEFAULT_GENERATION_CONFIG["top_p"],
         temperature=DEFAULT_GENERATION_CONFIG["temperature"],
         stop_sequences=DEFAULT_GENERATION_CONFIG["stop_sequences"],

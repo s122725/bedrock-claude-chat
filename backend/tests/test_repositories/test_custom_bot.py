@@ -36,9 +36,7 @@ from app.repositories.models.custom_bot_kb import (
     BedrockKnowledgeBaseModel,
     OpenSearchParamsModel,
 )
-from app.repositories.models.custom_bot_kb import (
-    SearchParamsModel as SearchParamsModelKB,
-)
+from app.repositories.models.custom_bot_kb import SearchParamsModel as SearchParamsModelKB
 from app.usecases.bot import fetch_all_bots_by_user_id
 from tests.test_repositories.utils.bot_factory import (
     create_test_private_bot,
@@ -227,6 +225,7 @@ class TestCustomBotRepository(unittest.TestCase):
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2500,
+                top_k=250,
                 top_p=0.99,
                 temperature=0.2,
                 stop_sequences=["Human: ", "Assistant: "],
@@ -282,6 +281,7 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.embedding_params.enable_partition_pdf, False)
 
         self.assertEqual(bot.generation_params.max_tokens, 2500)
+        self.assertEqual(bot.generation_params.top_k, 250)
         self.assertEqual(bot.generation_params.top_p, 0.99)
         self.assertEqual(bot.generation_params.temperature, 0.2)
 
@@ -413,9 +413,7 @@ class TestUpdateBotVisibility(unittest.TestCase):
     def setUp(self) -> None:
         bot1 = create_test_private_bot("1", is_pinned=True, owner_user_id="user1")
         bot2 = create_test_private_bot("2", is_pinned=True, owner_user_id="user1")
-        public1 = create_test_public_bot(
-            "public1", is_pinned=True, owner_user_id="user2"
-        )
+        public1 = create_test_public_bot("public1", is_pinned=True, owner_user_id="user2")
         alias1 = BotAliasModel(
             id="4",
             title="Test Alias",
@@ -458,6 +456,7 @@ class TestUpdateBotVisibility(unittest.TestCase):
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,
+                top_k=250,
                 top_p=0.999,
                 temperature=0.6,
                 stop_sequences=["Human: ", "Assistant: "],

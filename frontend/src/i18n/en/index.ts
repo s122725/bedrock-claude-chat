@@ -461,6 +461,11 @@ How would you categorize this email?`,
         hint: 'Affects the shape of the probability distribution for the predicted output and influences the likelihood of the model selecting lower-probability outputs',
         help: 'Choose a lower value to influence the model to select higher-probability outputs; Choose a higher value to influence the model to select lower-probability outputs',
       },
+      topK: {
+        label: 'Top-k',
+        hint: 'The number of most-likely candidates that the model considers for the next token',
+        help: 'Choose a lower value to decrease the size of the pool and limit the options to more likely outputs; Choose a higher value to increase the size of the pool and allow the model to consider less likely outputs',
+      },
       topP: {
         label: 'Top-p',
         hint: 'The percentage of most-likely candidates that the model considers for the next token',

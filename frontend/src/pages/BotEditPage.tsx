@@ -76,6 +76,7 @@ const BotEditPage: React.FC = () => {
   const [maxTokens, setMaxTokens] = useState<number>(
     defaultGenerationConfig.maxTokens
   );
+  const [topK, setTopK] = useState<number>(defaultGenerationConfig.topK);
   const [topP, setTopP] = useState<number>(defaultGenerationConfig.topP);
   const [temperature, setTemperature] = useState<number>(
     defaultGenerationConfig.temperature
@@ -132,6 +133,7 @@ const BotEditPage: React.FC = () => {
           );
           setEmbeddingParams(bot.embeddingParams);
           setSearchParams(bot.searchParams);
+          setTopK(bot.generationParams.topK);
           setTopP(bot.generationParams.topP);
           setTemperature(bot.generationParams.temperature);
           setMaxTokens(bot.generationParams.maxTokens);
@@ -335,7 +337,7 @@ const BotEditPage: React.FC = () => {
   }, []);
 
   const isValidGenerationConfigParam = useCallback(
-    (value: number, key: 'maxTokens' | 'topP' | 'temperature') => {
+    (value: number, key: 'maxTokens' | 'topK' | 'topP' | 'temperature') => {
       if (value < edgeGenerationParams[key].MIN) {
         setErrorMessages(
           key,
@@ -429,6 +431,7 @@ const BotEditPage: React.FC = () => {
 
     return (
       isValidGenerationConfigParam(maxTokens, 'maxTokens') &&
+      isValidGenerationConfigParam(topK, 'topK') &&
       isValidGenerationConfigParam(topP, 'topP') &&
       isValidGenerationConfigParam(temperature, 'temperature')
     );
@@ -441,6 +444,7 @@ const BotEditPage: React.FC = () => {
     conversationQuickStarters,
     isValidGenerationConfigParam,
     maxTokens,
+    topK,
     topP,
     temperature,
     setErrorMessages,
@@ -468,6 +472,7 @@ const BotEditPage: React.FC = () => {
       generationParams: {
         maxTokens,
         temperature,
+        topK,
         topP,
         stopSequences: stopSequences.split(','),
       },
@@ -503,6 +508,7 @@ const BotEditPage: React.FC = () => {
     embeddingParams.enablePartitionPdf,
     maxTokens,
     temperature,
+    topK,
     topP,
     stopSequences,
     searchParams,
@@ -534,6 +540,7 @@ const BotEditPage: React.FC = () => {
         generationParams: {
           maxTokens,
           temperature,
+          topK,
           topP,
           stopSequences: stopSequences.split(','),
         },
@@ -573,6 +580,7 @@ const BotEditPage: React.FC = () => {
     embeddingParams?.enablePartitionPdf,
     maxTokens,
     temperature,
+    topK,
     topP,
     stopSequences,
     searchParams,
@@ -833,7 +841,9 @@ const BotEditPage: React.FC = () => {
                 label={t('generationConfig.title')}
                 className="py-2">
                 <GenerationConfig
+                  topK={topK}
                   topP={topP}
+                  setTopK={setTopK}
                   setTopP={setTopP}
                   temperature={temperature}
                   setTemperature={setTemperature}

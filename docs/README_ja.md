@@ -87,8 +87,7 @@ Frontend URL: https://xxxxxxxxx.cloudfront.net
 > [!Important]
 > オプションのパラメータを設定しない場合、このデプロイ方法では URL を知っている誰でもサインアップできてしまいます。本番環境で使用する場合は、セキュリティリスクを軽減するために、IP アドレスの制限を追加し、セルフサインアップを無効にすることを強くお勧めします（`allowed-signup-email-domains` を定義して、会社のドメインからのメールアドレスのみがサインアップできるようにすることで、ユーザーを制限できます）。IP アドレスの制限には `ipv4-ranges` と `ipv6-ranges` の両方を使用し、`./bin` を実行する際に `disable-self-register` を使用してセルフサインアップを無効にしてください。
 
-> [!TIP]
-> `Frontend URL` が正しく表示されない場合や、Bedrock Claude Chat が正常に動作しない場合は、最新バージョンの不具合である可能性がありますので、パラメータに `--version "v1.2.6"` を追加して再度デプロイを試してみてください。
+> [!TIP] > `Frontend URL` が正しく表示されない場合や、Bedrock Claude Chat が正常に動作しない場合は、最新バージョンの不具合である可能性がありますので、パラメータに `--version "v1.2.6"` を追加して再度デプロイを試してみてください。
 
 ## アーキテクチャ
 
@@ -189,6 +188,7 @@ cdk.json 内の`enableMistral`を`true`に更新し、`cdk deploy`を実行し�
 GENERATION_CONFIG = {
     "max_tokens_to_sample": 500,
     "temperature": 0.6,
+    "top_k": 250,
     "top_p": 0.999,
     "stop_sequences": ["Human: ", "Assistant: "],
 }
