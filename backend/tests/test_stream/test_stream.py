@@ -110,6 +110,7 @@ class TestConverseApiStreamHandler(unittest.TestCase):
 
         generation_params = GenerationParamsModel(
             max_tokens=2000,
+            top_k=50,
             top_p=0.999,
             temperature=0.6,
             stop_sequences=["Human: ", "Assistant: "],

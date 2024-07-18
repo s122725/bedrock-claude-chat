@@ -28,6 +28,7 @@ client = get_bedrock_client()
 
 class ConverseApiRequest(TypedDict):
     inference_config: dict
+    additional_model_request_fields: dict
     model_id: str
     messages: list[dict]
     stream: bool
@@ -144,24 +145,27 @@ def compose_args_for_converse_api(
                     raise NotImplementedError()
             arg_messages.append({"role": message.role, "content": content_blocks})
 
-    inference_config = convert_dict_keys_to_camel_case(
-        {
-            **DEFAULT_GENERATION_CONFIG,
-            **(
-                {
-                    "maxTokens": generation_params.max_tokens,
-                    "temperature": generation_params.temperature,
-                    "topK": generation_params.top_k,
-                    "topP": generation_params.top_p,
-                    "stopSequences": generation_params.stop_sequences,
-                }
-                if generation_params
-                else {}
-            ),
-        }
-    )
+    inference_config = {
+        **DEFAULT_GENERATION_CONFIG,
+        **(
+            {
+                "maxTokens": generation_params.max_tokens,
+                "temperature": generation_params.temperature,
+                "topP": generation_params.top_p,
+                "stopSequences": generation_params.stop_sequences,
+            }
+            if generation_params
+            else {}
+        ),
+    }
+
+    # `top_k` is configured in `additional_model_request_fields` instead of `inference_config`
+    del inference_config["top_k"]
+    additional_model_request_fields = {"top_k": generation_params.top_k}
+
     args: ConverseApiRequest = {
-        "inference_config": inference_config,
+        "inference_config": convert_dict_keys_to_camel_case(inference_config),
+        "additional_model_request_fields": additional_model_request_fields,
         "model_id": get_model_id(model),
         "messages": arg_messages,
         "stream": stream,
@@ -176,6 +180,7 @@ def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     client = get_bedrock_client()
     messages = args["messages"]
     inference_config = args["inference_config"]
+    additional_model_request_fields = args["additional_model_request_fields"]
     model_id = args["model_id"]
     system = args["system"]
 
@@ -184,6 +189,7 @@ def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
         messages=messages,
         inferenceConfig=inference_config,
         system=system,
+        additionalModelRequestFields=additional_model_request_fields,
     )
 
     return response
