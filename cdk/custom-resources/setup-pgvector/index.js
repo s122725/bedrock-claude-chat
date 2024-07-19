@@ -37,9 +37,8 @@ async function connectWithRetry(maxRetries = 5, retryDelay = 60000) {
 }
 
 const setUp = async () => {
+  const client = await connectWithRetry();
   try {
-    const client = await connectWithRetry();
-
     // Create pgvector table and index
     // Ref: https://github.com/pgvector/pgvector
     await client.query("CREATE EXTENSION IF NOT EXISTS pgcrypto;");
@@ -73,9 +72,8 @@ const setUp = async () => {
 };
 
 const updateTable = async () => {
+  const client = await connectWithRetry();
   try {
-    const client = await connectWithRetry();
-
     await client.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS metadata jsonb;`);
     console.log("SQL execution successful.");
   } catch (err) {
@@ -122,7 +120,7 @@ exports.handler = async (event, context) => {
   try {
     switch (event.RequestType) {
       case "Create":
-        await setUp(client);
+        await setUp();
         await updateStatus(
           event,
           "SUCCESS",
@@ -131,7 +129,7 @@ exports.handler = async (event, context) => {
         );
         break;
       case "Update":
-        await updateTable(client);
+        await updateTable();
         await updateStatus(
           event,
           "SUCCESS",
@@ -142,7 +140,6 @@ exports.handler = async (event, context) => {
       case "Delete":
         await updateStatus(event, "SUCCESS", "", dbClusterIdentifier);
     }
-    await client.end();
   } catch (error) {
     console.log(error);
     if (event.PhysicalResourceId) {
