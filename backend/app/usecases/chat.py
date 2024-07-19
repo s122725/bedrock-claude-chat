@@ -2,7 +2,6 @@ import logging
 from copy import deepcopy
 from typing import Literal
 
-from anthropic.types import Message as AnthropicMessage
 from app.agents.agent import AgentExecutor, create_react_agent, format_log_to_str
 from app.agents.handlers.token_count import get_token_count_callback
 from app.agents.handlers.used_chunk import get_used_chunk_callback
@@ -10,10 +9,9 @@ from app.agents.langchain import BedrockLLM
 from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
 from app.bedrock import (
-    InvocationMetrics,
     calculate_price,
-    compose_args,
-    get_bedrock_response,
+    call_converse_api,
+    compose_args_for_converse_api,
 )
 from app.prompt import build_rag_prompt
 from app.repositories.conversation import (
@@ -44,12 +42,7 @@ from app.routes.schemas.conversation import (
     RelatedDocumentsOutput,
 )
 from app.usecases.bot import fetch_bot, modify_bot_last_used_time
-from app.utils import (
-    get_anthropic_client,
-    get_current_time,
-    is_anthropic_model,
-    is_running_on_lambda,
-)
+from app.utils import get_current_time, is_running_on_lambda
 from app.vector_search import (
     SearchResult,
     filter_used_results,
@@ -60,8 +53,6 @@ from ulid import ULID
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-client = get_anthropic_client()
 
 
 def prepare_conversation(
@@ -324,7 +315,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             # NOTE: `is_running_on_lambda`is a workaround for local testing due to no postgres mock.
             # Fetch most related documents from vector store
             # NOTE: Currently embedding not support multi-modal. For now, use the last content.
-            query = conversation.message_map[user_msg_id].content[-1].body
+            query: str = conversation.message_map[user_msg_id].content[-1].body  # type: ignore[assignment]
 
             search_results = search_related_docs(bot=bot, query=query)
             logger.info(f"Search results from vector store: {search_results}")
@@ -342,28 +333,22 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
         )
 
         if not chat_input.continue_generate:
-            messages.append(chat_input.message)  # type: ignore
+            messages.append(MessageModel.from_message_input(chat_input.message))
 
         # Create payload to invoke Bedrock
-        args = compose_args(
+        args = compose_args_for_converse_api(
             messages=messages,
             model=chat_input.message.model,
             instruction=(
                 message_map["instruction"].content[0].body
                 if "instruction" in message_map
-                else None
+                else None  # type: ignore[union-attr]
             ),
             generation_params=(bot.generation_params if bot else None),
         )
 
-        if is_anthropic_model(args["model"]):
-            client = get_anthropic_client()
-            response: AnthropicMessage = client.messages.create(**args)
-            reply_txt = response.content[0].text
-        else:
-            response = get_bedrock_response(args)  # type: ignore
-            reply_txt = response["outputs"][0]["text"]  # type: ignore
-
+        converse_response = call_converse_api(args)
+        reply_txt = converse_response["output"]["message"]["content"][0]["text"]
         reply_txt = reply_txt.rstrip()
 
         # Used chunks for RAG generation
@@ -380,14 +365,10 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                             rank=r.rank,
                         )
                     )
-        if is_anthropic_model(args["model"]):
-            # Update total pricing
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
-        else:
-            metrics: InvocationMetrics = response["amazon-bedrock-invocationMetrics"]  # type: ignore
-            input_tokens = metrics.input_tokens
-            output_tokens = metrics.output_tokens
+
+        input_tokens = converse_response["usage"]["inputTokens"]
+        output_tokens = converse_response["usage"]["outputTokens"]
+
         price = calculate_price(chat_input.message.model, input_tokens, output_tokens)
         # Published API does not support continued generation
         conversation.should_continue = False
@@ -414,7 +395,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
     if chat_input.continue_generate:
         conversation.message_map[conversation.last_message_id].content[
             0
-        ].body += reply_txt
+        ].body += reply_txt  # type: ignore[union-attr]
     else:
         conversation.message_map[assistant_msg_id] = message
 
@@ -523,16 +504,13 @@ def propose_conversation_title(
     messages.append(new_message)
 
     # Invoke Bedrock
-    args = compose_args(
+    args = compose_args_for_converse_api(
         messages=messages,
         model=model,
     )
-    if is_anthropic_model(args["model"]):
-        response = client.messages.create(**args)
-        reply_txt = response.content[0].text
-    else:
-        response: AnthropicMessage = get_bedrock_response(args)["outputs"][0]  # type: ignore[no-redef]
-        reply_txt = response["text"]
+    response = call_converse_api(args)
+    reply_txt = response["output"]["message"]["content"][0]["text"]
+
     return reply_txt
 
 
@@ -612,10 +590,8 @@ def fetch_related_documents(
     if not bot.display_retrieved_chunks:
         return None
 
-    chunks = search_related_docs(
-        bot=bot,
-        query=chat_input.message.content[-1].body,
-    )
+    query: str = chat_input.message.content[-1].body  # type: ignore[assignment]
+    chunks = search_related_docs(bot=bot, query=query)
 
     documents = []
     for chunk in chunks:

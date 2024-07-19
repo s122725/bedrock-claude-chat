@@ -228,7 +228,7 @@ class TestCustomBotRepository(unittest.TestCase):
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2500,
-                top_k=200,
+                top_k=250,
                 top_p=0.99,
                 temperature=0.2,
                 stop_sequences=["Human: ", "Assistant: "],
@@ -284,7 +284,7 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.embedding_params.enable_partition_pdf, False)
 
         self.assertEqual(bot.generation_params.max_tokens, 2500)
-        self.assertEqual(bot.generation_params.top_k, 200)
+        self.assertEqual(bot.generation_params.top_k, 250)
         self.assertEqual(bot.generation_params.top_p, 0.99)
         self.assertEqual(bot.generation_params.temperature, 0.2)
 
