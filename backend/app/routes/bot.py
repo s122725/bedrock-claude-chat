@@ -141,6 +141,7 @@ def get_private_bot(request: Request, bot_id: str):
             chunk_size=bot.embedding_params.chunk_size,
             chunk_overlap=bot.embedding_params.chunk_overlap,
             enable_partition_pdf=bot.embedding_params.enable_partition_pdf,
+            enable_pdf_image_scan=bot.embedding_params.enable_pdf_image_scan,
         ),
         agent=Agent(
             tools=[

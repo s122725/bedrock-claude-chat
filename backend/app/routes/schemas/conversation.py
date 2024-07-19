@@ -59,6 +59,7 @@ class Chunk(BaseSchema):
     content: str
     content_type: str
     source: str
+    metadata: dict
     rank: int
 
 
@@ -100,6 +101,7 @@ class RelatedDocumentsOutput(BaseSchema):
     chunk_body: str
     content_type: Literal["s3", "url"]
     source_link: str
+    metadata: dict
     rank: int
 
 

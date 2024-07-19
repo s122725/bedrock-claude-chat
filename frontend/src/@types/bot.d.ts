@@ -29,6 +29,7 @@ export type EmdeddingParams = {
   chunkSize: number;
   chunkOverlap: number;
   enablePartitionPdf: boolean;
+  enablePdfImageScan: boolean;
 };
 
 export type BotKnowledgeDiff = {

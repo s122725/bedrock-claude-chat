@@ -145,6 +145,12 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         else DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"]
     )
 
+    enable_pdf_image_scan = (
+        bot_input.embedding_params.enable_pdf_image_scan
+        if bot_input.embedding_params
+        else DEFAULT_EMBEDDING_CONFIG["enable_pdf_image_scan"]
+    )
+
     generation_params = (
         bot_input.generation_params.model_dump()
         if bot_input.generation_params
@@ -186,6 +192,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 enable_partition_pdf=enable_partition_pdf,
+                enable_pdf_image_scan=enable_pdf_image_scan,
             ),
             generation_params=GenerationParamsModel(**generation_params),  # type: ignore
             search_params=SearchParamsModel(**search_params),
@@ -237,6 +244,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             enable_partition_pdf=enable_partition_pdf,
+            enable_pdf_image_scan=enable_pdf_image_scan,
         ),
         generation_params=GenerationParams(**generation_params),
         search_params=SearchParams(**search_params),
@@ -327,6 +335,12 @@ def modify_owned_bot(
         else DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"]
     )
 
+    enable_pdf_image_scan = (
+        modify_input.embedding_params.enable_pdf_image_scan
+        if modify_input.embedding_params
+        else DEFAULT_EMBEDDING_CONFIG["enable_pdf_image_scan"]
+    )
+
     generation_params = (
         modify_input.generation_params.model_dump()
         if modify_input.generation_params
@@ -369,6 +383,7 @@ def modify_owned_bot(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             enable_partition_pdf=enable_partition_pdf,
+            enable_pdf_image_scan=enable_pdf_image_scan,
         ),
         generation_params=GenerationParamsModel(**generation_params),
         search_params=SearchParamsModel(**search_params),
@@ -411,6 +426,7 @@ def modify_owned_bot(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             enable_partition_pdf=enable_partition_pdf,
+            enable_pdf_image_scan=enable_pdf_image_scan,
         ),
         generation_params=GenerationParams(**generation_params),
         search_params=SearchParams(**search_params),

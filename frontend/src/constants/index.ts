@@ -4,6 +4,7 @@ export const DEFAULT_EMBEDDING_CONFIG: EmdeddingParams = {
   chunkSize: 1000,
   chunkOverlap: 200,
   enablePartitionPdf: false,
+  enablePdfImageScan: false,
 };
 
 export const EDGE_EMBEDDING_PARAMS = {

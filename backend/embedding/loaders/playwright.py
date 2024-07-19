@@ -2,7 +2,6 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-
 from embedding.loaders.base import BaseLoader, Document
 
 logger = logging.getLogger(__name__)

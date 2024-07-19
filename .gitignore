@@ -5,3 +5,6 @@ verification
 __pycache__/
 .venv
 .DS_Store
+research
+.env
+.python-version

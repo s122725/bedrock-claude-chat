@@ -438,6 +438,11 @@ How would you categorize this email?`,
           'Enable detailed PDF analysis. If enabled, the PDF will be analyzed in detail over time.',
         hint: 'It is effective when you want to improve search accuracy. Computation costs increase because computation takes more time.',
       },
+      enablePdfImageScan: {
+        label:
+          'Enable image scan in the PDF. If enabled, diagrams included in PDFs will be analyzed.',
+        hint: 'It is effective when you want to improve search accuracy. Computation costs increase because computation takes more time.',
+      },
       help: {
         chunkSize:
           "When the chunk size is too small, contextual information can be lost, and when it's too large, different contextual information may exist within the same chunk, potentially reducing search accuracy.",

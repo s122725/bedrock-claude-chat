@@ -81,13 +81,13 @@ files = [
 
 [[package]]
 name = "aws-lambda-powertools"
-version = "2.40.1"
+version = "2.41.0"
 description = "Powertools for AWS Lambda (Python) is a developer toolkit to implement Serverless best practices and increase developer velocity."
 optional = false
 python-versions = "<4.0.0,>=3.8"
 files = [
-    {file = "aws_lambda_powertools-2.40.1-py3-none-any.whl", hash = "sha256:606feeb4c233d9f2cfbccc44789cf44e0790ddec6ae9d290dff9ca330ae51934"},
-    {file = "aws_lambda_powertools-2.40.1.tar.gz", hash = "sha256:d7a1e2fdf4c8089e5d65fc54ac2f0f4e7fc46ae17f806737e6a1bec494095daf"},
+    {file = "aws_lambda_powertools-2.41.0-py3-none-any.whl", hash = "sha256:3c8a44dcfdb9fad49f161db6bf79d12e727bf440ae2c3d5896905ec8250b8624"},
+    {file = "aws_lambda_powertools-2.41.0.tar.gz", hash = "sha256:024aec66b7f1b453a622117d1ba5df01dfbd06c92fbd25839eae3df4fdc27233"},
 ]
 
 [package.dependencies]
@@ -150,17 +150,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.34.143"
+version = "1.34.144"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.143-py3-none-any.whl", hash = "sha256:0d16832f23e6bd3ae94e35ea8e625529850bfad9baccd426de96ad8f445d8e03"},
-    {file = "boto3-1.34.143.tar.gz", hash = "sha256:b590ce80c65149194def43ebf0ea1cf0533945502507837389a8d22e3ecbcf05"},
+    {file = "boto3-1.34.144-py3-none-any.whl", hash = "sha256:b8433d481d50b68a0162c0379c0dd4aabfc3d1ad901800beb5b87815997511c1"},
+    {file = "boto3-1.34.144.tar.gz", hash = "sha256:2f3e88b10b8fcc5f6100a9d74cd28230edc9d4fa226d99dd40a3ab38ac213673"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.143,<1.35.0"
+botocore = ">=1.34.144,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -169,13 +169,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.143"
+version = "1.34.144"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.143-py3-none-any.whl", hash = "sha256:094aea179e8aaa1bc957ad49cc27d93b189dd3a1f3075d8b0ca7c445a2a88430"},
-    {file = "botocore-1.34.143.tar.gz", hash = "sha256:059f032ec05733a836e04e869c5a15534420102f93116f3bc9a5b759b0651caf"},
+    {file = "botocore-1.34.144-py3-none-any.whl", hash = "sha256:a2cf26e1bf10d5917a2285e50257bc44e94a1d16574f282f3274f7a5d8d1f08b"},
+    {file = "botocore-1.34.144.tar.gz", hash = "sha256:4215db28d25309d59c99507f1f77df9089e5bebbad35f6e19c7c44ec5383a3e8"},
 ]
 
 [package.dependencies]
@@ -345,21 +345,21 @@ files = [
 
 [[package]]
 name = "duckduckgo-search"
-version = "6.1.12"
+version = "6.2.0"
 description = "Search for words, documents, images, news, maps and text translation using the DuckDuckGo.com search engine."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "duckduckgo_search-6.1.12-py3-none-any.whl", hash = "sha256:1a3c674de4a9307fe7a05b76726c2bf00d8a97c408ff443d07d7c7a8ac264ed2"},
-    {file = "duckduckgo_search-6.1.12.tar.gz", hash = "sha256:6e16ddd54ebfa6567702bd371a95d396e54ad7ace2edd1cb7f4f565547eb065c"},
+    {file = "duckduckgo_search-6.2.0-py3-none-any.whl", hash = "sha256:54d8e2a745630fde9fa016835dcc98f551a4f56b7d851bde1706d2f221cba006"},
+    {file = "duckduckgo_search-6.2.0.tar.gz", hash = "sha256:df2d31996122675a775a4327b1fffff1b14bd0541c683fcc4134fa167541c746"},
 ]
 
 [package.dependencies]
 click = ">=8.1.7"
-pyreqwest-impersonate = ">=0.4.9"
+pyreqwest-impersonate = ">=0.5.0"
 
 [package.extras]
-dev = ["mypy (>=1.10.1)", "pytest (>=8.2.2)", "pytest-asyncio (>=0.23.7)", "ruff (>=0.5.0)"]
+dev = ["mypy (>=1.10.1)", "pytest (>=8.2.2)", "pytest-asyncio (>=0.23.7)", "ruff (>=0.5.2)"]
 lxml = ["lxml (>=5.2.2)"]
 
 [[package]]
@@ -512,13 +512,13 @@ socks = ["socksio (==1.*)"]
 
 [[package]]
 name = "huggingface-hub"
-version = "0.23.4"
+version = "0.23.5"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "huggingface_hub-0.23.4-py3-none-any.whl", hash = "sha256:3a0b957aa87150addf0cc7bd71b4d954b78e749850e1e7fb29ebbd2db64ca037"},
-    {file = "huggingface_hub-0.23.4.tar.gz", hash = "sha256:35d99016433900e44ae7efe1c209164a5a81dbbcd53a52f99c281dcd7ce22431"},
+    {file = "huggingface_hub-0.23.5-py3-none-any.whl", hash = "sha256:d7a7d337615e11a45cc14a0ce5a605db6b038dc24af42866f731684825226e90"},
+    {file = "huggingface_hub-0.23.5.tar.gz", hash = "sha256:67a9caba79b71235be3752852ca27da86bd54311d2424ca8afdb8dda056edf98"},
 ]
 
 [package.dependencies]
@@ -593,13 +593,13 @@ files = [
 
 [[package]]
 name = "langchain-core"
-version = "0.2.13"
+version = "0.2.20"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.2.13-py3-none-any.whl", hash = "sha256:b9f52003bfda464975413751737c7e6781781398ba14d9aa6c604046d6fc0c6f"},
-    {file = "langchain_core-0.2.13.tar.gz", hash = "sha256:a5d8b436639b6aa0955f6db287beb4030c46a8e85951ba3873739c4d47645ee1"},
+    {file = "langchain_core-0.2.20-py3-none-any.whl", hash = "sha256:16cc4da6f7ebf33accea7af45a70480733dc852ab291030fb6924865bd7caf76"},
+    {file = "langchain_core-0.2.20.tar.gz", hash = "sha256:a66c439e085d8c75f822f7650a5551d17bada4003521173c763d875d949e4ed5"},
 ]
 
 [package.dependencies]
@@ -629,13 +629,13 @@ six = "*"
 
 [[package]]
 name = "langsmith"
-version = "0.1.85"
+version = "0.1.88"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.85-py3-none-any.whl", hash = "sha256:c1f94384f10cea96f7b4d33fd3db7ec180c03c7468877d50846f881d2017ff94"},
-    {file = "langsmith-0.1.85.tar.gz", hash = "sha256:acff31f9e53efa48586cf8e32f65625a335c74d7c4fa306d1655ac18452296f6"},
+    {file = "langsmith-0.1.88-py3-none-any.whl", hash = "sha256:460ebb7de440afd150fcea8f54ca8779821f2228cd59e149e5845c9dbe06db16"},
+    {file = "langsmith-0.1.88.tar.gz", hash = "sha256:28a07dec19197f4808aa2628d5a3ccafcbe14cc137aef0e607bbd128e7907821"},
 ]
 
 [package.dependencies]
@@ -971,59 +971,55 @@ files = [
 
 [[package]]
 name = "pyreqwest-impersonate"
-version = "0.4.9"
+version = "0.5.0"
 description = "HTTP client that can impersonate web browsers, mimicking their headers and `TLS/JA3/JA4/HTTP2` fingerprints"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pyreqwest_impersonate-0.4.9-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:a229f56575d992df0c520d93408b4b6b660b304387af06208e7b97d739cce2ff"},
-    {file = "pyreqwest_impersonate-0.4.9-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c00dbfd0ed878bed231384cd0c823d71a42220ae73c6d982b6fe77d2870338ca"},
-    {file = "pyreqwest_impersonate-0.4.9-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2d4e6ce0e48b73740f08b1aa69cdbded5d66f4eec327d5eaf2ac42a4fce1a008"},
-    {file = "pyreqwest_impersonate-0.4.9-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:690a5c5615b33cbab340e3a4247256ede157ebf39a02f563cff5356bf61c0c51"},
-    {file = "pyreqwest_impersonate-0.4.9-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:7231511ee14faee27b90a84ec74e15515b7e2d1c389710698660765eaed6e2fd"},
-    {file = "pyreqwest_impersonate-0.4.9-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:2fdbe8e146e595c02fa0afb776d70f9e3b351122e2de9af15934b83f3a548ecd"},
-    {file = "pyreqwest_impersonate-0.4.9-cp310-none-win_amd64.whl", hash = "sha256:982b0e53db24c084675a056944dd769aa07cd1378abf972927f3f1afb23e08b0"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:60b1102b8aec7bbf91e0f7b8bbc3507776731a9acc6844de764911e8d64f7dd2"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:37150478157e683374517d4c0eae0f991b8f5280067a8ee042b6a72fec088843"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ccc77cd1cdae22dad7549a4e9a1a4630619c2ff443add1b28c7d607accda81eb"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:83e99e627d13f1f60d71ce2c2a2b03e1c7f57e8f6a73bde2827ff97cb96f1683"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:72d1adb73264db8c5e24d073d558a895d6690d13a5e38fd857b8b01c33fcbabf"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:6253bd8a104316bbece0e6c658d28292f0bf37a99cccfaf476470b98252d185b"},
-    {file = "pyreqwest_impersonate-0.4.9-cp311-none-win_amd64.whl", hash = "sha256:7e25628a900236fc76320e790fce90e5502371994523c476af2b1c938382f5fa"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:57e1e7f3bfc175c3229947cdd2b26564bcea2923135b8dec8ab157609e201a7c"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:3aeb1c834f54fe685d3c7c0bec65dd981bd988fa3725ee3c7b5656eb7c44a1f7"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:27bc384f18099573817d7ed68d12eb67d33dfc5d2b30ab2ac5a69cdf19c22b6f"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cd604444ddf86ed222b49dd5e3f050c4c0e980dd7be0b3ea0f208fb70544c4b6"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:5206dc7311081accf5b7d021c9e0e68219fd7bb35b0cd755b2d72c3ebfa41842"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:76802f0738c2d00bb4e057938ec048c4c7c4efc5c44f04b9d877ad4419b21ee8"},
-    {file = "pyreqwest_impersonate-0.4.9-cp312-none-win_amd64.whl", hash = "sha256:7cf94f6365bc144f787658e844f94dad38107fb9ff61d65079fb6510447777fe"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-cp38-macosx_10_12_x86_64.whl", hash = "sha256:66e92bd868146028dac1ef9cd2b4aac57e7e6cbd8806fa8a4c77ac5becf396e1"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:dc3ff7ac332879e40301d737b3ec1f3691b1de7492728bea26e75e26d05f89ec"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4c9e9eba83620852d4253023e50e3436726aee16e2de94afbd468da4373830dc"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1d6b47d403c63b461a97efa2aed668f0f06ed26cf61c23d7d6dab4f5a0c81ffc"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:88f695a01e8699ec3a1547d793617b9fd00f810c05c2b4dc0d1472c7f12eed97"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:abb4fbfaa1a3c3adeb7f46baa1d67663af85ab24f2b4cdd15a668ddc6be3a375"},
-    {file = "pyreqwest_impersonate-0.4.9-cp38-none-win_amd64.whl", hash = "sha256:884c1399fe0157dcd0a5a71e3600910df50faa0108c64602d47c15e75b32e60b"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:bf5cd99276207510d64b48eff5602e12f049754d3b0f1194a024e1a080a61d3d"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:029eea1d386d12856da767d685169835f0b0c025ae312c1ee7bc0d8cb47a7d3d"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f1bfb8795fe0a46aee883abcf510a9ecdb4e9acf75c3a5a23571276f555f5e88"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9fe35ce48e7e6b570304ee15915da0e6fab82dcae2b7a1d1a92593b522ebe852"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:dfa377a842bd2e73d1f201bfc33194dd98c148372409d376f6d57efe338ff0eb"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:d46880e68eb779cd071648e94a7ec50b3b77a28210f218be407eda1b0c8df343"},
-    {file = "pyreqwest_impersonate-0.4.9-cp39-none-win_amd64.whl", hash = "sha256:ac431e4a94f8529a19a396750d78c66cc4fa11a8cc61d4bed7f0e0295a9394a9"},
-    {file = "pyreqwest_impersonate-0.4.9-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:12fd04d8da4d23ab5720402fd9f3b6944fb388c19952f2ec9121b46ac1f74616"},
-    {file = "pyreqwest_impersonate-0.4.9-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b52df560d78681cde2fbc39bee547a42a79c8fd33655b79618835ecc412e6933"},
-    {file = "pyreqwest_impersonate-0.4.9-pp310-pypy310_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:e1a2828942f9d589ee6161496444a380d3305e78bda25ff63e4f993b0545b193"},
-    {file = "pyreqwest_impersonate-0.4.9-pp310-pypy310_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:beebedf6d8c0d5fdee9ae15bc64a74e51b35f98eb0d049bf2db067702fbf4e53"},
-    {file = "pyreqwest_impersonate-0.4.9-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8a3d47dea1f46410b58ab60795b5818c8c99d901f6c93fbb6a9d23fa55adb2b1"},
-    {file = "pyreqwest_impersonate-0.4.9-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7bb871adc5d12b2bcbb5af167384d49fc4e7e5e07d12cf912b931149163df724"},
-    {file = "pyreqwest_impersonate-0.4.9-pp38-pypy38_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:d1b0b5556d2bd14a4ffa32654291fe2a9ef1eaac35b5514d9220e7e333a6c727"},
-    {file = "pyreqwest_impersonate-0.4.9-pp38-pypy38_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:5d50feaec78c06d51e1dd65cdbe80a1fc62ff93c8114555482f8a8cc5fe14895"},
-    {file = "pyreqwest_impersonate-0.4.9-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b2a9cfc41917200d8eee61b87a5668abe7d1f924a55b7437065540edf613beed"},
-    {file = "pyreqwest_impersonate-0.4.9-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8106e3df0c1dca4df99e0f998f0e085ea3e1facfaa5afc268160a496ddf7256f"},
-    {file = "pyreqwest_impersonate-0.4.9-pp39-pypy39_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:ff66bb7dc6b1f52cf950b5e9cb0e53baffd1a15da595fd1ef933cd9e36396403"},
-    {file = "pyreqwest_impersonate-0.4.9-pp39-pypy39_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:39f2a3ed17cf08098dc637459e88fb86d3fa7bdf9502659c82218be75651649c"},
-    {file = "pyreqwest_impersonate-0.4.9.tar.gz", hash = "sha256:4ec8df7fe813e89f61e814c5ef75f6fd71164c8e26299c1a42dcd0d42f0bc96c"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:f32457638faa28f8ebcca0ded51bd473fc3f7d2f849d264ec783007e64737d82"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c682a90b87dcc6519aa85983a83f6b76e5b1060512231f22e020c7ed6d476f15"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c7222c42b37cde080c32e32646f52d8ac33276323b5de95a91478116f3f1f15f"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e60eee01d5c1480d12ec92796a8049d2bc96cac7f12b1da246c9009fbaa5309e"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:788d7bdd2bf28162b801918965db42f4cca1acb65f4f9dff8d6ef24874240eb2"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:0c9ac55b87b49b8df22ea8c7b8527c7b3c2ee10273b09e04edecde188a501ff9"},
+    {file = "pyreqwest_impersonate-0.5.0-cp310-none-win_amd64.whl", hash = "sha256:5e3e9e51cf2cd005ade7846510e4c313e5519ab546911586e7bb228eb3cffea8"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:c8ed91f8a521b9b491bcd626de001cd8a1c6eccdecea792ed9b593944ff2b78e"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ff7018952ccd9de818d91d85d9a44b5c515ab20a1db4596fa0d1eb2333f89c80"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0b77f5101a5b8e370a11fcebab8409dd0b979e3ceaaec1e0bd6444a48a8db365"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c26073ee941b2db710ad3c5b00112e97fa488fb328431cddf3b2e6f26cb385ca"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:73026fc157f53267fd04b96adbd9fdc447f9d39bb5a190e72c168bfc8ff256fa"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:64c3643ba96592a1be23a73c82360936b1509b4860b489071c50ddab02f60977"},
+    {file = "pyreqwest_impersonate-0.5.0-cp311-none-win_amd64.whl", hash = "sha256:5d2c4f1b518e74c0d9d0b460c4376f0668125c75f73554509307c8ab2578d2ea"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:0c4659baacb2fe2b3a84f7692e7e3e8189fad6005cd21db0be3a87a9f32b4bcc"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:0c24fd6c45dcc6fa10fcaa1df79bf46b64a91c806c0f704e3293e9478a00ef2c"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b448840692b19b06db441180d850342dbe43559fb9ce97bf47b3984933577681"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ac9bc91b6a2039d3d135755cd5aa492b4139c6b8c3e905bff24fb9ea5bbb0a0a"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:3633ff3a76551f573f14a5703bb349a5750d3d8f3622c3f31ca76bb6732ec3d7"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:f93ee8de736b30db5698a5b6257ac14bb351794e5b742f847f50567d5a65c351"},
+    {file = "pyreqwest_impersonate-0.5.0-cp312-none-win_amd64.whl", hash = "sha256:213350e90f58baf7cf929fee42d09b7859ea96bab203a3186ab580413779ad3d"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-cp38-macosx_10_12_x86_64.whl", hash = "sha256:05a6cab1fd07a9f753393d9cc30aaa77d6e5ef4d3788306b94465de44a82b75c"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:e6e6e96835b46fa7ac2ec02c62b9533a0ac9f299bc7e24651448f38899ef3461"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3419a5f7bce9393dd86aac8f0daea51e63064acdbe92042b36c256bfccbf132c"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:aad8a39f2a490eea7562a83e3d5e69dfca8a42e8e5efaa0a863eeb7db66dbe11"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:566e82771a1eb9d2402e5a371d77ff40aa4d9fdaf2cd1d043faf2909ac4ddb0f"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:d4227ebeb72cbcabec96f2ef38a508d2cdd60752da7f0d3dea279b4ba31174f1"},
+    {file = "pyreqwest_impersonate-0.5.0-cp38-none-win_amd64.whl", hash = "sha256:d439eb4bc0540e33677cf01ddf7021f7a89e44aeda2e978a8fdba4849cf42a0c"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:0792ee7537fa416314c050680a676f70b509e0b9ea5e0a48c43455437dae6ad6"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:6c324147d1ace618f40341c9c3bc7364907b4a3f26cd22d86661ee89dbe0bdeb"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c6ef04bed60e436dedeee97e7acbacdf0a8330feb9cccc2b1248fa30fb6e7136"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:53bce83f1d2afc6b4c553e5509c2d47b9aa71c4569f54ee2d48f35a7b78af93c"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:9904ca4d6daa139586a201446b7117c055b3a4b3b21fbe2e5ebd775129e90db4"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:17e0f5f738577c48711411532607583d536dc0ef1956fab073135594c558e819"},
+    {file = "pyreqwest_impersonate-0.5.0-cp39-none-win_amd64.whl", hash = "sha256:7edfa7d82b6dda982aa94ed0fb257bc34345388cfcab7b8d91f5397d8c155802"},
+    {file = "pyreqwest_impersonate-0.5.0-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1d61f734f13e3ff08f5f24af9cb6173ae0469cf6d32242195e830186cb33388f"},
+    {file = "pyreqwest_impersonate-0.5.0-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:daa181607ce2f4e33b8cba04ca06e66987eef090e1c9e01f98d557ca93bb8baa"},
+    {file = "pyreqwest_impersonate-0.5.0-pp310-pypy310_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:f3b8120bf66d2361c80dbd0deb15d66dbc627231c98d482ecf924ba2daf18a97"},
+    {file = "pyreqwest_impersonate-0.5.0-pp310-pypy310_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:19ac2de3c51ea674213956631ce30fc3373806d3e37a438d0985d4000cc70d83"},
+    {file = "pyreqwest_impersonate-0.5.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:aab2be67b4ec00fc4fc8877046e0ba618cca361616275f5e3a05374d49e11324"},
+    {file = "pyreqwest_impersonate-0.5.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f66ffd6bff90a6794fd3a03f7678508b0fa7366b4613744ba60b68552fa0bd6b"},
+    {file = "pyreqwest_impersonate-0.5.0-pp39-pypy39_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:2ec832b626b541555e64b6bbc66b53d7c101154592f925190626072404efa1e7"},
+    {file = "pyreqwest_impersonate-0.5.0-pp39-pypy39_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:d9cbe2bf50e3712cec512242b9ca9126e0796f18c24e238b71d262b218de8a8d"},
+    {file = "pyreqwest_impersonate-0.5.0.tar.gz", hash = "sha256:17e669985479c6240e3d8149b69d364ea256c40f3d076081f0f14f0051dde078"},
 ]
 
 [package.extras]
@@ -1409,13 +1405,13 @@ telegram = ["requests"]
 
 [[package]]
 name = "types-requests"
-version = "2.32.0.20240622"
+version = "2.32.0.20240712"
 description = "Typing stubs for requests"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-requests-2.32.0.20240622.tar.gz", hash = "sha256:ed5e8a412fcc39159d6319385c009d642845f250c63902718f605cd90faade31"},
-    {file = "types_requests-2.32.0.20240622-py3-none-any.whl", hash = "sha256:97bac6b54b5bd4cf91d407e62f0932a74821bc2211f22116d9ee1dd643826caf"},
+    {file = "types-requests-2.32.0.20240712.tar.gz", hash = "sha256:90c079ff05e549f6bf50e02e910210b98b8ff1ebdd18e19c873cd237737c1358"},
+    {file = "types_requests-2.32.0.20240712-py3-none-any.whl", hash = "sha256:f754283e152c752e46e70942fa2a146b5bc70393522257bb85bd1ef7e019dcc3"},
 ]
 
 [package.dependencies]

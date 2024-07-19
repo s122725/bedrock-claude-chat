@@ -28,6 +28,7 @@ class EmbeddingParams(BaseSchema):
     chunk_size: int
     chunk_overlap: int
     enable_partition_pdf: bool
+    enable_pdf_image_scan: bool
 
 
 class GenerationParams(BaseSchema):
@@ -158,6 +159,8 @@ class BotModifyInput(BaseSchema):
                 == current_bot_model.embedding_params.chunk_overlap
                 and self.embedding_params.enable_partition_pdf
                 == current_bot_model.embedding_params.enable_partition_pdf
+                and self.embedding_params.enable_pdf_image_scan
+                == current_bot_model.embedding_params.enable_pdf_image_scan
             ):
                 pass
             else:

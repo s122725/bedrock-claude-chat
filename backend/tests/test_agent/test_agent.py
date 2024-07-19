@@ -42,6 +42,7 @@ class TestReactAgent(unittest.TestCase):
                 chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
                 chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
                 enable_partition_pdf=False,
+                enable_pdf_image_scan=False,
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,

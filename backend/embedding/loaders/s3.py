@@ -2,7 +2,6 @@ import os
 import tempfile
 import logging
 import boto3
-from distutils.util import strtobool
 from embedding.loaders.base import BaseLoader, Document
 from unstructured.partition.auto import partition
 from unstructured.partition.pdf import partition_pdf
@@ -42,7 +41,7 @@ class S3FileLoader(BaseLoader):
                 return partition_pdf(
                     filename=file_path,
                     strategy="hi_res",
-                    infer_table_structure=True,
+                    infer_table_structure=False,
                     extract_images_in_pdf=False,
                 )
             else:
@@ -50,7 +49,10 @@ class S3FileLoader(BaseLoader):
                 return partition(filename=file_path)
 
     def _get_metadata(self) -> dict:
-        return {"source": f"s3://{self.bucket}/{self.key}"}
+        return {
+            "source": f"s3://{self.bucket}/{self.key}",
+            "metadata": {}, # metadataはDBのmetadataにJSON型で格納される想定
+        }
 
     def load(self) -> list[Document]:
         """Load file."""

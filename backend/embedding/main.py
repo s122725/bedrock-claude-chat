@@ -21,6 +21,7 @@ from aws_lambda_powertools.utilities import parameters
 from embedding.loaders import UrlLoader
 from embedding.loaders.base import BaseLoader
 from embedding.loaders.s3 import S3FileLoader
+from embedding.loaders.sfn import StepFunctionsLoader
 from embedding.wrapper import DocumentSplitter, Embedder
 from llama_index.core.node_parser import SentenceSplitter
 from retry import retry
@@ -53,7 +54,7 @@ def get_exec_id() -> str:
 
 @retry(tries=RETRIES_TO_INSERT_TO_POSTGRES, delay=RETRY_DELAY_TO_INSERT_TO_POSTGRES)
 def insert_to_postgres(
-    bot_id: str, contents: ListProxy, sources: ListProxy, embeddings: ListProxy
+    bot_id: str, contents: ListProxy, sources: ListProxy, metadatas: ListProxy, embeddings: ListProxy
 ):
     secrets: Any = parameters.get_secret(DB_SECRETS_ARN)  # type: ignore
     db_info = json.loads(secrets)
@@ -71,15 +72,16 @@ def insert_to_postgres(
             delete_query = "DELETE FROM items WHERE botid = %s"
             cursor.execute(delete_query, (bot_id,))
 
-            insert_query = f"INSERT INTO items (id, botid, content, source, embedding) VALUES (%s, %s, %s, %s, %s)"
+            insert_query = f"INSERT INTO items (id, botid, content, source, metadata, embedding) VALUES (%s, %s, %s, %s, %s, %s)"
             values_to_insert = []
-            for i, (source, content, embedding) in enumerate(
-                zip(sources, contents, embeddings)
+            for i, (source, metadata, content, embedding) in enumerate(
+                zip(sources, metadatas, contents, embeddings)
             ):
                 id_ = str(ULID())
                 logger.info(f"Preview of content {i}: {content[:200]}")
+                logger.info(f"{bot_id}, {content[:10]}, {source}, {metadata}")
                 values_to_insert.append(
-                    (id_, bot_id, content, source, json.dumps(embedding))
+                    (id_, bot_id, content, source, json.dumps(metadata), json.dumps(embedding))
                 )
             cursor.executemany(insert_query, values_to_insert)
         conn.commit()
@@ -115,6 +117,7 @@ def embed(
     loader: BaseLoader,
     contents: ListProxy,
     sources: ListProxy,
+    metadatas: ListProxy,
     embeddings: ListProxy,
     chunk_size: int,
     chunk_overlap: int,
@@ -136,6 +139,7 @@ def embed(
 
     contents.extend([t.page_content for t in splitted])
     sources.extend([t.metadata["source"] for t in splitted])
+    metadatas.extend([t.metadata["metadata"] for t in splitted])
     embeddings.extend(splitted_embeddings)
 
 
@@ -148,6 +152,7 @@ def main(
     chunk_size: int,
     chunk_overlap: int,
     enable_partition_pdf: bool,
+    enable_pdf_image_scan: bool,
 ):
     exec_id = ""
     try:
@@ -182,6 +187,7 @@ def main(
         with multiprocessing.Manager() as manager:
             contents: ListProxy = manager.list()
             sources: ListProxy = manager.list()
+            metadatas: ListProxy = manager.list()
             embeddings: ListProxy = manager.list()
 
             if len(source_urls) > 0:
@@ -189,6 +195,7 @@ def main(
                     UrlLoader(source_urls),
                     contents,
                     sources,
+                    metadatas,
                     embeddings,
                     chunk_size,
                     chunk_overlap,
@@ -197,34 +204,69 @@ def main(
                 for sitemap_url in sitemap_urls:
                     raise NotImplementedError()
             if len(filenames) > 0:
-                with multiprocessing.Pool(processes=None) as pool:
-                    futures = [
-                        pool.apply_async(
-                            embed,
-                            args=(
-                                S3FileLoader(
-                                    bucket=DOCUMENT_BUCKET,
-                                    key=compose_upload_document_s3_path(
-                                        user_id, bot_id, filename
+                # イメージ変換ありの場合はStepFunctionsで処理
+                if enable_pdf_image_scan == True:
+                    with multiprocessing.Pool(processes=None) as pool:
+                        futures = [
+                            pool.apply_async(
+                                embed,
+                                args=(
+                                    StepFunctionsLoader(
+                                        bucket=DOCUMENT_BUCKET,
+                                        key=compose_upload_document_s3_path(
+                                            user_id, bot_id, filename
+                                        ),
+                                        user_id = user_id, 
+                                        bot_id = bot_id,
+                                        exec_id = exec_id,
+                                        filename = filename,
+                                        enable_partition_pdf=enable_partition_pdf,
+                                        enable_pdf_image_scan=enable_pdf_image_scan,
                                     ),
-                                    enable_partition_pdf=enable_partition_pdf,
+                                    contents,
+                                    sources,
+                                    metadatas,
+                                    embeddings,
+                                    chunk_size,
+                                    chunk_overlap,
                                 ),
-                                contents,
-                                sources,
-                                embeddings,
-                                chunk_size,
-                                chunk_overlap,
-                            ),
-                        )
-                        for filename in filenames
-                    ]
-                    for future in futures:
-                        future.get()
+                            )
+                            for filename in filenames
+                        ]
+                        for future in futures:
+                            future.get()
+                    
+                else:
+                    # イメージ変換なしの場合は、マルチプロセスで処理
+                    with multiprocessing.Pool(processes=None) as pool:
+                        futures = [
+                            pool.apply_async(
+                                embed,
+                                args=(
+                                    S3FileLoader(
+                                        bucket=DOCUMENT_BUCKET,
+                                        key=compose_upload_document_s3_path(
+                                            user_id, bot_id, filename
+                                        ),
+                                        enable_partition_pdf=enable_partition_pdf,
+                                    ),
+                                    contents,
+                                    sources,
+                                    metadatas,
+                                    embeddings,
+                                    chunk_size,
+                                    chunk_overlap,
+                                ),
+                            )
+                            for filename in filenames
+                        ]
+                        for future in futures:
+                            future.get()
 
             logger.info(f"Number of chunks: {len(contents)}")
 
             # Insert records into postgres
-            insert_to_postgres(bot_id, contents, sources, embeddings)
+            insert_to_postgres(bot_id, contents, sources, metadatas, embeddings)
             status_reason = "Successfully inserted to vector store."
     except Exception as e:
         logger.error("[ERROR] Failed to embed.")
@@ -266,6 +308,7 @@ if __name__ == "__main__":
     chunk_size = embedding_params.chunk_size
     chunk_overlap = embedding_params.chunk_overlap
     enable_partition_pdf = embedding_params.enable_partition_pdf
+    enable_pdf_image_scan = embedding_params.enable_pdf_image_scan
     knowledge = new_image.knowledge
     sitemap_urls = knowledge.sitemap_urls
     source_urls = knowledge.source_urls
@@ -277,6 +320,7 @@ if __name__ == "__main__":
     logger.info(f"chunk_size: {chunk_size}")
     logger.info(f"chunk_overlap: {chunk_overlap}")
     logger.info(f"enable_partition_pdf: {enable_partition_pdf}")
+    logger.info(f"enable_pdf_image_scan: {enable_pdf_image_scan}")
 
     main(
         user_id,
@@ -287,4 +331,5 @@ if __name__ == "__main__":
         chunk_size,
         chunk_overlap,
         enable_partition_pdf,
+        enable_pdf_image_scan,
     )

@@ -20,6 +20,7 @@ export type UsedChunk = {
   content: string;
   contentType: 's3' | 'url' | 'youtube';
   source: string;
+  metadata: dict;
   rank: number;
 };
 
@@ -35,6 +36,7 @@ export type RelatedDocument = {
   chunkBody: string;
   contentType: 's3' | 'url' | 'youtube';
   sourceLink: string;
+  metadata: dict
   rank: number;
 };
 

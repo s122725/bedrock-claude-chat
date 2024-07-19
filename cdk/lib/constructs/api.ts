@@ -176,8 +176,16 @@ export class Api extends Construct {
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
+          assetName: "BackendHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "backend/embedding_statemachine",
+            "test",
+            "tests",
+          ]
         }
       ),
       vpc: props.vpc,

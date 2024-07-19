@@ -1,7 +1,6 @@
 """Loader that uses unstructured to load HTML files."""
 
 import logging
-import time
 from typing import Any, List
 
 from embedding.loaders.base import BaseLoader, Document

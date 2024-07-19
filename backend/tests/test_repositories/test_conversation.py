@@ -149,6 +149,7 @@ class TestConversationRepository(unittest.TestCase):
                         ChunkModel(
                             content="chunk1",
                             source="source1",
+                            metadata={},
                             rank=1,
                             content_type="url",
                         ),
@@ -404,6 +405,7 @@ class TestConversationBotRepository(unittest.TestCase):
                 chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
                 chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
                 enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
+                enable_pdf_image_scan=DEFAULT_EMBEDDING_CONFIG["enable_pdf_image_scan"],
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,
@@ -453,6 +455,7 @@ class TestConversationBotRepository(unittest.TestCase):
                 chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
                 chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
                 enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
+                enable_pdf_image_scan=DEFAULT_EMBEDDING_CONFIG["enable_pdf_image_scan"],
             ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,

@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import useChat from '../hooks/useChat';
 import DialogFeedback from './DialogFeedback';
 import UploadedFileText from './UploadedFileText';
+import RelatedImageGallery from './RelatedImageGallery';
 
 type Props = BaseProps & {
   chatContent?: DisplayMessageContent;
@@ -52,6 +53,7 @@ const ChatMessage: React.FC<Props> = (props) => {
               chunkBody: chunk.content,
               contentType: chunk.contentType,
               sourceLink: chunk.source,
+              metadata: chunk.metadata,
               rank: chunk.rank,
             };
           })
@@ -260,11 +262,20 @@ const ChatMessage: React.FC<Props> = (props) => {
             </div>
           )}
           {chatContent?.role === 'assistant' && (
-            <ChatMessageMarkdown
+            <div>
+              <ChatMessageMarkdown
               relatedDocuments={relatedDocuments}
               messageId={chatContent.id}>
               {chatContent.content[0].body}
             </ChatMessageMarkdown>
+
+            {/* 生成AIの回答が完了したタイミングで画像を出す。回答中はrelated documentの全ての画像が表示されて、その後表示件数が絞るという挙動をするので、それを防ぐため。 */}
+            { chatContent?.usedChunks && (
+              <RelatedImageGallery 
+                relatedDocuments={relatedDocuments}
+              />
+            )}
+          </div>
           )}
         </div>
       </div>

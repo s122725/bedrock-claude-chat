@@ -1,11 +1,44 @@
 const { Client } = require("pg");
 const { getSecret } = require("@aws-lambda-powertools/parameters/secrets");
 
-const setUp = async (dbConfig) => {
-  const client = new Client(dbConfig);
+// Aurora Serverless may be down, so retry until it connect
+async function connectWithRetry(maxRetries = 5, retryDelay = 60000) {
+  let retries = 0;
+  let client = null;
+
+  const secrets = await getSecret(process.env.DB_SECRETS_ARN);
+  const dbInfo = JSON.parse(secrets);
+  const dbConfig = {
+    host: dbInfo["host"],
+    user: dbInfo["username"],
+    password: dbInfo["password"],
+    database: dbInfo["dbname"],
+    port: dbInfo["port"],
+  };
+
+  while (retries < maxRetries) {
+    try {
+      client = new Client(dbConfig);
+      await client.connect();
+      console.log('Connected to PostgreSQL');
+      return client;
+    } catch (error) {
+      console.error(`Connection attempt ${retries + 1} failed:`, error);
+      retries++;
+      
+      if (retries < maxRetries) {
+        console.log(`Retrying in ${retryDelay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+  }
+
+  throw new Error('Could not connect to PostgreSQL after multiple retries');
+}
+
+const setUp = async () => {
   try {
-    await client.connect();
-    console.log("Connected to the database.");
+    const client = await connectWithRetry();
 
     // Create pgvector table and index
     // Ref: https://github.com/pgvector/pgvector
@@ -19,6 +52,7 @@ const setUp = async (dbConfig) => {
                          botid CHAR(26),
                          content text,
                          source text,
+                         metadata jsonb,
                          embedding vector(1024));`);
     // `lists` parameter controls the nubmer of clusters created during index building.
     // Also it's important to choose the same index method as the one used in the query.
@@ -28,6 +62,21 @@ const setUp = async (dbConfig) => {
                          USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);`);
     await client.query(`CREATE INDEX idx_items_botid ON items (botid);`);
 
+    console.log("SQL execution successful.");
+  } catch (err) {
+    console.error("Error executing SQL: ", err.stack);
+    throw err;
+  } finally {
+    await client.end();
+    console.log("Database connection closed.");
+  }
+};
+
+const updateTable = async () => {
+  try {
+    const client = await connectWithRetry();
+
+    await client.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS metadata jsonb;`);
     console.log("SQL execution successful.");
   } catch (err) {
     console.error("Error executing SQL: ", err.stack);
@@ -71,19 +120,9 @@ exports.handler = async (event, context) => {
   const dbClusterIdentifier = process.env.DB_CLUSTER_IDENTIFIER;
 
   try {
-    const secrets = await getSecret(process.env.DB_SECRETS_ARN);
-    const dbInfo = JSON.parse(secrets);
-    const dbConfig = {
-      host: dbInfo["host"],
-      user: dbInfo["username"],
-      password: dbInfo["password"],
-      database: dbInfo["dbname"],
-      port: dbInfo["port"],
-    };
     switch (event.RequestType) {
       case "Create":
-      case "Update":
-        await setUp(dbConfig);
+        await setUp(client);
         await updateStatus(
           event,
           "SUCCESS",
@@ -91,9 +130,19 @@ exports.handler = async (event, context) => {
           dbClusterIdentifier
         );
         break;
+      case "Update":
+        await updateTable(client);
+        await updateStatus(
+          event,
+          "SUCCESS",
+          "Update succeeded",
+          dbClusterIdentifier
+        );
+        break;
       case "Delete":
         await updateStatus(event, "SUCCESS", "", dbClusterIdentifier);
     }
+    await client.end();
   } catch (error) {
     console.log(error);
     if (event.PhysicalResourceId) {

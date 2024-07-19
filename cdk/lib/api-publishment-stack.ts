@@ -89,8 +89,16 @@ export class ApiPublishmentStack extends Stack {
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../backend"),
         {
+          assetName: "ApiHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "backend/embedding_statemachine",
+            "test",
+            "tests",
+          ]
         }
       ),
       vpc,
@@ -122,9 +130,17 @@ export class ApiPublishmentStack extends Stack {
         code: DockerImageCode.fromImageAsset(
           path.join(__dirname, "../../backend"),
           {
+            assetName: "SqsConsumeHandlerImage",
             platform: Platform.LINUX_AMD64,
             file: "lambda.Dockerfile",
             cmd: ["app.sqs_consumer.handler"],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine",
+              "test",
+              "tests",
+            ]
           }
         ),
         vpc,

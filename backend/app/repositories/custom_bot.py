@@ -415,6 +415,12 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
                 and "enable_partition_pdf" in item["EmbeddingParams"]
                 else False
             ),
+            enable_pdf_image_scan=(
+                item["EmbeddingParams"]["enable_pdf_image_scan"]
+                if "EmbeddingParams" in item
+                and "enable_pdf_image_scan" in item["EmbeddingParams"]
+                else False
+            )
         ),
         generation_params=GenerationParamsModel(
             **(
@@ -508,6 +514,12 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
                 and "enable_partition_pdf" in item["EmbeddingParams"]
                 else False
             ),
+            enable_pdf_image_scan=(
+                item["EmbeddingParams"]["enable_pdf_image_scan"]
+                if "EmbeddingParams" in item
+                and "enable_pdf_image_scan" in item["EmbeddingParams"]
+                else False
+            )
         ),
         generation_params=GenerationParamsModel(
             **(

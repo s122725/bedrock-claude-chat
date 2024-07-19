@@ -9,9 +9,9 @@ from app.vector_search import SearchResult, filter_used_results
 class TestVectorSearch(unittest.TestCase):
     def test_filter_used_results(self):
         search_results = [
-            SearchResult(bot_id="1", content="content1", source="source1", rank=1),
-            SearchResult(bot_id="2", content="content2", source="source2", rank=2),
-            SearchResult(bot_id="3", content="content3", source="source3", rank=3),
+            SearchResult(bot_id="1", content="content1", source="source1", metadata={}, rank=1),
+            SearchResult(bot_id="2", content="content2", source="source2", metadata={}, rank=2),
+            SearchResult(bot_id="3", content="content3", source="source3", metadata={}, rank=3),
         ]
 
         generated_text = "This is a test [^1] [^3]"
@@ -23,9 +23,9 @@ class TestVectorSearch(unittest.TestCase):
 
     def test_no_reference_filter_used_results(self):
         search_results = [
-            SearchResult(bot_id="1", content="content1", source="source1", rank=1),
-            SearchResult(bot_id="2", content="content2", source="source2", rank=2),
-            SearchResult(bot_id="3", content="content3", source="source3", rank=3),
+            SearchResult(bot_id="1", content="content1", source="source1", metadata={}, rank=1),
+            SearchResult(bot_id="2", content="content2", source="source2", metadata={}, rank=2),
+            SearchResult(bot_id="3", content="content3", source="source3", metadata={}, rank=3),
         ]
 
         # 4 is not in the search results
@@ -36,9 +36,9 @@ class TestVectorSearch(unittest.TestCase):
 
     def test_format_not_match_filter_used_results(self):
         search_results = [
-            SearchResult(bot_id="1", content="content1", source="source1", rank=1),
-            SearchResult(bot_id="2", content="content2", source="source2", rank=2),
-            SearchResult(bot_id="3", content="content3", source="source3", rank=3),
+            SearchResult(bot_id="1", content="content1", source="source1", metadata={}, rank=1),
+            SearchResult(bot_id="2", content="content2", source="source2", metadata={}, rank=2),
+            SearchResult(bot_id="3", content="content3", source="source3", metadata={}, rank=3),
         ]
 
         # format not match

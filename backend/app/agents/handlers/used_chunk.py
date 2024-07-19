@@ -31,11 +31,16 @@ class UsedChunkCallbackHandler(BaseCallbackHandler):
             generated_text: str = output.get("output")  # type: ignore
             for r in filter_used_results(generated_text, search_results):
                 content_type, source_link = get_source_link(r.source)
+                metadata = r.metadata if isinstance(r.metadata, dict) else {}
+                if "parentSource" in metadata:
+                    _, parent_source_link = get_source_link(metadata["parentSource"])
+                    metadata["parentSourceLink"] = parent_source_link
                 self.used_chunks.append(
                     ChunkModel(
                         content=r.content,
                         content_type=content_type,
                         source=source_link,
+                        metadata=metadata,
                         rank=r.rank,
                     )
                 )

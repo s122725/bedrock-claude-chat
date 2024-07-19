@@ -846,18 +846,21 @@ class TestInsertKnowledge(unittest.TestCase):
                     "bot_id": "bot_bb                    ",
                     "content": "73\n\nその他リソース\n\nサービス概要: https://aws.amazon.com/jp/opensearch-service/features/serverless/\n\nよくある質問: https://aws.amazon.com/opensearch-service/faqs/#Serverless\n\n料金: https://aws.amazon.com/opensearch-\n\nservice/pricing/?nc1=h_ls#Amazon_OpenSearch_Serverless\n\nドキュメント: https://docs.aws.amazon.com/opensearch- service/latest/developerguide/serverless.html\n\nOpenSearch Service と OpenSearch Serverless の比較:\n\nhttps://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless- overview.html#serverless-comparison\n\nワークショップ: https://catalog.us-east-1.prod.workshops.aws/workshops/f8d2c175- 634d-4c5d-94cb-d83bbc656c6a\n\n© 2023, Amazon Web Services, Inc. or its affiliates.\n\n74\n\n本資料に関するお問い合わせ・ご感想\n\n技術的な内容に関しましては、有料のAWSサポート窓口へ お問い合わせください\n\nhttps://aws.amazon.com/jp/premiumsupport/\n\n料金面でのお問い合わせに関しましては、カスタマーサポート窓口へ お問い合わせください（マネジメントコンソールへのログインが必要です）\n\nhttps://console.aws.amazon.com/support/home#/case/create?issueType=customer- service\n\n具体的な案件に対する構成相談は、後述する個別相談会をご活用ください",
                     "source": "https://pages.awscloud.com/rs/112-TZM-766/images/AWS-Black-Belt_2023_AmazonOpenSearchServerless_0131_v1.pdf",
+                    "metadata": {},
                     "rank": 0,
                 },
                 {
                     "bot_id": "bot_bb                    ",
                     "content": "70\n\nAmazon OpenSearch Serverless がフィットするケース\n\n事前のキャパシティプランニングが困難\n\n一日の間で負荷の変動が激しい\n\n一般的な検索アプリケーション、もしくは小規模 (TiB オーダー) のログ分析が想定用途\n\nノードやクラスターのスケール、セキュリティパッチ適用といった 運用タスクをなるべく削減したい\n\nAmazon OpenSearch Serverless 固有の制限 (API、プラグイン) が利用上の問題にならない\n\n© 2023, Amazon Web Services, Inc. or its affiliates.\n\n71\n\n従来の Amazon OpenSearch Service がフィットするケース\n\n事前にキャパシティプランニングが可能\n\n一日の間で負荷が一定、もしくは増減の予測が可能\n\n数十 TiB オーダーの大規模なデータから分析や検索を行う 必要がある\n\nベクトル検索やアラート、セキュリティ機能など、 OpenSearch の高度な機能を利用する必要がある\n\n© 2023, Amazon Web Services, Inc. or its affiliates.\n\n72\n\nまとめ\n\nOpenSearch Serverless は OpenSearch 互換のサーバレスサービスである\n\n負荷に応じて OCU が動的に増減する、自動スケールアウト、スケールインを サポートしている\n\n従来アーキテクチャで行っていたアップデートなどの運用タスクを削減できる\n\nOpenSearch Serverless 固有の制限あり (API、プラグイン、その他機能)\n\n従来の Amazon OpenSearch Service からの移行に際しては、 既存のワークロードや要件を確認し、移行の可能性を検討してから行うこと\n\n© 2023, Amazon Web Services, Inc. or its affiliates.\n\n73\n\nその他リソース\n\nサービス概要: https://aws.amazon.com/jp/opensearch-service/features/serverless/",
                     "source": "https://pages.awscloud.com/rs/112-TZM-766/images/AWS-Black-Belt_2023_AmazonOpenSearchServerless_0131_v1.pdf",
+                    "metadata": {},
                     "rank": 1,
                 },
                 {
                     "bot_id": "bot_bb                    ",
                     "content": "67\n\n料金\n\nポイント • OpenSearch Serverless の料金モデルは、\n\n割り当てられたキャパシティユニットに応じた時間課金\n\n料金概要(東京リージョン) • OCU – インデキシング : $0.334 per OCU per hour • OCU – 検索: $0.334 per OCU per hour • マネージドストレージ: $0.026 per GB / month • OpenSearch Dashboards は無料で利用可能\n\n© 2023, Amazon Web Services, Inc. or its affiliates.\n\nhttps://aws.amazon.com/jp/opensearch-service/pricing/#Amazon_OpenSearch_Serverless\n\n68\n\n主要な制限\n\nアカウント(リージョン)毎の制限 • インデックス可能なデータサイズ : 6 TiB\n\n(超過分のデータはノード上のディスクではなく S3 に格納)\n\nコレクション数: 50 • 検索用 OCU: 50 • インデキシング用 OCU: 50\n\nコレクションごとの制限 • インデックス可能なデータサイズ : 1 TiB\n\n(超過分のデータはノード上のディスクではなく S3 に格納)\n\nインデックス数(検索コレクション): 20 • インデックス数(時系列コレクション): 120\n\n© 2023, Amazon Web Services, Inc. or its affiliates.\n\nhttps://docs.aws.amazon.com/opensearch-service/latest/developerguide/limits.html#limits-serverless\n\n69\n\nまとめ\n\n© 2023, Amazon Web Services, Inc. or its affiliates. © 2023, Amazon Web Services, Inc. or its affiliates.\n\n70\n\nAmazon OpenSearch Serverless がフィットするケース\n\n事前のキャパシティプランニングが困難\n\n一日の間で負荷の変動が激しい",
                     "source": "https://pages.awscloud.com/rs/112-TZM-766/images/AWS-Black-Belt_2023_AmazonOpenSearchServerless_0131_v1.pdf",
+                    "metadata": {},
                     "rank": 2,
                 },
             ]

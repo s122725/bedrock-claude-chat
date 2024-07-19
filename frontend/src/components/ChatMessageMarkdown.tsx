@@ -59,6 +59,35 @@ const RelatedDocumentLink: React.FC<{
     return '';
   }, [props.relatedDocument?.contentType, props.relatedDocument?.sourceLink]);
 
+  const parentSourceLinkUrl = useMemo(() => {
+    const url = props.relatedDocument?.metadata.parentSourceLink;
+    if (url) {
+      if (props.relatedDocument?.contentType === 's3') {
+        return decodeURIComponent(url.split('?')[0].split('/').pop() ?? '');
+      } else {
+        return url;
+      }
+    }
+    return '';
+  }, [props.relatedDocument?.contentType, props.relatedDocument?.metadata.parentSourceLink]);
+
+  const isImageLink = useMemo(() => {
+    const url = props.relatedDocument?.sourceLink;
+    if (url) {
+      const pattern = /\.\w+\?/;
+      const match = url.match(pattern);
+
+      if (match) {
+        const extension = match[0].slice(1, -1);
+        const isImageExtension = ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(extension.toLowerCase());
+        return isImageExtension;    
+      } else {
+        return false
+      }
+    }
+    return false;
+  }, [props.relatedDocument?.contentType, props.relatedDocument?.sourceLink]);
+
   return (
     <>
       <a
@@ -92,6 +121,12 @@ const RelatedDocumentLink: React.FC<{
               <div key={idx}>{s}</div>
             ))}
 
+            {isImageLink ? (
+              <img src={props.relatedDocument.sourceLink} alt="Related Document" />
+            ) : (
+              <></>
+            )}
+
             <div className="my-1 border-t pt-1 italic">
               {t('bot.label.referenceLink')}:
               <span
@@ -101,6 +136,14 @@ const RelatedDocumentLink: React.FC<{
                 }}>
                 {linkUrl}
               </span>
+              <span
+                className="ml-1 cursor-pointer underline"
+                onClick={() => {
+                  window.open(props.relatedDocument?.metadata?.parentSourceLink, '_blank');
+                }}>
+                {parentSourceLinkUrl}
+              </span>
+              
             </div>
           </div>
         </div>

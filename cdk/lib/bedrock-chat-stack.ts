@@ -20,6 +20,8 @@ import { UsageAnalysis } from "./constructs/usage-analysis";
 import { TIdentityProvider, identityProvider } from "./utils/identity-provider";
 import { ApiPublishCodebuild } from "./constructs/api-publish-codebuild";
 import { WebAclForPublishedApi } from "./constructs/webacl-for-published-api";
+import { SfnLambdaInvoke } from './constructs/pdf-ai-ocr/sfn-lambda-invoke';
+import { SfnWorkFlow } from './constructs/pdf-ai-ocr/sfn-workflow';
 import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
@@ -102,6 +104,7 @@ export class BedrockChatStack extends cdk.Stack {
           exclude: [
             "**/node_modules/**",
             "**/dist/**",
+            "**/dev-dist/**",
             "**/.venv/**",
             "**/__pycache__/**",
             "**/cdk.out/**",
@@ -110,6 +113,14 @@ export class BedrockChatStack extends cdk.Stack {
             "**/.git/**",
             "**/.github/**",
             "**/.mypy_cache/**",
+            "**/examples/**",
+            "**/docs/**",
+            "**/.env",
+            "**/.env.local",
+            "**/.gitignore",
+            "**/test/**",
+            "**/tests/**",
+            "**/backend/embedding_statemachine/pdf_ai_ocr**",
           ],
         }),
       ],
@@ -214,6 +225,18 @@ export class BedrockChatStack extends cdk.Stack {
       maxAge: 3000,
     });
 
+    // Stepfunctionsで使用するLambdaの定義
+    const sfnLambdaInvoke = new SfnLambdaInvoke(this, `SfnLambdaInvoke`, {
+      s3Bucket: documentBucket
+    })
+    // ワークフローの定義(CDKで定義する場合)
+    const sfnWorkFlow = new SfnWorkFlow(this, `SfnWorkFlow`, {
+      sfnLambdaInvoke,
+      bucket: documentBucket,
+      table: database.table,
+      tableAccessRole: database.tableAccessRole,
+    })
+
     const embedding = new Embedding(this, "Embedding", {
       vpc,
       bedrockRegion: props.bedrockRegion,
@@ -224,6 +247,7 @@ export class BedrockChatStack extends cdk.Stack {
       embeddingContainerVcpu: props.embeddingContainerVcpu,
       embeddingContainerMemory: props.embeddingContainerMemory,
       bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
+      stateMachineArn: sfnWorkFlow.stateMachine.stateMachineArn,
     });
     documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
 

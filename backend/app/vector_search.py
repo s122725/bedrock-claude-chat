@@ -18,6 +18,7 @@ class SearchResult(BaseModel):
     bot_id: str
     content: str
     source: str
+    metadata: dict
     rank: int
 
 
@@ -79,7 +80,7 @@ def _pgvector_search(bot_id: str, limit: int, query: str) -> list[SearchResult]:
     logger.info(f"query_embedding: {query_embedding}")
 
     search_query = """
-SELECT id, botid, content, source, embedding 
+SELECT id, botid, content, source, embedding, metadata 
 FROM items 
 WHERE botid = %s 
 ORDER BY embedding <-> %s 
@@ -94,7 +95,7 @@ LIMIT %s
     #     ...
     # ]
     return [
-        SearchResult(rank=i, bot_id=r[1], content=r[2], source=r[3])
+        SearchResult(rank=i, bot_id=r[1], content=r[2], source=r[3], metadata=r[5])
         for i, r in enumerate(results)
     ]
 
@@ -131,9 +132,10 @@ def _bedrock_knowledge_base_search(bot: BotModel, query: str) -> list[SearchResu
                 .get("s3Location", {})
                 .get("uri", "")
             )
+            metadata = retrieval_result.get("metadata", {})
 
             search_results.append(
-                SearchResult(rank=i, bot_id=bot.id, content=content, source=source)
+                SearchResult(rank=i, bot_id=bot.id, content=content, source=source, metadata=metadata)
             )
 
         return search_results

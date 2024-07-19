@@ -14,6 +14,7 @@ class EmbeddingConfig(TypedDict):
     chunk_size: int
     chunk_overlap: int
     enable_partition_pdf: bool
+    enable_pdf_image_scan: bool
 
 
 # Configure generation parameter for Claude chat response.
@@ -44,6 +45,7 @@ DEFAULT_EMBEDDING_CONFIG: EmbeddingConfig = {
     "chunk_size": 1000,
     "chunk_overlap": 200,
     "enable_partition_pdf": False,
+    "enable_pdf_image_scan": False,
 }
 
 # Configure search parameter to fetch relevant documents from vector store.

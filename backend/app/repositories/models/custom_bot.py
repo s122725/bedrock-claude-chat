@@ -8,6 +8,7 @@ class EmbeddingParamsModel(BaseModel):
     chunk_size: int
     chunk_overlap: int
     enable_partition_pdf: bool
+    enable_pdf_image_scan: bool
 
 
 class KnowledgeModel(BaseModel):

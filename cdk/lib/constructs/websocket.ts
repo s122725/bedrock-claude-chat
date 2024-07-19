@@ -90,9 +90,17 @@ export class WebSocket extends Construct {
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
+          assetName: "WebsocketHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
-        }
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "embedding_statemachine/pdf_ai_ocr",
+            "test",
+            "tests",
+          ]
+        },
       ),
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },

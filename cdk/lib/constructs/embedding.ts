@@ -33,6 +33,7 @@ export interface EmbeddingProps {
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
   readonly bedrockKnowledgeBaseProject: codebuild.IProject;
+  readonly stateMachineArn: string;
 }
 
 export class Embedding extends Construct {
@@ -108,6 +109,16 @@ export class Embedding extends Construct {
     );
     this._taskDefinition.addToTaskRolePolicy(
       new iam.PolicyStatement({
+        actions: [
+          "states:StartExecution",
+          "states:DescribeExecution",
+          "states:StopExecution",
+        ],
+        resources: ["*"],
+      })
+    );
+    this._taskDefinition.addToTaskRolePolicy(
+      new iam.PolicyStatement({
         actions: ["sts:AssumeRole"],
         resources: [props.tableAccessRole.roleArn],
       })
@@ -128,9 +139,17 @@ export class Embedding extends Construct {
     });
 
     const asset = new DockerImageAsset(this, "Image", {
+      assetName: "EmbeddingImage",
       directory: path.join(__dirname, "../../../backend"),
       file: "embedding/Dockerfile",
       platform: Platform.LINUX_AMD64,
+      exclude: [
+        ".mypy_cache",
+        ".venv",
+        "embedding_statemachine",
+        "test",
+        "tests",
+      ]
     });
     SociIndexBuild.fromDockerImageAsset(this, "Index", asset);
 
@@ -148,10 +167,12 @@ export class Embedding extends Construct {
         TABLE_NAME: props.database.tableName,
         TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
         DOCUMENT_BUCKET: props.documentBucket.bucketName,
+        STATE_MACHINE_ARN: props.stateMachineArn,
       },
     });
     taskLogGroup.grantWrite(this._container.taskDefinition.executionRole!);
     props.dbSecrets.grantRead(this._container.taskDefinition.taskRole);
+    props.documentBucket.grantReadWrite(this._container.taskDefinition.taskRole);
     return this;
   }
 
@@ -201,6 +222,13 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.update_bot_status.handler",
             ],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine/pdf_ai_ocr",
+              "test",
+              "tests",
+            ]
           }
         ),
         memorySize: 512,
@@ -227,6 +255,13 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.fetch_stack_output.handler",
             ],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine/pdf_ai_ocr",
+              "test",
+              "tests",
+            ]
           }
         ),
         memorySize: 512,
@@ -246,6 +281,13 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.store_knowledge_base_id.handler",
             ],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "backend/embedding_statemachine/pdf_ai_ocr",
+              "test",
+              "tests",
+            ]
           }
         ),
         memorySize: 512,
@@ -635,9 +677,17 @@ export class Embedding extends Construct {
       code: DockerImageCode.fromImageAsset(
         path.join(__dirname, "../../../backend"),
         {
+          assetName: "BotRemovalHandlerImage",
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
           cmd: ["app.bot_remove.handler"],
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "backend/embedding_statemachine",
+            "test",
+            "tests",
+          ]
         }
       ),
       vpc: props.vpc,
