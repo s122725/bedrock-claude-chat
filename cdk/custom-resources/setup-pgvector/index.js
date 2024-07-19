@@ -1,8 +1,45 @@
 const { Client } = require("pg");
 const { getSecret } = require("@aws-lambda-powertools/parameters/secrets");
 
-const setUp = async (client) => {
+// Aurora Serverless may be down, so retry until it connect
+async function connectWithRetry(maxRetries = 5, retryDelay = 60000) {
+  let retries = 0;
+  let client = null;
+
+  const secrets = await getSecret(process.env.DB_SECRETS_ARN);
+  const dbInfo = JSON.parse(secrets);
+  const dbConfig = {
+    host: dbInfo["host"],
+    user: dbInfo["username"],
+    password: dbInfo["password"],
+    database: dbInfo["dbname"],
+    port: dbInfo["port"],
+  };
+
+  while (retries < maxRetries) {
+    try {
+      client = new Client(dbConfig);
+      await client.connect();
+      console.log('Connected to PostgreSQL');
+      return client;
+    } catch (error) {
+      console.error(`Connection attempt ${retries + 1} failed:`, error);
+      retries++;
+      
+      if (retries < maxRetries) {
+        console.log(`Retrying in ${retryDelay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+  }
+
+  throw new Error('Could not connect to PostgreSQL after multiple retries');
+}
+
+const setUp = async () => {
   try {
+    const client = await connectWithRetry();
+
     // Create pgvector table and index
     // Ref: https://github.com/pgvector/pgvector
     await client.query("CREATE EXTENSION IF NOT EXISTS pgcrypto;");
@@ -35,8 +72,10 @@ const setUp = async (client) => {
   }
 };
 
-const updateTable = async (client) => {
+const updateTable = async () => {
   try {
+    const client = await connectWithRetry();
+
     await client.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS metadata jsonb;`);
     console.log("SQL execution successful.");
   } catch (err) {
@@ -81,18 +120,6 @@ exports.handler = async (event, context) => {
   const dbClusterIdentifier = process.env.DB_CLUSTER_IDENTIFIER;
 
   try {
-    const secrets = await getSecret(process.env.DB_SECRETS_ARN);
-    const dbInfo = JSON.parse(secrets);
-    const dbConfig = {
-      host: dbInfo["host"],
-      user: dbInfo["username"],
-      password: dbInfo["password"],
-      database: dbInfo["dbname"],
-      port: dbInfo["port"],
-    };
-    const client = new Client(dbConfig);
-    await client.connect();
-
     switch (event.RequestType) {
       case "Create":
         await setUp(client);
