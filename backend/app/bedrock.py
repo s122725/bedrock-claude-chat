@@ -160,8 +160,8 @@ def compose_args_for_converse_api(
     }
 
     # `top_k` is configured in `additional_model_request_fields` instead of `inference_config`
+    additional_model_request_fields = {"top_k": inference_config["top_k"]}
     del inference_config["top_k"]
-    additional_model_request_fields = {"top_k": generation_params.top_k}
 
     args: ConverseApiRequest = {
         "inference_config": convert_dict_keys_to_camel_case(inference_config),
