@@ -151,16 +151,16 @@ class TestConverseApiStreamHandler(unittest.TestCase):
         self._run(message)
 
     def test_run_with_attachment(self):
-        # _, aws_pdf_body = get_aws_overview()
-        # aws_pdf_filename = "aws_arch_overview.pdf"
-        body = get_test_markdown()
-        file_name = "test.md"
+        _, body = get_aws_overview()
+        file_name = "aws_arch_overview.pdf"
+        # body = get_test_markdown()
+        # file_name = "test.md"
 
         message = MessageModel(
             role="user",
             content=[
                 ContentModel(
-                    content_type="textAttachment",
+                    content_type="attachment",
                     media_type=None,
                     body=body,
                     file_name=file_name,

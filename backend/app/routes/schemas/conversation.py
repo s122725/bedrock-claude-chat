@@ -18,7 +18,7 @@ type_model_name = Literal[
 
 
 class Content(BaseSchema):
-    content_type: Literal["text", "image", "textAttachment"] = Field(
+    content_type: Literal["text", "image", "attachment"] = Field(
         ..., description="Content type. Note that image is only available for claude 3."
     )
     media_type: str | None = Field(
@@ -27,9 +27,9 @@ class Content(BaseSchema):
     )
     file_name: str | None = Field(
         None,
-        description="File name of the attachment. Must be specified if `content_type` is `textAttachment`.",
+        description="File name of the attachment. Must be specified if `content_type` is `attachment`.",
     )
-    body: str = Field(..., description="Content body.")
+    body: str | bytes = Field(..., description="Content body.")
 
     @validator("media_type", pre=True)
     def check_media_type(cls, v, values):
@@ -42,13 +42,13 @@ class Content(BaseSchema):
     def check_body(cls, v, values):
         content_type = values.get("content_type")
 
-        # if content_type in ["image", "textAttachment"]:
+        # if content_type in ["image", "attachment"]:
         #     try:
         #         # Check if the body is a valid base64 string
         #         base64.b64decode(v, validate=True)
         #     except Exception:
         #         raise ValueError(
-        #             "body must be a valid base64 string if `content_type` is `image` or `textAttachment`"
+        #             "body must be a valid base64 string if `content_type` is `image` or `attachment`"
         #         )
 
         if content_type == "text" and not isinstance(v, str):

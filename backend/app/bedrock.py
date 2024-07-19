@@ -68,9 +68,7 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
+    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
@@ -124,7 +122,7 @@ def compose_args_for_converse_api(
                             }
                         }
                     )
-                elif c.content_type == "textAttachment":
+                elif c.content_type == "attachment":
                     content_blocks.append(
                         {
                             "document": {
@@ -136,8 +134,7 @@ def compose_args_for_converse_api(
                                 "name": Path(
                                     c.file_name
                                 ).stem,  # e.g. "document.txt" -> "document"
-                                # encode text attachment body
-                                "source": {"bytes": c.body.encode("utf-8")},
+                                "source": {"bytes": c.body},
                             }
                         }
                     )
@@ -160,8 +157,8 @@ def compose_args_for_converse_api(
     }
 
     # `top_k` is configured in `additional_model_request_fields` instead of `inference_config`
+    additional_model_request_fields = {"top_k": inference_config["top_k"]}
     del inference_config["top_k"]
-    additional_model_request_fields = {"top_k": generation_params.top_k}
 
     args: ConverseApiRequest = {
         "inference_config": convert_dict_keys_to_camel_case(inference_config),

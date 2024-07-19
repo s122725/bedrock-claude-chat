@@ -6,11 +6,11 @@ from pydantic import BaseModel, Field
 
 
 class ContentModel(BaseModel):
-    content_type: Literal["text", "image", "textAttachment"]
+    content_type: Literal["text", "image", "attachment"]
     media_type: str | None
-    body: str = Field(
+    body: str | bytes = Field(
         ...,
-        description="Body string. If content_type is image or attachment, it should be base64 encoded.",
+        description="Body string. If content_type is attachment, it should be base64 encoded.",
     )
     file_name: str | None = Field(None)
 

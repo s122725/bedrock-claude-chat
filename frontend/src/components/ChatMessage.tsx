@@ -177,11 +177,11 @@ const ChatMessage: React.FC<Props> = (props) => {
                 </div>
               )}
               {chatContent.content.some(
-                (content) => content.contentType === 'textAttachment'
+                (content) => content.contentType === 'attachment'
               ) && (
                 <div key="files" className="my-2 flex">
                   {chatContent.content.map((content, idx) => {
-                    if (content.contentType === 'textAttachment') {
+                    if (content.contentType === 'attachment') {
                       return (
                         <UploadedFileText
                           key={idx}

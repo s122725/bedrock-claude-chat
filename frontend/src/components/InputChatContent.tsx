@@ -8,7 +8,7 @@ import React, {
 import ButtonSend from './ButtonSend';
 import Textarea from './Textarea';
 import useChat from '../hooks/useChat';
-import { TextAttachmentType } from '../hooks/useChat';
+import { attachmentType } from '../hooks/useChat';
 import Button from './Button';
 import {
   PiArrowsCounterClockwise,
@@ -36,7 +36,7 @@ type Props = BaseProps & {
   onSend: (
     content: string,
     base64EncodedImages?: string[],
-    textAttachments?: TextAttachmentType[]
+    attachments?: attachmentType[]
   ) => void;
   onRegenerate: () => void;
   continueGenerate: () => void;
@@ -227,7 +227,7 @@ const InputChatContent: React.FC<Props> = (props) => {
   const inputRef = useRef<HTMLDivElement>(null);
 
   const sendContent = useCallback(() => {
-    const textAttachments = textFiles.map((file) => ({
+    const attachments = textFiles.map((file) => ({
       fileName: file.name,
       fileType: file.type,
       extractedContent: file.content,
@@ -238,7 +238,7 @@ const InputChatContent: React.FC<Props> = (props) => {
       !disabledImageUpload && base64EncodedImages.length > 0
         ? base64EncodedImages
         : undefined,
-      textAttachments.length > 0 ? textAttachments : undefined
+      attachments.length > 0 ? attachments : undefined
     );
     setContent('');
     clearBase64EncodedImages();

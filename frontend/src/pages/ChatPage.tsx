@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import InputChatContent from '../components/InputChatContent';
 import useChat from '../hooks/useChat';
-import { TextAttachmentType } from '../hooks/useChat';
+import { attachmentType } from '../hooks/useChat';
 import ChatMessage from '../components/ChatMessage';
 import useScroll from '../hooks/useScroll';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -137,12 +137,12 @@ const ChatPage: React.FC = () => {
     (
       content: string,
       base64EncodedImages?: string[],
-      textAttachments?: TextAttachmentType[]
+      attachments?: attachmentType[]
     ) => {
       postChat({
         content,
         base64EncodedImages,
-        textAttachments,
+        attachments,
         bot: inputBotParams,
       });
     },
