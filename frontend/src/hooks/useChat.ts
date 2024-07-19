@@ -37,7 +37,7 @@ type BotInputType = {
 export type attachmentType = {
   fileName: string;
   fileType: string;
-  extractedContent: string;
+  extractedContent: Uint8Array;
 };
 
 export type ThinkingAction =
@@ -87,7 +87,7 @@ const useChatState = create<{
   setIsGeneratedTitle: (b: boolean) => void;
   getPostedModel: () => Model;
   shouldUpdateMessages: (currentConversation: Conversation) => boolean;
-  shouldCotinue: boolean;
+  shouldContinue: boolean;
   setShouldContinue: (b: boolean) => void;
   getShouldContinue: () => boolean;
 }>((set, get) => {
@@ -234,14 +234,14 @@ const useChatState = create<{
       );
     },
     getShouldContinue: () => {
-      return get().shouldCotinue;
+      return get().shouldContinue;
     },
     setShouldContinue: (b) => {
       set(() => ({
-        shouldCotinue: b,
+        shouldContinue: b,
       }));
     },
-    shouldCotinue: false,
+    shouldContinue: false,
   };
 });
 
@@ -477,12 +477,10 @@ const useChat = () => {
         conversationApi
           .postMessage(input)
           .then((res) => {
-            editMessage(
-              conversationId,
-              NEW_MESSAGE_ID.ASSISTANT,
-              res.data.message.content[0].body
-            );
-            resolve(res.data.message.content[0].body);
+            // Note: response body type is always string
+            const body = res.data.message.content[0].body as string;
+            editMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT, body);
+            resolve(body);
           })
           .catch((e) => {
             reject(e);
@@ -726,7 +724,7 @@ const useChat = () => {
         // エラー発生時の最新のメッセージはユーザ入力;
         removeMessage(conversationId, latestMessage.id);
         postChat({
-          content: params.content ?? latestMessage.content[0].body,
+          content: params.content ?? (latestMessage.content[0].body as string),
           bot: params.bot
             ? {
                 botId: params.bot.botId,
@@ -738,7 +736,7 @@ const useChat = () => {
       } else {
         // 再生成時
         regenerate({
-          content: params.content ?? latestMessage.content[0].body,
+          content: params.content ?? (latestMessage.content[0].body as string),
           bot: params.bot,
         });
       }

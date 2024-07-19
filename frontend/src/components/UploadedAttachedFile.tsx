@@ -7,7 +7,7 @@ type Props = BaseProps & {
   onClick?: () => void;
 };
 
-const UploadedFileText: React.FC<Props> = (props) => {
+const UploadedAttachedFile: React.FC<Props> = (props) => {
   const onClick = useCallback(() => {
     if (props.onClick) {
       props.onClick();
@@ -61,4 +61,4 @@ const UploadedFileText: React.FC<Props> = (props) => {
   );
 };
 
-export default UploadedFileText;
+export default UploadedAttachedFile;

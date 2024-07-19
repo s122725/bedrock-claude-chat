@@ -1,6 +1,7 @@
 import sys
 
 sys.path.insert(0, ".")
+import os
 import unittest
 from pprint import pprint
 
@@ -39,6 +40,7 @@ from app.usecases.chat import (
 )
 from app.vector_search import SearchResult
 from tests.test_stream.get_aws_logo import get_aws_logo
+from tests.test_stream.get_pdf import get_aws_overview
 from tests.test_usecases.utils.bot_factory import (
     create_test_instruction_template,
     create_test_private_bot,
@@ -46,7 +48,6 @@ from tests.test_usecases.utils.bot_factory import (
 )
 
 MODEL: type_model_name = "claude-instant-v1"
-MISTRAL_MODEL: type_model_name = "mistral-7b-instruct"
 
 
 class TestTraceToRoot(unittest.TestCase):
@@ -224,49 +225,6 @@ class TestStartChat(unittest.TestCase):
         self.assertEqual(conv.last_message_id, second_key)
         self.assertNotEqual(conv.total_price, 0)
 
-    def test_chat_mistral(self):
-        prompt = "あなたの名前は何ですか?"
-        body = f"<s>[INST]{prompt}[/INST]"
-
-        chat_input = ChatInput(
-            conversation_id="test_conversation_id",
-            message=MessageInput(
-                role="user",
-                content=[
-                    Content(
-                        content_type="text", body=body, media_type=None, file_name=None
-                    )
-                ],
-                model=MISTRAL_MODEL,
-                parent_message_id=None,
-                message_id=None,
-            ),
-            bot_id=None,
-            continue_generate=False,
-        )
-        output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
-        self.output = output
-
-        pprint(output.model_dump())
-        self.assertNotEqual(output.conversation_id, "")
-
-        conv = find_conversation_by_id(
-            user_id="user1", conversation_id=output.conversation_id
-        )
-        self.assertEqual(len(conv.message_map), 3)
-        for k, v in conv.message_map.items():
-            if v.parent == "system":
-                first_key = k
-                first_message = v
-            elif v.parent:
-                second_key = k
-                second_message = v
-
-        self.assertEqual(second_message.parent, first_key)
-        self.assertEqual(first_message.children, [second_key])
-        self.assertEqual(conv.last_message_id, second_key)
-        self.assertNotEqual(conv.total_price, 0)
-
     def tearDown(self) -> None:
         delete_conversation_by_id("user1", self.output.conversation_id)
 
@@ -308,6 +266,44 @@ class TestMultimodalChat(unittest.TestCase):
 
         output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
         # Check the output whether the explanation is about aws logo
+        pprint(output.model_dump())
+        self.output = output
+
+
+class TestAttachmentChat(unittest.TestCase):
+    def tearDown(self) -> None:
+        delete_conversation_by_id("user1", self.output.conversation_id)
+
+    def test_chat(self):
+        file_name, body = get_aws_overview()
+        chat_input = ChatInput(
+            conversation_id="test_conversation_id",
+            message=MessageInput(
+                role="user",
+                content=[
+                    Content(
+                        content_type="attachment",
+                        body=body,
+                        media_type="application/pdf",
+                        file_name=file_name,
+                    ),
+                    Content(
+                        content_type="text",
+                        body="要約して",
+                        media_type=None,
+                        file_name=None,
+                    ),
+                ],
+                model="claude-v3-sonnet",  # Specify v3 model
+                parent_message_id=None,
+                message_id=None,
+            ),
+            bot_id=None,
+            continue_generate=False,
+        )
+        output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
+        self.output = output
+
         pprint(output.model_dump())
         self.output = output
 
@@ -585,17 +581,8 @@ class TestProposeTitle(unittest.TestCase):
         print(output)
         self.output = output
 
-        chat_input.message.model = MISTRAL_MODEL
-        mistral_output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
-        self.mistral_output = mistral_output
-        print(mistral_output)
-
     def test_propose_title(self):
         title = propose_conversation_title("user1", self.output.conversation_id)
-        print(f"[title]: {title}")
-
-    def test_propose_title_mistral(self):
-        title = propose_conversation_title("user1", self.mistral_output.conversation_id)
         print(f"[title]: {title}")
 
     def tearDown(self) -> None:

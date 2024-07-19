@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import TypedDict, no_type_check
 
@@ -92,6 +93,17 @@ def _get_converse_supported_format(ext: str) -> str:
     return supported_formats.get(ext, "txt")
 
 
+def _convert_to_valid_file_name(file_name: str) -> str:
+    # Note: The document file name can only contain alphanumeric characters,
+    # whitespace characters, hyphens, parentheses, and square brackets.
+    # The name can't contain more than one consecutive whitespace character.
+    file_name = re.sub(r"[^a-zA-Z0-9\s\-\(\)\[\]]", "", file_name)
+    file_name = re.sub(r"\s+", " ", file_name)
+    file_name = file_name.strip()
+
+    return file_name
+
+
 @no_type_check
 def compose_args_for_converse_api(
     messages: list[MessageModel],
@@ -129,12 +141,12 @@ def compose_args_for_converse_api(
                                 "format": _get_converse_supported_format(
                                     Path(c.file_name).suffix[
                                         1:
-                                    ],  # e.g. "document.txt" -> "txt"
+                                    ],  # e.g. "document.pdf" -> "pdf"
                                 ),
                                 "name": Path(
-                                    c.file_name
-                                ).stem,  # e.g. "document.txt" -> "document"
-                                "source": {"bytes": c.body},
+                                    _convert_to_valid_file_name(c.file_name)
+                                ).stem,  # e.g. "document.pdf" -> "document"
+                                "source": {"bytes": base64.b64decode(c.body)},
                             }
                         }
                     )

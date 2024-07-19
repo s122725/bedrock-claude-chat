@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import base64
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from app.routes.schemas.base import BaseSchema
 from pydantic import Field, root_validator, validator
+
+if TYPE_CHECKING:
+    from app.repositories.models.conversation import ContentModel
 
 type_model_name = Literal[
     "claude-instant-v1",
@@ -31,6 +36,19 @@ class Content(BaseSchema):
     )
     body: str | bytes = Field(..., description="Content body.")
 
+    @classmethod
+    def from_content_model(cls, content_model: ContentModel) -> "Content":
+        body = content_model.body
+        if content_model.content_type in ["attachment"]:
+            body = base64.b64decode(body)
+
+        return cls(
+            content_type=content_model.content_type,
+            media_type=content_model.media_type,
+            body=body,
+            file_name=content_model.file_name,
+        )
+
     @validator("media_type", pre=True)
     def check_media_type(cls, v, values):
         content_type = values.get("content_type")
@@ -42,14 +60,14 @@ class Content(BaseSchema):
     def check_body(cls, v, values):
         content_type = values.get("content_type")
 
-        # if content_type in ["image", "attachment"]:
-        #     try:
-        #         # Check if the body is a valid base64 string
-        #         base64.b64decode(v, validate=True)
-        #     except Exception:
-        #         raise ValueError(
-        #             "body must be a valid base64 string if `content_type` is `image` or `attachment`"
-        #         )
+        if content_type in ["image"]:
+            try:
+                # Check if the body is a valid base64 string
+                base64.b64decode(v, validate=True)
+            except Exception:
+                raise ValueError(
+                    "body must be a valid base64 string if `content_type` is `image` or `attachment`"
+                )
 
         if content_type == "text" and not isinstance(v, str):
             raise ValueError("body must be str if `content_type` is `text`")

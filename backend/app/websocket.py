@@ -32,7 +32,7 @@ dynamodb_client = boto3.resource("dynamodb")
 table = dynamodb_client.Table(WEBSOCKET_SESSION_TABLE_NAME)
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def process_chat_input(
@@ -147,9 +147,7 @@ def process_chat_input(
         last_data_to_send = json.dumps(
             dict(status="STREAMING_END", completion="", stop_reason="agent_finish")
         ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
+        gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
         return {"statusCode": 200, "body": "Message sent."}
 
@@ -183,7 +181,7 @@ def process_chat_input(
     )
 
     if not chat_input.continue_generate:
-        messages.append(chat_input.message)  # type: ignore
+        messages.append(MessageModel.from_message_input(chat_input.message))
 
     args = compose_args_for_converse_api(
         messages,
@@ -261,9 +259,7 @@ def process_chat_input(
         last_data_to_send = json.dumps(
             dict(status="STREAMING_END", completion="", stop_reason=arg.stop_reason)
         ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
+        gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
     stream_handler = ConverseApiStreamHandler(
         model=chat_input.message.model,
@@ -377,6 +373,11 @@ def handler(event, context):
             logger.info(f"Number of message chunks: {len(message_parts)}")
             message_parts.sort(key=lambda x: x["MessagePartId"])
             full_message = "".join(item["MessagePart"] for item in message_parts)
+
+            logger.debug(f"Full message: {full_message[:100]}")
+
+            json_full_message = json.loads(full_message)
+            logger.debug(f"Full message JSON: {json_full_message}")
 
             # Process the concatenated full message
             chat_input = ChatInput(**json.loads(full_message))

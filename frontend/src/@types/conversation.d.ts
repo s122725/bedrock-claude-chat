@@ -13,7 +13,7 @@ export type Content = {
   contentType: 'text' | 'image' | 'attachment';
   mediaType?: string;
   fileName?: string;
-  body: string;
+  body: string | Uint8Array;
 };
 
 export type UsedChunk = {

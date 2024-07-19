@@ -1,24 +1,30 @@
 import base64
 from typing import Literal
 
-from app.routes.schemas.conversation import MessageInput, type_model_name
+from app.routes.schemas.conversation import Content, MessageInput, type_model_name
 from pydantic import BaseModel, Field
 
 
 class ContentModel(BaseModel):
     content_type: Literal["text", "image", "attachment"]
     media_type: str | None
-    body: str | bytes = Field(
+    body: str = Field(
         ...,
         description="Body string. If content_type is attachment, it should be base64 encoded.",
     )
     file_name: str | None = Field(None)
 
-    model_config = {
-        "json_encoders": {
-            bytes: lambda v: base64.b64encode(v).decode(),
-        }
-    }
+    @classmethod
+    def from_content(cls, content: Content) -> "ContentModel":
+        body = content.body
+        if isinstance(body, bytes):
+            body = base64.b64encode(body).decode()
+        return cls(
+            content_type=content.content_type,
+            media_type=content.media_type,
+            body=body,  # type: ignore
+            file_name=content.file_name,
+        )
 
 
 class FeedbackModel(BaseModel):
@@ -50,13 +56,7 @@ class MessageModel(BaseModel):
         return MessageModel(
             role=message_input.role,
             content=[
-                ContentModel(
-                    content_type=content.content_type,
-                    media_type=content.media_type,
-                    body=content.body,
-                    file_name=content.file_name,
-                )
-                for content in message_input.content
+                ContentModel.from_content(content) for content in message_input.content
             ],
             model=message_input.model,
             children=[],

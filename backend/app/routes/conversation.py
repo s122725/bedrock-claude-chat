@@ -113,9 +113,7 @@ def patch_conversation_title(
     """Update conversation title"""
     current_user: User = request.state.current_user
 
-    change_conversation_title(
-        current_user.id, conversation_id, new_title_input.new_title
-    )
+    change_conversation_title(current_user.id, conversation_id, new_title_input.new_title)
 
 
 @router.get(

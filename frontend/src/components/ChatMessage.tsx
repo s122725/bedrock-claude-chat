@@ -21,7 +21,8 @@ import ModalDialog from './ModalDialog';
 import { useTranslation } from 'react-i18next';
 import useChat from '../hooks/useChat';
 import DialogFeedback from './DialogFeedback';
-import UploadedFileText from './UploadedFileText';
+import UploadedAttachedFile from './UploadedAttachedFile';
+import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachFiles';
 
 type Props = BaseProps & {
   chatContent?: DisplayMessageContent;
@@ -182,15 +183,27 @@ const ChatMessage: React.FC<Props> = (props) => {
                 <div key="files" className="my-2 flex">
                   {chatContent.content.map((content, idx) => {
                     if (content.contentType === 'attachment') {
+                      const isTextFile = TEXT_FILE_EXTENSIONS.some(
+                        (ext) => content.fileName?.toLowerCase().endsWith(ext)
+                      );
                       return (
-                        <UploadedFileText
+                        <UploadedAttachedFile
                           key={idx}
                           fileName={content.fileName ?? ''}
-                          onClick={() => {
-                            setDialogFileName(content.fileName ?? '');
-                            setDialogFileContent(content.body);
-                            setIsFileModalOpen(true);
-                          }}
+                          onClick={
+                            // Only text file can be previewed
+                            isTextFile
+                              ? () => {
+                                  const decoder = new TextDecoder('utf-8');
+                                  const textContent = decoder.decode(
+                                    content.body as Uint8Array
+                                  );
+                                  setDialogFileName(content.fileName ?? '');
+                                  setDialogFileContent(textContent);
+                                  setIsFileModalOpen(true);
+                                }
+                              : undefined
+                          }
                         />
                       );
                     }
@@ -202,9 +215,11 @@ const ChatMessage: React.FC<Props> = (props) => {
               ) &&
                 chatContent.content.map((content, idx) => {
                   if (content.contentType === 'text') {
+                    // Note that the body type is always string when contentType is text
+                    const textBody = content.body as string;
                     return (
                       <React.Fragment key={idx}>
-                        {content.body.split('\n').map((c, idxBody) => (
+                        {textBody.split('\n').map((c, idxBody) => (
                           <div key={idxBody}>{c}</div>
                         ))}
                       </React.Fragment>
@@ -263,7 +278,7 @@ const ChatMessage: React.FC<Props> = (props) => {
             <ChatMessageMarkdown
               relatedDocuments={relatedDocuments}
               messageId={chatContent.id}>
-              {chatContent.content[0].body}
+              {chatContent.content[0].body as string}
             </ChatMessageMarkdown>
           )}
         </div>
@@ -275,7 +290,9 @@ const ChatMessage: React.FC<Props> = (props) => {
             <ButtonIcon
               className="text-dark-gray"
               onClick={() => {
-                setChangedContent(chatContent.content[firstTextContent].body);
+                setChangedContent(
+                  chatContent.content[firstTextContent].body as string
+                );
                 setIsEdit(true);
               }}>
               <PiNotePencil />
@@ -294,7 +311,7 @@ const ChatMessage: React.FC<Props> = (props) => {
               </ButtonIcon>
               <ButtonCopy
                 className="text-dark-gray"
-                text={chatContent.content[0].body}
+                text={chatContent.content[0].body as string}
               />
             </div>
           )}

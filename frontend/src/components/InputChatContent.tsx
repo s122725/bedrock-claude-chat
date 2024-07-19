@@ -25,8 +25,9 @@ import { create } from 'zustand';
 import ButtonFileChoose from './ButtonFileChoose';
 import { BaseProps } from '../@types/common';
 import ModalDialog from './ModalDialog';
-import UploadedFileText from './UploadedFileText';
+import UploadedAttachedFile from './UploadedAttachedFile';
 import useSnackbar from '../hooks/useSnackbar';
+import { SUPPORTED_FILE_EXTENSIONS } from '../constants/supportedAttachFiles';
 
 type Props = BaseProps & {
   disabledSend?: boolean;
@@ -44,76 +45,26 @@ type Props = BaseProps & {
 
 const MAX_IMAGE_WIDTH = 800;
 const MAX_IMAGE_HEIGHT = 800;
-// To change the supported text format files, change the extension list below.
-const TEXT_FILE_EXTENSIONS = [
-  '.txt',
-  '.py',
-  '.ipynb',
-  '.js',
-  '.jsx',
-  '.html',
-  '.css',
-  '.java',
-  '.cs',
-  '.php',
-  '.c',
-  '.cpp',
-  '.cxx',
-  '.h',
-  '.hpp',
-  '.rs',
-  '.R',
-  '.Rmd',
-  '.swift',
-  '.go',
-  '.rb',
-  '.kt',
-  '.kts',
-  '.ts',
-  '.tsx',
-  '.m',
-  '.scala',
-  '.rs',
-  '.dart',
-  '.lua',
-  '.pl',
-  '.pm',
-  '.t',
-  '.sh',
-  '.bash',
-  '.zsh',
-  '.csv',
-  '.log',
-  '.ini',
-  '.config',
-  '.json',
-  '.proto',
-  '.yaml',
-  '.yml',
-  '.toml',
-  '.lua',
-  '.sql',
-  '.bat',
-  '.md',
-  '.coffee',
-  '.tex',
-  '.latex',
-];
 
 const useInputChatContentState = create<{
   base64EncodedImages: string[];
   pushBase64EncodedImage: (encodedImage: string) => void;
   removeBase64EncodedImage: (index: number) => void;
   clearBase64EncodedImages: () => void;
-  textFiles: { name: string; type: string; size: number; content: string }[];
-  pushTextFile: (file: {
+  attachedFiles: {
     name: string;
     type: string;
     size: number;
-    content: string;
+    content: Uint8Array;
+  }[];
+  pushAttachedFile: (file: {
+    name: string;
+    type: string;
+    size: number;
+    content: Uint8Array;
   }) => void;
-  removeTextFile: (index: number) => void;
-  clearTextFiles: () => void;
+  removeAttachedFile: (index: number) => void;
+  clearAttachedFiles: () => void;
   previewImageUrl: string | null;
   setPreviewImageUrl: (url: string | null) => void;
   isOpenPreviewImage: boolean;
@@ -147,24 +98,24 @@ const useInputChatContentState = create<{
   setIsOpenPreviewImage: (isOpen) => {
     set({ isOpenPreviewImage: isOpen });
   },
-  textFiles: [],
-  pushTextFile: (file) => {
+  attachedFiles: [],
+  pushAttachedFile: (file) => {
     set({
-      textFiles: produce(get().textFiles, (draft) => {
+      attachedFiles: produce(get().attachedFiles, (draft) => {
         draft.push(file);
       }),
     });
   },
-  removeTextFile: (index) => {
+  removeAttachedFile: (index) => {
     set({
-      textFiles: produce(get().textFiles, (draft) => {
+      attachedFiles: produce(get().attachedFiles, (draft) => {
         draft.splice(index, 1);
       }),
     });
   },
-  clearTextFiles: () => {
+  clearAttachedFiles: () => {
     set({
-      textFiles: [],
+      attachedFiles: [],
     });
   },
 }));
@@ -175,7 +126,7 @@ const InputChatContent: React.FC<Props> = (props) => {
   const { disabledImageUpload, model, acceptMediaType } = useModel();
 
   const extendedAcceptMediaType = useMemo(() => {
-    return [...acceptMediaType, ...TEXT_FILE_EXTENSIONS];
+    return [...acceptMediaType, ...SUPPORTED_FILE_EXTENSIONS];
   }, [acceptMediaType]);
 
   const [shouldContinue, setShouldContinue] = useState(false);
@@ -190,15 +141,15 @@ const InputChatContent: React.FC<Props> = (props) => {
     setPreviewImageUrl,
     isOpenPreviewImage,
     setIsOpenPreviewImage,
-    textFiles,
-    pushTextFile,
-    removeTextFile,
-    clearTextFiles,
+    attachedFiles,
+    pushAttachedFile,
+    removeAttachedFile,
+    clearAttachedFiles,
   } = useInputChatContentState();
 
   useEffect(() => {
     clearBase64EncodedImages();
-    clearTextFiles();
+    clearAttachedFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -227,7 +178,7 @@ const InputChatContent: React.FC<Props> = (props) => {
   const inputRef = useRef<HTMLDivElement>(null);
 
   const sendContent = useCallback(() => {
-    const attachments = textFiles.map((file) => ({
+    const attachments = attachedFiles.map((file) => ({
       fileName: file.name,
       fileType: file.type,
       extractedContent: file.content,
@@ -242,12 +193,12 @@ const InputChatContent: React.FC<Props> = (props) => {
     );
     setContent('');
     clearBase64EncodedImages();
-    clearTextFiles();
+    clearAttachedFiles();
   }, [
     base64EncodedImages,
-    textFiles,
+    attachedFiles,
     clearBase64EncodedImages,
-    clearTextFiles,
+    clearAttachedFiles,
     content,
     disabledImageUpload,
     props,
@@ -304,18 +255,19 @@ const InputChatContent: React.FC<Props> = (props) => {
     (file: File) => {
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          pushTextFile({
+        if (reader.result instanceof ArrayBuffer) {
+          const byteArray = new Uint8Array(reader.result);
+          pushAttachedFile({
             name: file.name,
             type: file.type,
             size: file.size,
-            content: reader.result,
+            content: byteArray,
           });
         }
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     },
-    [pushTextFile]
+    [pushAttachedFile]
   );
 
   useEffect(() => {
@@ -361,7 +313,7 @@ const InputChatContent: React.FC<Props> = (props) => {
         const file = fileList.item(i);
         if (file) {
           if (
-            TEXT_FILE_EXTENSIONS.some((extension) =>
+            SUPPORTED_FILE_EXTENSIONS.some((extension) =>
               file.name.endsWith(extension)
             )
           ) {
@@ -470,15 +422,15 @@ const InputChatContent: React.FC<Props> = (props) => {
             </ModalDialog>
           </div>
         )}
-        {textFiles.length > 0 && (
+        {attachedFiles.length > 0 && (
           <div className="relative m-2 mr-24 flex flex-wrap gap-3">
-            {textFiles.map((file, idx) => (
+            {attachedFiles.map((file, idx) => (
               <div key={idx} className="relative flex flex-col items-center">
-                <UploadedFileText fileName={file.name} />
+                <UploadedAttachedFile fileName={file.name} />
                 <ButtonIcon
                   className="absolute left-2 top-1 -m-2 border border-aws-sea-blue bg-white p-1 text-xs text-aws-sea-blue"
                   onClick={() => {
-                    removeTextFile(idx);
+                    removeAttachedFile(idx);
                   }}>
                   <PiX />
                 </ButtonIcon>

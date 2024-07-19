@@ -8,11 +8,7 @@ from app.agents.handlers.used_chunk import get_used_chunk_callback
 from app.agents.langchain import BedrockLLM
 from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
-from app.bedrock import (
-    calculate_price,
-    call_converse_api,
-    compose_args_for_converse_api,
-)
+from app.bedrock import calculate_price, call_converse_api, compose_args_for_converse_api
 from app.prompt import build_rag_prompt
 from app.repositories.conversation import (
     RecordNotFoundError,
@@ -186,12 +182,13 @@ def prepare_conversation(
         new_message = MessageModel(
             role=chat_input.message.role,
             content=[
-                ContentModel(
-                    content_type=c.content_type,
-                    media_type=c.media_type,
-                    body=c.body,
-                    file_name=c.file_name,
-                )
+                # ContentModel(
+                #     content_type=c.content_type,
+                #     media_type=c.media_type,
+                #     body=c.body,
+                #     file_name=c.file_name,
+                # )
+                ContentModel.from_content(c)
                 for c in chat_input.message.content
             ],
             model=chat_input.message.model,
@@ -240,9 +237,7 @@ def insert_knowledge(
     logger.info(f"Inserted prompt: {inserted_prompt}")
 
     conversation_with_context = deepcopy(conversation)
-    conversation_with_context.message_map["instruction"].content[
-        0
-    ].body = inserted_prompt
+    conversation_with_context.message_map["instruction"].content[0].body = inserted_prompt
 
     return conversation_with_context
 
@@ -301,9 +296,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             price = token_cb.total_cost
             if bot.display_retrieved_chunks and chunk_cb.used_chunks:
                 used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(
-                agent_response.get("intermediate_steps", [])
-            )
+            thinking_log = format_log_to_str(agent_response.get("intermediate_steps", []))
             logger.info(f"Thinking log: {thinking_log}")
 
         reply_txt = agent_response["output"]
