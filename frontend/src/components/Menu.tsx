@@ -14,7 +14,7 @@ type Props = BaseProps & {
 
 // 認証時に表示するメニューコンポーネント
 const Menu: React.FC<Props> = (props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenLangage, setIsOpenLangage] = useState(false);
@@ -104,6 +104,11 @@ const Menu: React.FC<Props> = (props) => {
 
       <DialogSelectLanguage
         isOpen={isOpenLangage}
+        initialLanguage={i18n.language}
+        onSelectLanguage={(language) => {
+          i18n.changeLanguage(language);
+          setIsOpenLangage(false);
+        }}
         onClose={() => {
           setIsOpenLangage(false);
         }}
