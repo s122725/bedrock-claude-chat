@@ -34,7 +34,7 @@ type BotInputType = {
   hasAgent: boolean;
 };
 
-export type TextAttachmentType = {
+export type attachmentType = {
   fileName: string;
   fileType: string;
   extractedContent: string;
@@ -364,10 +364,10 @@ const useChat = () => {
   const postChat = (params: {
     content: string;
     base64EncodedImages?: string[];
-    textAttachments?: TextAttachmentType[];
+    attachments?: attachmentType[];
     bot?: BotInputType;
   }) => {
-    const { content, bot, base64EncodedImages, textAttachments } = params;
+    const { content, bot, base64EncodedImages, attachments } = params;
     const isNewChat = conversationId ? false : true;
     const newConversationId = ulid();
 
@@ -397,20 +397,20 @@ const useChat = () => {
       };
     });
 
-    const textAttachContents: MessageContent['content'] = (
-      textAttachments ?? []
-    ).map((attachment) => {
-      return {
-        body: attachment.extractedContent,
-        contentType: 'textAttachment',
-        mediaType: attachment.fileType,
-        fileName: attachment.fileName,
-      };
-    });
+    const attachContents: MessageContent['content'] = (attachments ?? []).map(
+      (attachment) => {
+        return {
+          body: attachment.extractedContent,
+          contentType: 'attachment',
+          mediaType: attachment.fileType,
+          fileName: attachment.fileName,
+        };
+      }
+    );
 
     const messageContent: MessageContent = {
       content: [
-        ...textAttachContents,
+        ...attachContents,
         ...imageContents,
         {
           body: content,

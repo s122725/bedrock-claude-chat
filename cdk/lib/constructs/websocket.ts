@@ -31,6 +31,7 @@ export interface WebSocketProps {
   readonly websocketSessionTable: ITable;
   readonly largeMessageBucket: s3.IBucket;
   readonly accessLogBucket?: s3.Bucket;
+  readonly enableMistral: boolean;
 }
 
 export class WebSocket extends Construct {
@@ -110,6 +111,7 @@ export class WebSocket extends Construct {
         DB_SECRETS_ARN: props.dbSecrets.secretArn,
         LARGE_PAYLOAD_SUPPORT_BUCKET: largePayloadSupportBucket.bucketName,
         WEBSOCKET_SESSION_TABLE_NAME: props.websocketSessionTable.tableName,
+        ENABLE_MISTRAL: props.enableMistral.toString(),
       },
       role: handlerRole,
     });

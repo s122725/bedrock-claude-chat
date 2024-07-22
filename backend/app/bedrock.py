@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import TypedDict, no_type_check
 
@@ -68,9 +69,7 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
+    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
@@ -92,6 +91,17 @@ def _get_converse_supported_format(ext: str) -> str:
     }
     # If the extension is not supported, return "txt"
     return supported_formats.get(ext, "txt")
+
+
+def _convert_to_valid_file_name(file_name: str) -> str:
+    # Note: The document file name can only contain alphanumeric characters,
+    # whitespace characters, hyphens, parentheses, and square brackets.
+    # The name can't contain more than one consecutive whitespace character.
+    file_name = re.sub(r"[^a-zA-Z0-9\s\-\(\)\[\]]", "", file_name)
+    file_name = re.sub(r"\s+", " ", file_name)
+    file_name = file_name.strip()
+
+    return file_name
 
 
 @no_type_check
@@ -124,7 +134,7 @@ def compose_args_for_converse_api(
                             }
                         }
                     )
-                elif c.content_type == "textAttachment":
+                elif c.content_type == "attachment":
                     content_blocks.append(
                         {
                             "document": {
@@ -134,10 +144,10 @@ def compose_args_for_converse_api(
                                     ],  # e.g. "document.txt" -> "txt"
                                 ),
                                 "name": Path(
-                                    c.file_name
+                                    _convert_to_valid_file_name(c.file_name)
                                 ).stem,  # e.g. "document.txt" -> "document"
                                 # encode text attachment body
-                                "source": {"bytes": c.body.encode("utf-8")},
+                                "source": {"bytes": base64.b64decode(c.body)},
                             }
                         }
                     )
