@@ -292,7 +292,7 @@ const InputChatContent: React.FC<Props> = (props) => {
       };
       reader.readAsArrayBuffer(file);
     },
-    [pushTextFile]
+    [pushTextFile] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
