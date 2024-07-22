@@ -69,7 +69,9 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
+    logger.warn(
+        "compose_args is deprecated. Use compose_args_for_converse_api instead."
+    )
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
