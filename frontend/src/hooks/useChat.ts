@@ -34,7 +34,7 @@ type BotInputType = {
   hasAgent: boolean;
 };
 
-export type attachmentType = {
+export type AttachmentType = {
   fileName: string;
   fileType: string;
   extractedContent: string;
@@ -364,7 +364,7 @@ const useChat = () => {
   const postChat = (params: {
     content: string;
     base64EncodedImages?: string[];
-    attachments?: attachmentType[];
+    attachments?: AttachmentType[];
     bot?: BotInputType;
   }) => {
     const { content, bot, base64EncodedImages, attachments } = params;

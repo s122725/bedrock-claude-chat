@@ -8,7 +8,7 @@ import React, {
 import ButtonSend from './ButtonSend';
 import Textarea from './Textarea';
 import useChat from '../hooks/useChat';
-import { attachmentType } from '../hooks/useChat';
+import { AttachmentType } from '../hooks/useChat';
 import Button from './Button';
 import {
   PiArrowsCounterClockwise,
@@ -42,7 +42,7 @@ type Props = BaseProps & {
   onSend: (
     content: string,
     base64EncodedImages?: string[],
-    attachments?: attachmentType[]
+    attachments?: AttachmentType[]
   ) => void;
   onRegenerate: () => void;
   continueGenerate: () => void;
