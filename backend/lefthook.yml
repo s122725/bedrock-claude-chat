@@ -1,0 +1,9 @@
+pre-commit:
+  parallel: true
+  commands:
+    black:
+      glob: "**/*.py"
+      run: poetry run black {staged_files}
+    mypy:
+      glob: "**/*.py"
+      run: poetry run mypy --config-file mypy.ini .
