@@ -92,6 +92,12 @@ export class WebSocket extends Construct {
         {
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "test",
+            "tests",
+          ]
         }
       ),
       vpc: props.vpc,

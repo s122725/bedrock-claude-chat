@@ -131,6 +131,12 @@ export class Embedding extends Construct {
       directory: path.join(__dirname, "../../../backend"),
       file: "embedding/Dockerfile",
       platform: Platform.LINUX_AMD64,
+      exclude: [
+        ".mypy_cache",
+        ".venv",
+        "test",
+        "tests",
+      ]
     });
     SociIndexBuild.fromDockerImageAsset(this, "Index", asset);
 
@@ -201,6 +207,12 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.update_bot_status.handler",
             ],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "test",
+              "tests",
+            ]
           }
         ),
         memorySize: 512,
@@ -227,6 +239,12 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.fetch_stack_output.handler",
             ],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "test",
+              "tests",
+            ]
           }
         ),
         memorySize: 512,
@@ -246,6 +264,12 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.store_knowledge_base_id.handler",
             ],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "test",
+              "tests",
+            ]
           }
         ),
         memorySize: 512,
@@ -638,6 +662,12 @@ export class Embedding extends Construct {
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
           cmd: ["app.bot_remove.handler"],
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "test",
+            "tests",
+          ]
         }
       ),
       vpc: props.vpc,

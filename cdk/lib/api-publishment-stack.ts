@@ -91,6 +91,12 @@ export class ApiPublishmentStack extends Stack {
         {
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
+          exclude: [
+            ".mypy_cache",
+            ".venv",
+            "test",
+            "tests",
+          ]
         }
       ),
       vpc,
@@ -125,6 +131,12 @@ export class ApiPublishmentStack extends Stack {
             platform: Platform.LINUX_AMD64,
             file: "lambda.Dockerfile",
             cmd: ["app.sqs_consumer.handler"],
+            exclude: [
+              ".mypy_cache",
+              ".venv",
+              "test",
+              "tests",
+            ]
           }
         ),
         vpc,
