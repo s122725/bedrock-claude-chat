@@ -16,7 +16,6 @@ import useSnackbar from '../hooks/useSnackbar';
 import ButtonCopy from '../components/ButtonCopy';
 import Skeleton from '../components/Skeleton';
 import Alert from '../components/Alert';
-import { log } from 'xstate';
 
 const AdminBotManagementPage: React.FC = () => {
   const { t } = useTranslation();
