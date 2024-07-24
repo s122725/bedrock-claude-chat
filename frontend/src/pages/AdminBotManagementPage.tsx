@@ -33,7 +33,6 @@ const AdminBotManagementPage: React.FC = () => {
   const hasSourceUrls = useMemo(() => {
     return bot ? bot.knowledge.sourceUrls.length > 0 : false;
   }, [bot]);
-  console.log('test');
 
   const hasFiles = useMemo(() => {
     return bot ? bot.knowledge.filenames.length > 0 : false;
