@@ -10,7 +10,7 @@ pre-commit:
     mypy:
       root: "backend/"
       glob: "**/*.py"
-      run: poetry run mypy --config-file mypy.ini .
+      run: poetry run mypy --config-file mypy.ini {staged_files}
     prettier:
       root: "frontend/"
       glob: "**/*.{js,jsx,ts,tsx,vue,json,md,yml,yaml}"
