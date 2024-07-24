@@ -31,6 +31,7 @@ export CLIENT_ID=xxxxxxxxx
 ## Launch local server
 
 ```sh
+pip install poetry --no-cache-dir
 poetry run uvicorn app.main:app  --reload --host 0.0.0.0 --port 8000
 ```
 
