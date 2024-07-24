@@ -1,0 +1,17 @@
+min_version: 1.3.0
+
+pre-commit:
+  parallel: true
+  commands:
+    prettier:
+      glob: "frontend/**/*.{js,jsx,ts,tsx,vue,json,md,yml,yaml}"
+      run: cd frontend && npx prettier --write --ignore-unknown {staged_files}
+    eslint:
+      glob: "frontend/**/*.{js,jsx,ts,tsx,vue}"
+      run: cd frontend && npx eslint --fix --max-warnings=0 {staged_files}
+    black:
+      glob: "backend/**/*.py"
+      run: cd backend && poetry run black {staged_files}
+    mypy:
+      glob: "backend/**/*.py"
+      run: cd backend && poetry run mypy --config-file mypy.ini .
