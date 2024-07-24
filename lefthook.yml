@@ -11,7 +11,7 @@ pre-commit:
       run: cd frontend && npx eslint --fix --max-warnings=0 {staged_files}
     black:
       glob: "backend/**/*.py"
-      run: poetry run black {staged_files}
+      run: cd backend && git ls-files -- "*.py" | xargs poetry run black
     mypy:
       glob: "backend/**/*.py"
-      run: cd backend && poetry run mypy --config-file mypy.ini .
+      run: cd backend && git ls-files -- "*.py" | xargs poetry run mypy --config-file mypy.ini
