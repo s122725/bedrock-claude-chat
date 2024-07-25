@@ -50,6 +50,8 @@ type Props = BaseProps & {
 
 const MAX_IMAGE_WIDTH = 800;
 const MAX_IMAGE_HEIGHT = 800;
+const MAX_FILE_SIZE_TO_SEND_MB = 10;
+const MAX_FILE_SIZE_TO_SEND_BYTES = MAX_FILE_SIZE_TO_SEND_MB * 1024 * 1024; // 10 MB (API Gateway response size limit)
 
 const useInputChatContentState = create<{
   base64EncodedImages: string[];
@@ -74,6 +76,8 @@ const useInputChatContentState = create<{
   setPreviewImageUrl: (url: string | null) => void;
   isOpenPreviewImage: boolean;
   setIsOpenPreviewImage: (isOpen: boolean) => void;
+  totalFileSizeToSend: number;
+  setTotalFileSizeToSend: (size: number) => void;
 }>((set, get) => ({
   base64EncodedImages: [],
   pushBase64EncodedImage: (encodedImage) => {
@@ -123,6 +127,11 @@ const useInputChatContentState = create<{
       attachedFiles: [],
     });
   },
+  totalFileSizeToSend: 0,
+  setTotalFileSizeToSend: (size) =>
+    set({
+      totalFileSizeToSend: size,
+    }),
 }));
 
 const InputChatContent: React.FC<Props> = (props) => {
@@ -150,6 +159,8 @@ const InputChatContent: React.FC<Props> = (props) => {
     pushTextFile,
     removeTextFile,
     clearAttachedFiles,
+    totalFileSizeToSend,
+    setTotalFileSizeToSend,
   } = useInputChatContentState();
 
   useEffect(() => {
@@ -249,11 +260,25 @@ const InputChatContent: React.FC<Props> = (props) => {
 
           const resizedImageData = canvas.toDataURL('image/png');
 
+          // Total file size check
+          if (
+            totalFileSizeToSend + resizedImageData.length >
+            MAX_FILE_SIZE_TO_SEND_BYTES
+          ) {
+            open(
+              t('error.totalFileSizeToSendExceeded', {
+                maxSize: `${MAX_FILE_SIZE_TO_SEND_MB} MB`,
+              })
+            );
+            return;
+          }
+
           pushBase64EncodedImage(resizedImageData);
+          setTotalFileSizeToSend(totalFileSizeToSend + imageFile.size);
         };
       };
     },
-    [pushBase64EncodedImage]
+    [pushBase64EncodedImage, totalFileSizeToSend, setTotalFileSizeToSend]
   );
 
   const handleAttachedFileRead = useCallback(
@@ -281,6 +306,19 @@ const InputChatContent: React.FC<Props> = (props) => {
             binaryString += String.fromCharCode(...chunk);
           }
 
+          // Total file size check
+          if (
+            totalFileSizeToSend + binaryString.length >
+            MAX_FILE_SIZE_TO_SEND_BYTES
+          ) {
+            open(
+              t('error.totalFileSizeToSendExceeded', {
+                maxSize: `${MAX_FILE_SIZE_TO_SEND_MB} MB`,
+              })
+            );
+            return;
+          }
+
           const base64String = btoa(binaryString);
           pushTextFile({
             name: file.name,
@@ -288,11 +326,12 @@ const InputChatContent: React.FC<Props> = (props) => {
             size: file.size,
             content: base64String,
           });
+          setTotalFileSizeToSend(totalFileSizeToSend + file.size);
         }
       };
       reader.readAsArrayBuffer(file);
     },
-    [pushTextFile] // eslint-disable-line react-hooks/exhaustive-deps
+    [pushTextFile, totalFileSizeToSend, setTotalFileSizeToSend] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
@@ -334,10 +373,33 @@ const InputChatContent: React.FC<Props> = (props) => {
 
   const onChangeFile = useCallback(
     (fileList: FileList) => {
-      const currentAttachedFilesCount =
-        useInputChatContentState.getState().attachedFiles.length;
-      console.log('currentAttachedFilesCount', currentAttachedFilesCount);
-      if (currentAttachedFilesCount + fileList.length > MAX_ATTACHED_FILES) {
+      // Check if the total number of attached files exceeds the limit
+      const currentAttachedFiles =
+        useInputChatContentState.getState().attachedFiles;
+      const currentAttachedFilesCount = currentAttachedFiles.filter((file) =>
+        SUPPORTED_FILE_EXTENSIONS.some((extension) =>
+          file.name.endsWith(extension)
+        )
+      ).length;
+
+      let newAttachedFilesCount = 0;
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList.item(i);
+        if (file) {
+          if (
+            SUPPORTED_FILE_EXTENSIONS.some((extension) =>
+              file.name.endsWith(extension)
+            )
+          ) {
+            newAttachedFilesCount++;
+          }
+        }
+      }
+
+      if (
+        currentAttachedFilesCount + newAttachedFilesCount >
+        MAX_ATTACHED_FILES
+      ) {
         open(
           t('error.attachment.fileCountExceeded', {
             maxCount: MAX_ATTACHED_FILES,
@@ -345,6 +407,7 @@ const InputChatContent: React.FC<Props> = (props) => {
         );
         return;
       }
+
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList.item(i);
         if (file) {

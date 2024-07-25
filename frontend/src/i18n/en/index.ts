@@ -506,6 +506,8 @@ How would you categorize this email?`,
       },
       notSupportedImage: 'The selected model does not support images.',
       unsupportedFileFormat: 'The selected file format is not supported.',
+      totalFileSizeToSendExceeded:
+        'The total file size must be no more than {{maxSize}}.',
       attachment: {
         fileSizeExceeded:
           'Each document size must be no more than {{maxSize}}.',

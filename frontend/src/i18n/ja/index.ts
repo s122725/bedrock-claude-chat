@@ -509,6 +509,8 @@ const translation = {
       },
       notSupportedImage: '選択しているモデルは、画像を利用できません。',
       unsupportedFileFormat: '選択したファイル形式はサポートされていません。',
+      totalFileSizeToSendExceeded:
+        'ファイルサイズの合計が{{maxSize}}を超えています。',
       attachment: {
         fileSizeExceeded: 'ファイルサイズは{{maxSize}}以下にしてください。',
         fileCountExceeded: 'ファイル数は{{maxCount}}以下にしてください。',
