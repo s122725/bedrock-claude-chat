@@ -278,7 +278,7 @@ const InputChatContent: React.FC<Props> = (props) => {
         };
       };
     },
-    [pushBase64EncodedImage, totalFileSizeToSend, setTotalFileSizeToSend]
+    [pushBase64EncodedImage, totalFileSizeToSend, setTotalFileSizeToSend] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const handleAttachedFileRead = useCallback(
