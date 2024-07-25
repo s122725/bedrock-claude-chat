@@ -47,9 +47,10 @@ type Props = BaseProps & {
   onRegenerate: () => void;
   continueGenerate: () => void;
 };
-
-const MAX_IMAGE_WIDTH = 800;
-const MAX_IMAGE_HEIGHT = 800;
+// Image size
+// Ref: https://docs.anthropic.com/en/docs/build-with-claude/vision#evaluate-image-size
+const MAX_IMAGE_WIDTH = 1568;
+const MAX_IMAGE_HEIGHT = 1568;
 // 6 MB (Lambda response size limit is 6 MB)
 // Ref: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
 // Converse API can handle 4.5 MB x 5 files, but the API to fetch conversation history is based on the lambda,
