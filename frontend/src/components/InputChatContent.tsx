@@ -284,7 +284,13 @@ const InputChatContent: React.FC<Props> = (props) => {
         };
       };
     },
-    [pushBase64EncodedImage, totalFileSizeToSend, setTotalFileSizeToSend] // eslint-disable-line react-hooks/exhaustive-deps
+    [
+      pushBase64EncodedImage,
+      totalFileSizeToSend,
+      setTotalFileSizeToSend,
+      open,
+      t,
+    ]
   );
 
   const handleAttachedFileRead = useCallback(
@@ -337,7 +343,7 @@ const InputChatContent: React.FC<Props> = (props) => {
       };
       reader.readAsArrayBuffer(file);
     },
-    [pushTextFile, totalFileSizeToSend, setTotalFileSizeToSend] // eslint-disable-line react-hooks/exhaustive-deps
+    [pushTextFile, totalFileSizeToSend, setTotalFileSizeToSend, open, t]
   );
 
   useEffect(() => {
