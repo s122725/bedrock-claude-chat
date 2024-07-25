@@ -50,8 +50,13 @@ type Props = BaseProps & {
 
 const MAX_IMAGE_WIDTH = 800;
 const MAX_IMAGE_HEIGHT = 800;
-const MAX_FILE_SIZE_TO_SEND_MB = 10;
-const MAX_FILE_SIZE_TO_SEND_BYTES = MAX_FILE_SIZE_TO_SEND_MB * 1024 * 1024; // 10 MB (API Gateway response size limit)
+// 6 MB (Lambda response size limit is 6 MB)
+// Ref: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
+// Converse API can handle 4.5 MB x 5 files, but the API to fetch conversation history is based on the lambda,
+// so we limit the size to 6 MB to prevent the error.
+// Need to refactor if want to increase the limit by using s3 presigned URL.
+const MAX_FILE_SIZE_TO_SEND_MB = 6;
+const MAX_FILE_SIZE_TO_SEND_BYTES = MAX_FILE_SIZE_TO_SEND_MB * 1024 * 1024;
 
 const useInputChatContentState = create<{
   base64EncodedImages: string[];
