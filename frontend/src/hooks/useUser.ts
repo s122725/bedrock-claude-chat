@@ -2,8 +2,8 @@ import { Auth } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 
-const GROUP_ALLOW_API_SETTINGS = 'PublishAllowed';
-const GROUP_ALLOW_CREATING_BOT = 'CreatingBotAllowed';
+const GROUP_PUBLISH_ALLOWED = 'PublishAllowed';
+const GROUP_CREATING_BOT_ALLOWED = 'CreatingBotAllowed';
 const GROUP_ADMIN = 'Admin';
 
 const useUser = () => {
@@ -20,13 +20,15 @@ const useUser = () => {
       session?.getIdToken().payload['cognito:groups'];
 
     if (groups) {
-      setIsAllowApiSettings(
-        groups.findIndex((group) => group === GROUP_ALLOW_API_SETTINGS) > -1
-      );
-      setIsAllowCreatingBot(
-        groups.findIndex((group) => group === GROUP_ALLOW_CREATING_BOT) > -1
-      );
-      setIsAdmin(groups.findIndex((group) => group === GROUP_ADMIN) > -1);
+      setIsAllowApiSettings(groups.some(group =>
+        group === GROUP_PUBLISH_ALLOWED || group === GROUP_ADMIN
+      ));
+      setIsAllowCreatingBot(groups.some(group =>
+        group === GROUP_CREATING_BOT_ALLOWED || group === GROUP_ADMIN
+      ));
+      setIsAdmin(groups.some(group =>
+        group === GROUP_ADMIN
+      ));
     } else {
       setIsAllowApiSettings(false);
       setIsAllowCreatingBot(false);
