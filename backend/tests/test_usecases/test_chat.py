@@ -1,3 +1,4 @@
+import base64
 import sys
 
 sys.path.insert(0, ".")
@@ -39,6 +40,7 @@ from app.usecases.chat import (
 )
 from app.vector_search import SearchResult
 from tests.test_stream.get_aws_logo import get_aws_logo
+from tests.test_stream.get_pdf import get_aws_overview
 from tests.test_usecases.utils.bot_factory import (
     create_test_instruction_template,
     create_test_private_bot,
@@ -269,6 +271,42 @@ class TestStartChat(unittest.TestCase):
 
     def tearDown(self) -> None:
         delete_conversation_by_id("user1", self.output.conversation_id)
+
+
+class TestAttachmentChat(unittest.TestCase):
+    def tearDown(self) -> None:
+        delete_conversation_by_id("user1", self.output.conversation_id)
+
+    def test_chat(self):
+        file_name, body = get_aws_overview()
+        chat_input = ChatInput(
+            conversation_id="test_conversation_id",
+            message=MessageInput(
+                role="user",
+                content=[
+                    Content(
+                        content_type="attachment",
+                        body=base64.b64encode(body).decode("utf-8"),
+                        media_type=None,
+                        file_name=file_name,
+                    ),
+                    Content(
+                        content_type="text",
+                        body="Summarize the document.",
+                        media_type=None,
+                        file_name=None,
+                    ),
+                ],
+                model=MODEL,
+                parent_message_id=None,
+                message_id=None,
+            ),
+            bot_id=None,
+            continue_generate=False,
+        )
+        output: ChatOutput = chat(user_id="user1", chat_input=chat_input)
+        pprint(output.model_dump())
+        self.output = output
 
 
 class TestMultimodalChat(unittest.TestCase):

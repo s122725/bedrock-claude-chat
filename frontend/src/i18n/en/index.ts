@@ -506,6 +506,13 @@ How would you categorize this email?`,
       },
       notSupportedImage: 'The selected model does not support images.',
       unsupportedFileFormat: 'The selected file format is not supported.',
+      totalFileSizeToSendExceeded:
+        'The total file size must be no more than {{maxSize}}.',
+      attachment: {
+        fileSizeExceeded:
+          'Each document size must be no more than {{maxSize}}.',
+        fileCountExceeded: 'Could not upload more than {{maxCount}} files.',
+      },
     },
     validation: {
       title: 'Validation Error',
@@ -522,7 +529,7 @@ How would you categorize this email?`,
         message: 'Please input both Title and Conversation Example.',
       },
     },
-    heler: {
+    helper: {
       shortcuts: {
         title: 'Shortcut Keys',
         items: {

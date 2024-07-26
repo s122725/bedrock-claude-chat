@@ -21,7 +21,8 @@ import ModalDialog from './ModalDialog';
 import { useTranslation } from 'react-i18next';
 import useChat from '../hooks/useChat';
 import DialogFeedback from './DialogFeedback';
-import UploadedFileText from './UploadedFileText';
+import UploadedAttachedFile from './UploadedAttachedFile';
+import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachedFiles';
 
 type Props = BaseProps & {
   chatContent?: DisplayMessageContent;
@@ -177,20 +178,35 @@ const ChatMessage: React.FC<Props> = (props) => {
                 </div>
               )}
               {chatContent.content.some(
-                (content) => content.contentType === 'textAttachment'
+                (content) => content.contentType === 'attachment'
               ) && (
                 <div key="files" className="my-2 flex">
                   {chatContent.content.map((content, idx) => {
-                    if (content.contentType === 'textAttachment') {
+                    if (content.contentType === 'attachment') {
+                      const isTextFile = TEXT_FILE_EXTENSIONS.some(
+                        (ext) => content.fileName?.toLowerCase().endsWith(ext)
+                      );
                       return (
-                        <UploadedFileText
+                        <UploadedAttachedFile
                           key={idx}
                           fileName={content.fileName ?? ''}
-                          onClick={() => {
-                            setDialogFileName(content.fileName ?? '');
-                            setDialogFileContent(content.body);
-                            setIsFileModalOpen(true);
-                          }}
+                          onClick={
+                            // Only text file can be previewed
+                            isTextFile
+                              ? () => {
+                                  const textContent = new TextDecoder(
+                                    'utf-8'
+                                  ).decode(
+                                    Uint8Array.from(atob(content.body), (c) =>
+                                      c.charCodeAt(0)
+                                    )
+                                  ); // base64 encoded text to be decoded string
+                                  setDialogFileName(content.fileName ?? '');
+                                  setDialogFileContent(textContent);
+                                  setIsFileModalOpen(true);
+                                }
+                              : undefined
+                          }
                         />
                       );
                     }

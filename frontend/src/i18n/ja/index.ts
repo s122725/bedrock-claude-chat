@@ -509,6 +509,12 @@ const translation = {
       },
       notSupportedImage: '選択しているモデルは、画像を利用できません。',
       unsupportedFileFormat: '選択したファイル形式はサポートされていません。',
+      totalFileSizeToSendExceeded:
+        'ファイルサイズの合計が{{maxSize}}を超えています。',
+      attachment: {
+        fileSizeExceeded: 'ファイルサイズは{{maxSize}}以下にしてください。',
+        fileCountExceeded: 'ファイル数は{{maxCount}}以下にしてください。',
+      },
     },
     validation: {
       title: 'バリデーションエラー',
@@ -526,7 +532,7 @@ const translation = {
         message: 'タイトルと入力例は、どちらも入力してください。',
       },
     },
-    heler: {
+    helper: {
       shortcuts: {
         title: 'ショートカットキー',
         items: {

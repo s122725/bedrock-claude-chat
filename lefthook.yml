@@ -19,3 +19,4 @@ pre-commit:
       root: "frontend/"
       glob: "**/*.{js,jsx,ts,tsx,vue}"
       run: npx eslint --fix --max-warnings=0 {staged_files}
+

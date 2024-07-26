@@ -18,12 +18,14 @@ export const BottomHelper = () => {
         />
       </div>
       <ModalDialog
-        title={t('heler.shortcuts.title')}
+        title={t('helper.shortcuts.title')}
         isOpen={isOpen}
         onClose={() => setIsOpen(() => false)}>
         <div className="flex items-center justify-between overflow-hidden">
           <div className="flex shrink items-center overflow-hidden text-sm">
-            <div className="truncate">{t('heler.shortcuts.items.newChat')}</div>
+            <div className="truncate">
+              {t('helper.shortcuts.items.newChat')}
+            </div>
           </div>
           <div className="ml-3 flex flex-row gap-2">
             <div className="my-2 flex h-8 min-w-[32px] items-center justify-center rounded-md border capitalize">
@@ -40,7 +42,7 @@ export const BottomHelper = () => {
         <div className="flex items-center justify-between overflow-hidden">
           <div className="flex shrink items-center overflow-hidden text-sm">
             <div className="truncate">
-              {t('heler.shortcuts.items.focusInput')}
+              {t('helper.shortcuts.items.focusInput')}
             </div>
           </div>
           <div className="ml-3 flex flex-row gap-2">

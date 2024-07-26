@@ -8,7 +8,7 @@ import React, {
 import ButtonSend from './ButtonSend';
 import Textarea from './Textarea';
 import useChat from '../hooks/useChat';
-import { TextAttachmentType } from '../hooks/useChat';
+import { AttachmentType } from '../hooks/useChat';
 import Button from './Button';
 import {
   PiArrowsCounterClockwise,
@@ -25,8 +25,14 @@ import { create } from 'zustand';
 import ButtonFileChoose from './ButtonFileChoose';
 import { BaseProps } from '../@types/common';
 import ModalDialog from './ModalDialog';
-import UploadedFileText from './UploadedFileText';
+import UploadedAttachedFile from './UploadedAttachedFile';
 import useSnackbar from '../hooks/useSnackbar';
+import {
+  MAX_FILE_SIZE_BYTES,
+  MAX_FILE_SIZE_MB,
+  SUPPORTED_FILE_EXTENSIONS,
+  MAX_ATTACHED_FILES,
+} from '../constants/supportedAttachedFiles';
 
 type Props = BaseProps & {
   disabledSend?: boolean;
@@ -36,76 +42,34 @@ type Props = BaseProps & {
   onSend: (
     content: string,
     base64EncodedImages?: string[],
-    textAttachments?: TextAttachmentType[]
+    attachments?: AttachmentType[]
   ) => void;
   onRegenerate: () => void;
   continueGenerate: () => void;
 };
-
-const MAX_IMAGE_WIDTH = 800;
-const MAX_IMAGE_HEIGHT = 800;
-// To change the supported text format files, change the extension list below.
-const TEXT_FILE_EXTENSIONS = [
-  '.txt',
-  '.py',
-  '.ipynb',
-  '.js',
-  '.jsx',
-  '.html',
-  '.css',
-  '.java',
-  '.cs',
-  '.php',
-  '.c',
-  '.cpp',
-  '.cxx',
-  '.h',
-  '.hpp',
-  '.rs',
-  '.R',
-  '.Rmd',
-  '.swift',
-  '.go',
-  '.rb',
-  '.kt',
-  '.kts',
-  '.ts',
-  '.tsx',
-  '.m',
-  '.scala',
-  '.rs',
-  '.dart',
-  '.lua',
-  '.pl',
-  '.pm',
-  '.t',
-  '.sh',
-  '.bash',
-  '.zsh',
-  '.csv',
-  '.log',
-  '.ini',
-  '.config',
-  '.json',
-  '.proto',
-  '.yaml',
-  '.yml',
-  '.toml',
-  '.lua',
-  '.sql',
-  '.bat',
-  '.md',
-  '.coffee',
-  '.tex',
-  '.latex',
-];
+// Image size
+// Ref: https://docs.anthropic.com/en/docs/build-with-claude/vision#evaluate-image-size
+const MAX_IMAGE_WIDTH = 1568;
+const MAX_IMAGE_HEIGHT = 1568;
+// 6 MB (Lambda response size limit is 6 MB)
+// Ref: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
+// Converse API can handle 4.5 MB x 5 files, but the API to fetch conversation history is based on the lambda,
+// so we limit the size to 6 MB to prevent the error.
+// Need to refactor if want to increase the limit by using s3 presigned URL.
+const MAX_FILE_SIZE_TO_SEND_MB = 6;
+const MAX_FILE_SIZE_TO_SEND_BYTES = MAX_FILE_SIZE_TO_SEND_MB * 1024 * 1024;
 
 const useInputChatContentState = create<{
   base64EncodedImages: string[];
   pushBase64EncodedImage: (encodedImage: string) => void;
   removeBase64EncodedImage: (index: number) => void;
   clearBase64EncodedImages: () => void;
-  textFiles: { name: string; type: string; size: number; content: string }[];
+  attachedFiles: {
+    name: string;
+    type: string;
+    size: number;
+    content: string;
+  }[];
   pushTextFile: (file: {
     name: string;
     type: string;
@@ -113,11 +77,13 @@ const useInputChatContentState = create<{
     content: string;
   }) => void;
   removeTextFile: (index: number) => void;
-  clearTextFiles: () => void;
+  clearAttachedFiles: () => void;
   previewImageUrl: string | null;
   setPreviewImageUrl: (url: string | null) => void;
   isOpenPreviewImage: boolean;
   setIsOpenPreviewImage: (isOpen: boolean) => void;
+  totalFileSizeToSend: number;
+  setTotalFileSizeToSend: (size: number) => void;
 }>((set, get) => ({
   base64EncodedImages: [],
   pushBase64EncodedImage: (encodedImage) => {
@@ -147,26 +113,31 @@ const useInputChatContentState = create<{
   setIsOpenPreviewImage: (isOpen) => {
     set({ isOpenPreviewImage: isOpen });
   },
-  textFiles: [],
+  attachedFiles: [],
   pushTextFile: (file) => {
     set({
-      textFiles: produce(get().textFiles, (draft) => {
+      attachedFiles: produce(get().attachedFiles, (draft) => {
         draft.push(file);
       }),
     });
   },
   removeTextFile: (index) => {
     set({
-      textFiles: produce(get().textFiles, (draft) => {
+      attachedFiles: produce(get().attachedFiles, (draft) => {
         draft.splice(index, 1);
       }),
     });
   },
-  clearTextFiles: () => {
+  clearAttachedFiles: () => {
     set({
-      textFiles: [],
+      attachedFiles: [],
     });
   },
+  totalFileSizeToSend: 0,
+  setTotalFileSizeToSend: (size) =>
+    set({
+      totalFileSizeToSend: size,
+    }),
 }));
 
 const InputChatContent: React.FC<Props> = (props) => {
@@ -175,7 +146,7 @@ const InputChatContent: React.FC<Props> = (props) => {
   const { disabledImageUpload, model, acceptMediaType } = useModel();
 
   const extendedAcceptMediaType = useMemo(() => {
-    return [...acceptMediaType, ...TEXT_FILE_EXTENSIONS];
+    return [...acceptMediaType, ...SUPPORTED_FILE_EXTENSIONS];
   }, [acceptMediaType]);
 
   const [shouldContinue, setShouldContinue] = useState(false);
@@ -190,15 +161,17 @@ const InputChatContent: React.FC<Props> = (props) => {
     setPreviewImageUrl,
     isOpenPreviewImage,
     setIsOpenPreviewImage,
-    textFiles,
+    attachedFiles,
     pushTextFile,
     removeTextFile,
-    clearTextFiles,
+    clearAttachedFiles,
+    totalFileSizeToSend,
+    setTotalFileSizeToSend,
   } = useInputChatContentState();
 
   useEffect(() => {
     clearBase64EncodedImages();
-    clearTextFiles();
+    clearAttachedFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -227,7 +200,7 @@ const InputChatContent: React.FC<Props> = (props) => {
   const inputRef = useRef<HTMLDivElement>(null);
 
   const sendContent = useCallback(() => {
-    const textAttachments = textFiles.map((file) => ({
+    const attachments = attachedFiles.map((file) => ({
       fileName: file.name,
       fileType: file.type,
       extractedContent: file.content,
@@ -238,16 +211,16 @@ const InputChatContent: React.FC<Props> = (props) => {
       !disabledImageUpload && base64EncodedImages.length > 0
         ? base64EncodedImages
         : undefined,
-      textAttachments.length > 0 ? textAttachments : undefined
+      attachments.length > 0 ? attachments : undefined
     );
     setContent('');
     clearBase64EncodedImages();
-    clearTextFiles();
+    clearAttachedFiles();
   }, [
     base64EncodedImages,
-    textFiles,
+    attachedFiles,
     clearBase64EncodedImages,
-    clearTextFiles,
+    clearAttachedFiles,
     content,
     disabledImageUpload,
     props,
@@ -293,29 +266,83 @@ const InputChatContent: React.FC<Props> = (props) => {
 
           const resizedImageData = canvas.toDataURL('image/png');
 
+          // Total file size check
+          if (
+            totalFileSizeToSend + resizedImageData.length >
+            MAX_FILE_SIZE_TO_SEND_BYTES
+          ) {
+            open(
+              t('error.totalFileSizeToSendExceeded', {
+                maxSize: `${MAX_FILE_SIZE_TO_SEND_MB} MB`,
+              })
+            );
+            return;
+          }
+
           pushBase64EncodedImage(resizedImageData);
+          setTotalFileSizeToSend(totalFileSizeToSend + resizedImageData.length);
         };
       };
     },
-    [pushBase64EncodedImage]
+    [
+      pushBase64EncodedImage,
+      totalFileSizeToSend,
+      setTotalFileSizeToSend,
+      open,
+      t,
+    ]
   );
 
-  const handleFileRead = useCallback(
+  const handleAttachedFileRead = useCallback(
     (file: File) => {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        open(
+          t('error.attachment.fileSizeExceeded', {
+            maxSize: `${MAX_FILE_SIZE_MB} MB`,
+          })
+        );
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') {
+        if (reader.result instanceof ArrayBuffer) {
+          // Convert from byte to base64 encoded string
+          const byteArray = new Uint8Array(reader.result);
+          let binaryString = '';
+          const chunkSize = 8192;
+
+          for (let i = 0; i < byteArray.length; i += chunkSize) {
+            const chunk = byteArray.slice(i, i + chunkSize);
+            // To avoid `Maximum call stack size exceeded` error, split into smaller chunks
+            binaryString += String.fromCharCode(...chunk);
+          }
+          const base64String = btoa(binaryString);
+
+          // Total file size check
+          if (
+            totalFileSizeToSend + base64String.length >
+            MAX_FILE_SIZE_TO_SEND_BYTES
+          ) {
+            open(
+              t('error.totalFileSizeToSendExceeded', {
+                maxSize: `${MAX_FILE_SIZE_TO_SEND_MB} MB`,
+              })
+            );
+            return;
+          }
           pushTextFile({
             name: file.name,
             type: file.type,
             size: file.size,
-            content: reader.result,
+            content: base64String,
           });
+          setTotalFileSizeToSend(totalFileSizeToSend + base64String.length);
         }
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     },
-    [pushTextFile]
+    [pushTextFile, totalFileSizeToSend, setTotalFileSizeToSend, open, t]
   );
 
   useEffect(() => {
@@ -357,15 +384,50 @@ const InputChatContent: React.FC<Props> = (props) => {
 
   const onChangeFile = useCallback(
     (fileList: FileList) => {
+      // Check if the total number of attached files exceeds the limit
+      const currentAttachedFiles =
+        useInputChatContentState.getState().attachedFiles;
+      const currentAttachedFilesCount = currentAttachedFiles.filter((file) =>
+        SUPPORTED_FILE_EXTENSIONS.some((extension) =>
+          file.name.endsWith(extension)
+        )
+      ).length;
+
+      let newAttachedFilesCount = 0;
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList.item(i);
         if (file) {
           if (
-            TEXT_FILE_EXTENSIONS.some((extension) =>
+            SUPPORTED_FILE_EXTENSIONS.some((extension) =>
               file.name.endsWith(extension)
             )
           ) {
-            handleFileRead(file);
+            newAttachedFilesCount++;
+          }
+        }
+      }
+
+      if (
+        currentAttachedFilesCount + newAttachedFilesCount >
+        MAX_ATTACHED_FILES
+      ) {
+        open(
+          t('error.attachment.fileCountExceeded', {
+            maxCount: MAX_ATTACHED_FILES,
+          })
+        );
+        return;
+      }
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList.item(i);
+        if (file) {
+          if (
+            SUPPORTED_FILE_EXTENSIONS.some((extension) =>
+              file.name.endsWith(extension)
+            )
+          ) {
+            handleAttachedFileRead(file);
           } else if (
             acceptMediaType.some((extension) => file.name.endsWith(extension))
           ) {
@@ -376,7 +438,7 @@ const InputChatContent: React.FC<Props> = (props) => {
         }
       }
     },
-    [encodeAndPushImage, handleFileRead, open, t, acceptMediaType]
+    [encodeAndPushImage, handleAttachedFileRead, open, t, acceptMediaType]
   );
 
   const onDragOver: React.DragEventHandler<HTMLDivElement> = useCallback(
@@ -470,11 +532,11 @@ const InputChatContent: React.FC<Props> = (props) => {
             </ModalDialog>
           </div>
         )}
-        {textFiles.length > 0 && (
+        {attachedFiles.length > 0 && (
           <div className="relative m-2 mr-24 flex flex-wrap gap-3">
-            {textFiles.map((file, idx) => (
+            {attachedFiles.map((file, idx) => (
               <div key={idx} className="relative flex flex-col items-center">
-                <UploadedFileText fileName={file.name} />
+                <UploadedAttachedFile fileName={file.name} />
                 <ButtonIcon
                   className="absolute left-2 top-1 -m-2 border border-aws-sea-blue bg-white p-1 text-xs text-aws-sea-blue"
                   onClick={() => {
