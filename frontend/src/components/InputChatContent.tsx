@@ -280,7 +280,7 @@ const InputChatContent: React.FC<Props> = (props) => {
           }
 
           pushBase64EncodedImage(resizedImageData);
-          setTotalFileSizeToSend(totalFileSizeToSend + imageFile.size);
+          setTotalFileSizeToSend(totalFileSizeToSend + resizedImageData.length);
         };
       };
     },
@@ -317,10 +317,11 @@ const InputChatContent: React.FC<Props> = (props) => {
             // To avoid `Maximum call stack size exceeded` error, split into smaller chunks
             binaryString += String.fromCharCode(...chunk);
           }
+          const base64String = btoa(binaryString);
 
           // Total file size check
           if (
-            totalFileSizeToSend + binaryString.length >
+            totalFileSizeToSend + base64String.length >
             MAX_FILE_SIZE_TO_SEND_BYTES
           ) {
             open(
@@ -330,15 +331,13 @@ const InputChatContent: React.FC<Props> = (props) => {
             );
             return;
           }
-
-          const base64String = btoa(binaryString);
           pushTextFile({
             name: file.name,
             type: file.type,
             size: file.size,
             content: base64String,
           });
-          setTotalFileSizeToSend(totalFileSizeToSend + file.size);
+          setTotalFileSizeToSend(totalFileSizeToSend + base64String.length);
         }
       };
       reader.readAsArrayBuffer(file);
