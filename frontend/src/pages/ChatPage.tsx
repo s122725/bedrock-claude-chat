@@ -275,7 +275,12 @@ const ChatPage: React.FC = () => {
 
       if (hasKeyDownCommand) {
         event.preventDefault();
-        navigate('/');
+
+        if (botId) {
+          navigate(`/bot/${botId}`);
+        } else {
+          navigate('/');
+        }
       }
     };
     document.addEventListener('keydown', handleKeyDown);
