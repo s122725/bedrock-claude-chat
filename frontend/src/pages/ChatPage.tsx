@@ -279,7 +279,15 @@ const ChatPage: React.FC = () => {
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      delete activeCodes[event.code];
+    };
+    document.addEventListener('keyup', handleKeyUp);
+    return () => {
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   });
 
   return (
