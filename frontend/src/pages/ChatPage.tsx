@@ -259,21 +259,19 @@ const ChatPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const activeCodes: { [key in KeyboardEvent['code']]: boolean } = {};
     const handleKeyDown = (event: KeyboardEvent) => {
-      activeCodes[event.code] = true;
-
-      const hasKeyDownCommand = (() => {
-        return isWindows
-          ? (activeCodes['ControlLeft'] || activeCodes['ControlRight']) &&
-              (activeCodes['ShiftLeft'] || activeCodes['ShiftRight']) &&
-              activeCodes['KeyO']
-          : (activeCodes['MetaLeft'] || activeCodes['MetaRight']) &&
-              (activeCodes['ShiftLeft'] || activeCodes['ShiftRight']) &&
-              activeCodes['KeyO'];
+      const isNewConversationCommand = (() => {
+        if (event.code !== 'KeyO') {
+          return false;
+        }
+        if (isWindows) {
+          return event.ctrlKey && event.shiftKey;
+        } else {
+          return event.metaKey && event.shiftKey;
+        }
       })();
 
-      if (hasKeyDownCommand) {
+      if (isNewConversationCommand) {
         event.preventDefault();
 
         if (botId) {
@@ -284,15 +282,7 @@ const ChatPage: React.FC = () => {
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      delete activeCodes[event.code];
-    };
-    document.addEventListener('keyup', handleKeyUp);
-    return () => {
-      document.removeEventListener('keyup', handleKeyUp);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => document.removeEventListener('keydown', handleKeyDown);
   });
 
   return (
