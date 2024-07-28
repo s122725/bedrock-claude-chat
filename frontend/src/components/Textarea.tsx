@@ -36,14 +36,8 @@ const Textarea: React.FC<Props> = (props) => {
   }, [props.value]);
 
   useEffect(() => {
-    const activeCodes: { [key in KeyboardEvent['code']]: boolean } = {};
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      activeCodes[event.code] = true;
-      if (
-        activeCodes['Escape'] &&
-        (activeCodes['ShiftLeft'] || activeCodes['ShiftRight'])
-      ) {
+      if (event.code === 'Escape' && event.shiftKey) {
         ref.current?.focus();
       }
     };
