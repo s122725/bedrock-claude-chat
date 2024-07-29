@@ -4,6 +4,7 @@ import React, {
   useLayoutEffect,
   useMemo,
   useState,
+  useRef,
 } from 'react';
 import InputChatContent from '../components/InputChatContent';
 import useChat from '../hooks/useChat';
@@ -258,6 +259,8 @@ const ChatPage: React.FC = () => {
     e.preventDefault();
   }, []);
 
+  const focusInputRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const isNewConversationCommand = (() => {
@@ -270,6 +273,9 @@ const ChatPage: React.FC = () => {
           return event.metaKey && event.shiftKey;
         }
       })();
+      const isFocusChatInputCommand = (
+        event.code === 'Escape' && event.shiftKey
+      );
 
       if (isNewConversationCommand) {
         event.preventDefault();
@@ -279,6 +285,8 @@ const ChatPage: React.FC = () => {
         } else {
           navigate('/');
         }
+      } else if (isFocusChatInputCommand) {
+        focusInputRef.current?.focus();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -461,6 +469,7 @@ const ChatPage: React.FC = () => {
             }
             onSend={onSend}
             onRegenerate={onRegenerate}
+            ref={focusInputRef}
           />
         ) : (
           <InputChatContent
@@ -475,6 +484,7 @@ const ChatPage: React.FC = () => {
             onSend={onSend}
             onRegenerate={onRegenerate}
             continueGenerate={onContinueGenerate}
+            ref={focusInputRef}
           />
         )}
       </div>

@@ -1,4 +1,5 @@
 import React, {
+  forwardRef,
   useCallback,
   useEffect,
   useMemo,
@@ -140,7 +141,7 @@ const useInputChatContentState = create<{
     }),
 }));
 
-const InputChatContent: React.FC<Props> = (props) => {
+const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) => {
   const { t } = useTranslation();
   const { postingMessage, hasError, messages, getShouldContinue } = useChat();
   const { disabledImageUpload, model, acceptMediaType } = useModel();
@@ -479,6 +480,7 @@ const InputChatContent: React.FC<Props> = (props) => {
             noBorder
             value={content}
             onChange={setContent}
+            ref={focusInputRef}
           />
         </div>
         <div className="absolute bottom-0 right-0 flex items-center">
@@ -572,6 +574,6 @@ const InputChatContent: React.FC<Props> = (props) => {
       </div>
     </>
   );
-};
+});
 
 export default InputChatContent;

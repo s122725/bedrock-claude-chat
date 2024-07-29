@@ -1,4 +1,5 @@
-import React, {
+import {
+  forwardRef,
   useCallback,
   useEffect,
   useMemo,
@@ -22,7 +23,7 @@ type Props = BaseProps & {
   onRegenerate: () => void;
 };
 
-export const TextInputChatContent: React.FC<Props> = (props) => {
+export const TextInputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) => {
   const { t } = useTranslation();
   const { postingMessage, hasError, messages } = useChat();
 
@@ -87,6 +88,7 @@ export const TextInputChatContent: React.FC<Props> = (props) => {
             noBorder
             value={content}
             onChange={setContent}
+            ref={focusInputRef}
           />
         </div>
         <div className="absolute bottom-0 right-0 flex items-center">
@@ -111,4 +113,4 @@ export const TextInputChatContent: React.FC<Props> = (props) => {
       </div>
     </>
   );
-};
+});
