@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { BaseProps } from '../@types/common';
 import { twMerge } from 'tailwind-merge';
 
@@ -15,8 +15,8 @@ type Props = BaseProps & {
 
 const MAX_HEIGHT = 300;
 
-const Textarea: React.FC<Props> = (props) => {
-  const ref = useRef<HTMLTextAreaElement>(null);
+const Textarea = forwardRef<HTMLElement, Props>((props, focusInputRef) => {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
   const [isMax, setIsMax] = useState(false);
 
   useEffect(() => {
@@ -35,26 +35,19 @@ const Textarea: React.FC<Props> = (props) => {
     }
   }, [props.value]);
 
-  useEffect(() => {
-    const activeCodes: { [key in KeyboardEvent['code']]: boolean } = {};
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      activeCodes[event.code] = true;
-      if (
-        activeCodes['Escape'] &&
-        (activeCodes['ShiftLeft'] || activeCodes['ShiftRight'])
-      ) {
-        ref.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  });
-
   return (
     <div className={`${props.className ?? ''} flex w-full flex-col`}>
       <textarea
-        ref={ref}
+        ref={element => {
+          ref.current = element;
+          if (focusInputRef) {
+            if (typeof focusInputRef === 'function') {
+              focusInputRef(element);
+            } else {
+              focusInputRef.current = element;
+            }
+          }
+        }}
         className={twMerge(
           'peer w-full resize-none rounded p-1.5 outline-none',
           isMax ? 'overflow-y-auto' : 'overflow-hidden',
@@ -79,6 +72,6 @@ const Textarea: React.FC<Props> = (props) => {
       )}
     </div>
   );
-};
+});
 
 export default Textarea;

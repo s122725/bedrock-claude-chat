@@ -4,6 +4,7 @@ import React, {
   useLayoutEffect,
   useMemo,
   useState,
+  useRef,
 } from 'react';
 import InputChatContent from '../components/InputChatContent';
 import useChat from '../hooks/useChat';
@@ -258,24 +259,34 @@ const ChatPage: React.FC = () => {
     e.preventDefault();
   }, []);
 
+  const focusInputRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
-    const activeCodes: { [key in KeyboardEvent['code']]: boolean } = {};
     const handleKeyDown = (event: KeyboardEvent) => {
-      activeCodes[event.code] = true;
-
-      const hasKeyDownCommand = (() => {
-        return isWindows
-          ? (activeCodes['ControlLeft'] || activeCodes['ControlRight']) &&
-              (activeCodes['ShiftLeft'] || activeCodes['ShiftRight']) &&
-              activeCodes['KeyO']
-          : (activeCodes['MetaLeft'] || activeCodes['MetaRight']) &&
-              (activeCodes['ShiftLeft'] || activeCodes['ShiftRight']) &&
-              activeCodes['KeyO'];
+      const isNewConversationCommand = (() => {
+        if (event.code !== 'KeyO') {
+          return false;
+        }
+        if (isWindows) {
+          return event.ctrlKey && event.shiftKey;
+        } else {
+          return event.metaKey && event.shiftKey;
+        }
       })();
+      const isFocusChatInputCommand = (
+        event.code === 'Escape' && event.shiftKey
+      );
 
-      if (hasKeyDownCommand) {
+      if (isNewConversationCommand) {
         event.preventDefault();
-        navigate('/');
+
+        if (botId) {
+          navigate(`/bot/${botId}`);
+        } else {
+          navigate('/');
+        }
+      } else if (isFocusChatInputCommand) {
+        focusInputRef.current?.focus();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -458,6 +469,7 @@ const ChatPage: React.FC = () => {
             }
             onSend={onSend}
             onRegenerate={onRegenerate}
+            ref={focusInputRef}
           />
         ) : (
           <InputChatContent
@@ -472,6 +484,7 @@ const ChatPage: React.FC = () => {
             onSend={onSend}
             onRegenerate={onRegenerate}
             continueGenerate={onContinueGenerate}
+            ref={focusInputRef}
           />
         )}
       </div>
