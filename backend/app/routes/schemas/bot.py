@@ -233,6 +233,10 @@ class BotSummaryOutput(BaseSchema):
     sync_status: type_sync_status
     has_knowledge: bool
     conversation_quick_starters: list[ConversationQuickStarter]
+    owned_and_has_bedrock_knowledge_base: bool = Field(
+        ...,
+        description="Whether the bot has Bedrock KnowledgeBase attributes. Note that if bot alias, always false.",
+    )
 
 
 class BotSwitchVisibilityInput(BaseSchema):

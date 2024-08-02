@@ -611,6 +611,7 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
                 )
                 for starter in bot.conversation_quick_starters
             ],
+            owned_and_has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base(),
         )
 
     except RecordNotFoundError:
@@ -641,6 +642,7 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
                     for starter in alias.conversation_quick_starters
                 ]
             ),
+            owned_and_has_bedrock_knowledge_base=False,
         )
     except RecordNotFoundError:
         pass
@@ -691,6 +693,7 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
                 )
                 for starter in bot.conversation_quick_starters
             ],
+            owned_and_has_bedrock_knowledge_base=False,
         )
     except RecordNotFoundError:
         raise RecordNotFoundError(
