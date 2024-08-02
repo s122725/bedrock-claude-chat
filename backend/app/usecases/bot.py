@@ -268,7 +268,9 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             ]
         ),
         bedrock_knowledge_base=(
-            BedrockKnowledgeBaseOutput(**(bot_input.bedrock_knowledge_base.model_dump()))
+            BedrockKnowledgeBaseOutput(
+                **(bot_input.bedrock_knowledge_base.model_dump())
+            )
             if bot_input.bedrock_knowledge_base
             else None
         ),
@@ -342,7 +344,8 @@ def modify_owned_bot(
             tools=[
                 AgentToolModel(name=t.name, description=t.description)
                 for t in [
-                    get_tool_by_name(tool_name) for tool_name in modify_input.agent.tools
+                    get_tool_by_name(tool_name)
+                    for tool_name in modify_input.agent.tools
                 ]
             ]
         )
@@ -391,7 +394,9 @@ def modify_owned_bot(
             ]
         ),
         bedrock_knowledge_base=(
-            BedrockKnowledgeBaseModel(**modify_input.bedrock_knowledge_base.model_dump())
+            BedrockKnowledgeBaseModel(
+                **modify_input.bedrock_knowledge_base.model_dump()
+            )
             if modify_input.bedrock_knowledge_base
             else None
         ),
