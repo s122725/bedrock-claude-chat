@@ -461,7 +461,7 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
     <>
       {props.dndMode && (
         <div
-          className="fixed left-0 top-0 h-full w-full bg-black/40"
+          className="fixed left-0 top-0 size-full bg-black/40"
           onDrop={onDrop}></div>
       )}
       <div

@@ -245,7 +245,7 @@ const ChatMessage: React.FC<Props> = (props) => {
                 onClose={() => setIsFileModalOpen(false)}
                 widthFromContent={true}
                 title={dialogFileName ?? ''}>
-                <div className="relative flex h-auto max-h-[80vh] w-auto max-w-[80vh] flex-col">
+                <div className="relative flex size-auto max-h-[80vh] max-w-[80vh] flex-col">
                   <div className="overflow-auto px-4">
                     <pre className="whitespace-pre-wrap break-all">
                       {dialogFileContent}

@@ -57,7 +57,7 @@ const AdminSharedBotAnalyticsPage: React.FC = () => {
     <>
       <div className="flex h-full justify-center">
         <div className="w-2/3">
-          <div className="h-full w-full pt-8">
+          <div className="size-full pt-8">
             <div className="flex items-end justify-between">
               <div className="flex items-center gap-2">
                 <div className="text-xl font-bold">
@@ -150,7 +150,7 @@ const AdminSharedBotAnalyticsPage: React.FC = () => {
               )}
 
               {publicBots?.length === 0 && (
-                <div className="flex h-full w-full items-center justify-center italic text-dark-gray">
+                <div className="flex size-full items-center justify-center italic text-dark-gray">
                   {t('admin.sharedBotAnalytics.label.noPublicBotUsages')}
                 </div>
               )}
