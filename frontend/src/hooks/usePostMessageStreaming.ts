@@ -1,4 +1,4 @@
-import { Auth } from 'aws-amplify';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { PostMessageRequest } from '../@types/conversation';
 import { create } from 'zustand';
 import i18next from 'i18next';
@@ -25,7 +25,7 @@ const usePostMessageStreaming = create<{
       } else {
         dispatch(i18next.t('app.chatWaitingSymbol'));
       }
-      const token = (await Auth.currentSession()).getIdToken().getJwtToken();
+      const token = (await fetchAuthSession()).tokens?.idToken?.toString();
       const payloadString = JSON.stringify({
         ...input,
         token,

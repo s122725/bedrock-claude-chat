@@ -1,4 +1,4 @@
-import { Auth } from 'aws-amplify';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 
@@ -12,14 +12,13 @@ const useUser = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const { data: session } = useSWR('current-session', () =>
-    Auth.currentSession()
+    fetchAuthSession()
   );
 
   useEffect(() => {
-    const groups: string[] | undefined =
-      session?.getIdToken().payload['cognito:groups'];
+    const groups = session?.tokens?.idToken?.payload?.['cognito:groups'];
 
-    if (groups) {
+    if (Array.isArray(groups)) {
       setIsAllowApiSettings(groups.some(group =>
         group === GROUP_PUBLISH_ALLOWED || group === GROUP_ADMIN
       ));

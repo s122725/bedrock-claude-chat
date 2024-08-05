@@ -360,7 +360,7 @@ const ChatPage: React.FC = () => {
             </div>
           )}
         </div>
-        <section className="relative h-full w-full flex-1 overflow-auto pb-9">
+        <section className="relative size-full flex-1 overflow-auto pb-9">
           <div className="h-full">
             <div
               id="messages"
