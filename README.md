@@ -7,6 +7,10 @@
 
 This repository is a sample chatbot using the Anthropic company's LLM [Claude](https://www.anthropic.com/), one of the foundational models provided by [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI.
 
+### Watch Overview and Installation on YouTube
+
+[![Overview](https://img.youtube.com/vi/EfgyAblrEQA/0.jpg)](https://youtu.be/EfgyAblrEQA?si=cxxYxF6m0n85AoHb)
+
 ### Basic Conversation
 
 Not only text but also images are available with [Anthropic's Claude 3](https://www.anthropic.com/news/claude-3-family). Currently we support `Haiku`, `Sonnet` and `Opus`.
@@ -26,15 +30,25 @@ Add your own instruction and give external knowledge as URL or files (a.k.a [RAG
 
 ### Administrator dashboard
 
+<details>
+<summary>Administrator dashboard</summary>
+
 Analyze usage for each user / bot on administrator dashboard. [detail](./docs/ADMINISTRATOR.md)
 
 ![](./docs/imgs/admin_bot_analytics.png)
 
+</details>
+
 ### LLM-powered Agent
+
+<details>
+<summary>LLM-powered Agent</summary>
 
 By using the [Agent functionality](./docs/AGENT.md), your chatbot can automatically handle more complex tasks. For example, to answer a user's question, the Agent can retrieve necessary information from external tools or break down the task into multiple steps for processing.
 
 ![](./docs/imgs/agent.gif)
+
+</details>
 
 ## 📚 Supported Languages
 
