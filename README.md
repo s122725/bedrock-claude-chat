@@ -7,6 +7,8 @@
 
 This repository is a sample chatbot using the Anthropic company's LLM [Claude](https://www.anthropic.com/), one of the foundational models provided by [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI.
 
+[![Overview]()](https://youtu.be/EfgyAblrEQA?si=cxxYxF6m0n85AoHb)
+
 ### Basic Conversation
 
 Not only text but also images are available with [Anthropic's Claude 3](https://www.anthropic.com/news/claude-3-family). Currently we support `Haiku`, `Sonnet` and `Opus`.
