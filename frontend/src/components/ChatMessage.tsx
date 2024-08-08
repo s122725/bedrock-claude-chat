@@ -91,7 +91,7 @@ const ChatMessage: React.FC<Props> = (props) => {
       }
       setIsFeedbackOpen(false);
     },
-    [chatContent]
+    [chatContent, props]
   );
 
   return (

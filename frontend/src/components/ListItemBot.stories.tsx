@@ -67,7 +67,7 @@ export const MyBots = () => {
   return (
     <div className="h-4/5 overflow-x-hidden overflow-y-scroll border-b border-gray pr-1 scrollbar-thin scrollbar-thumb-aws-font-color/20 ">
       {myBots.length === 0 && (
-        <div className="flex h-full w-full items-center justify-center italic text-dark-gray">
+        <div className="flex size-full items-center justify-center italic text-dark-gray">
           {t('bot.label.noBots')}
         </div>
       )}
@@ -161,7 +161,7 @@ export const RecentlyUsedSharedBots = () => {
   return (
     <div className="h-4/5 overflow-y-scroll border-b border-gray  pr-1 scrollbar-thin scrollbar-thumb-aws-font-color/20">
       {recentlyUsedSharedBots.length === 0 && (
-        <div className="flex h-full w-full items-center justify-center italic text-dark-gray">
+        <div className="flex size-full items-center justify-center italic text-dark-gray">
           {t('bot.label.noBotsRecentlyUsed')}
         </div>
       )}
