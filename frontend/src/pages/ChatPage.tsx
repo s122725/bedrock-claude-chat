@@ -24,6 +24,7 @@ import {
 import Button from '../components/Button';
 import { useTranslation } from 'react-i18next';
 import SwitchBedrockModel from '../components/SwitchBedrockModel';
+import useSnackbar from '../hooks/useSnackbar';
 import useBot from '../hooks/useBot';
 import useConversation from '../hooks/useConversation';
 import ButtonPopover from '../components/PopoverMenu';
@@ -50,10 +51,13 @@ const MISTRAL_ENABLED: boolean =
 const ChatPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { open: openSnackbar } = useSnackbar();
 
   const {
     agentThinking,
+    conversationError,
     postingMessage,
+    newChat,
     postChat,
     messages,
     conversationId,
@@ -65,7 +69,23 @@ const ChatPage: React.FC = () => {
     continueGenerate,
     getPostedModel,
     loadingConversation,
+    getShouldContinue,
+    getRelatedDocuments,
+    giveFeedback,
   } = useChat();
+
+  // Error Handling
+  useEffect(() => {
+    if (conversationError) {
+      if (conversationError.response?.status === 404) {
+        openSnackbar(t('error.notFoundConversation'));
+        newChat();
+        navigate('');
+      } else {
+        openSnackbar(conversationError.message ?? '');
+      }
+    }
+  }, [conversationError, navigate, newChat, openSnackbar, t]);
 
   const { isWindows } = useIsWindows();
 
@@ -395,8 +415,29 @@ const ChatPage: React.FC = () => {
                       ) : (
                         <ChatMessage
                           chatContent={message}
+                          relatedDocuments={
+                            (() => {
+                              if (message.usedChunks) {
+                                // usedChunks is available for existing messages
+                                return message.usedChunks.map(chunk => ({
+                                  chunkBody: chunk.content,
+                                  contentType: chunk.contentType,
+                                  sourceLink: chunk.source,
+                                  rank: chunk.rank,
+                                }));
+                              } else {
+                                // For new messages, get related documents from the api
+                                return getRelatedDocuments(message.id);
+                              }
+                            })()
+                          }
                           onChangeMessageId={onChangeCurrentMessageId}
                           onSubmit={onSubmitEditedContent}
+                          onSubmitFeedback={(messageId, feedback) => {
+                            if (conversationId) {
+                              giveFeedback(messageId, feedback);
+                            }
+                          }}
                         />
                       )}
 
@@ -460,13 +501,16 @@ const ChatPage: React.FC = () => {
 
         {bot?.hasAgent ? (
           <TextInputChatContent
-            disabledSend={postingMessage}
+            disabledSend={postingMessage || hasError}
+            disabledRegenerate={postingMessage || hasError}
             disabled={disabledInput}
             placeholder={
               disabledInput
                 ? t('bot.label.notAvailableBotInputMessage')
                 : undefined
             }
+            hasRegenerate={messages.length > 1}
+            isLoading={postingMessage}
             onSend={onSend}
             onRegenerate={onRegenerate}
             ref={focusInputRef}
@@ -474,13 +518,18 @@ const ChatPage: React.FC = () => {
         ) : (
           <InputChatContent
             dndMode={dndMode}
-            disabledSend={postingMessage}
+            disabledSend={postingMessage || hasError}
+            disabledRegenerate={postingMessage || hasError}
+            disabledContinue={postingMessage || hasError}
             disabled={disabledInput}
             placeholder={
               disabledInput
                 ? t('bot.label.notAvailableBotInputMessage')
                 : undefined
             }
+            hasRegenerate={messages.length > 1}
+            hasContinue={getShouldContinue()}
+            isLoading={postingMessage}
             onSend={onSend}
             onRegenerate={onRegenerate}
             continueGenerate={onContinueGenerate}

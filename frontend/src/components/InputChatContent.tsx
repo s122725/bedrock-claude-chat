@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import ButtonSend from './ButtonSend';
 import Textarea from './Textarea';
-import useChat from '../hooks/useChat';
 import { AttachmentType } from '../hooks/useChat';
 import Button from './Button';
 import {
@@ -37,9 +36,14 @@ import {
 
 type Props = BaseProps & {
   disabledSend?: boolean;
+  disabledRegenerate?: boolean;
+  disabledContinue?: boolean;
   disabled?: boolean;
   placeholder?: string;
   dndMode?: boolean;
+  hasRegenerate: boolean;
+  hasContinue: boolean;
+  isLoading: boolean;
   onSend: (
     content: string,
     base64EncodedImages?: string[],
@@ -143,14 +147,11 @@ const useInputChatContentState = create<{
 
 const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) => {
   const { t } = useTranslation();
-  const { postingMessage, hasError, messages, getShouldContinue } = useChat();
   const { disabledImageUpload, model, acceptMediaType } = useModel();
 
   const extendedAcceptMediaType = useMemo(() => {
     return [...acceptMediaType, ...SUPPORTED_FILE_EXTENSIONS];
   }, [acceptMediaType]);
-
-  const [shouldContinue, setShouldContinue] = useState(false);
 
   const [content, setContent] = useState('');
   const {
@@ -176,27 +177,11 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const checkShouldContinue = async () => {
-      const result = await getShouldContinue();
-      setShouldContinue(result);
-    };
-    checkShouldContinue();
-  }, [getShouldContinue, postingMessage, content, props, hasError]);
-
   const { open } = useSnackbar();
 
   const disabledSend = useMemo(() => {
-    return content === '' || props.disabledSend || hasError;
-  }, [hasError, content, props.disabledSend]);
-
-  const disabledRegenerate = useMemo(() => {
-    return postingMessage || hasError;
-  }, [hasError, postingMessage]);
-
-  const disableContinue = useMemo(() => {
-    return postingMessage || hasError;
-  }, [hasError, postingMessage]);
+    return content === '' || props.disabledSend;
+  }, [content, props.disabledSend]);
 
   const inputRef = useRef<HTMLDivElement>(null);
 
@@ -485,7 +470,7 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
         </div>
         <div className="absolute bottom-0 right-0 flex items-center">
           <ButtonFileChoose
-            disabled={postingMessage}
+            disabled={props.isLoading}
             icon
             accept={extendedAcceptMediaType.join(',')}
             onChange={onChangeFile}>
@@ -494,7 +479,7 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
           <ButtonSend
             className="m-2 align-bottom"
             disabled={disabledSend || props.disabled}
-            loading={postingMessage}
+            loading={props.isLoading}
             onClick={sendContent}
           />
         </div>
@@ -550,9 +535,9 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
             ))}
           </div>
         )}
-        {messages.length > 1 && (
+        {props.hasRegenerate && (
           <div className="absolute -top-14 right-0 flex space-x-2">
-            {shouldContinue && !disableContinue && !props.disabled && (
+            {props.hasContinue && !props.disabledContinue && !props.disabled && (
               <Button
                 className="bg-aws-paper p-2 text-sm"
                 outlined
@@ -564,7 +549,7 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
             <Button
               className="bg-aws-paper p-2 text-sm"
               outlined
-              disabled={disabledRegenerate || props.disabled}
+              disabled={props.disabledRegenerate || props.disabled}
               onClick={props.onRegenerate}>
               <PiArrowsCounterClockwise className="mr-2" />
               {t('button.regenerate')}

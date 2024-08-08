@@ -19,15 +19,16 @@ import Textarea from './Textarea';
 import Button from './Button';
 import ModalDialog from './ModalDialog';
 import { useTranslation } from 'react-i18next';
-import useChat from '../hooks/useChat';
 import DialogFeedback from './DialogFeedback';
 import UploadedAttachedFile from './UploadedAttachedFile';
 import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachedFiles';
 
 type Props = BaseProps & {
   chatContent?: DisplayMessageContent;
+  relatedDocuments?: RelatedDocument[];
   onChangeMessageId?: (messageId: string) => void;
   onSubmit?: (messageId: string, content: string) => void;
+  onSubmitFeedback?: (messageId: string, feedback: PutFeedbackRequest) => void;
 };
 
 const ChatMessage: React.FC<Props> = (props) => {
@@ -36,31 +37,12 @@ const ChatMessage: React.FC<Props> = (props) => {
   const [changedContent, setChangedContent] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
-  const { getRelatedDocuments, conversationId, giveFeedback } = useChat();
-  const [relatedDocuments, setRelatedDocuments] = useState<RelatedDocument[]>(
-    []
-  );
+  const relatedDocuments = useMemo<RelatedDocument[] | undefined>(() => props.relatedDocuments, [props]);
 
   const [firstTextContent, setFirstTextContent] = useState(0);
 
   useEffect(() => {
     if (props.chatContent) {
-      if (props.chatContent.usedChunks) {
-        // usedChunks is available for existing messages
-        setRelatedDocuments(
-          props.chatContent.usedChunks.map((chunk) => {
-            return {
-              chunkBody: chunk.content,
-              contentType: chunk.contentType,
-              sourceLink: chunk.source,
-              rank: chunk.rank,
-            };
-          })
-        );
-      } else {
-        // For new messages, get related documents from the api
-        setRelatedDocuments(getRelatedDocuments(props.chatContent.id));
-      }
       setFirstTextContent(
         props.chatContent.content.findIndex(
           (content) => content.contentType === 'text'
@@ -104,12 +86,12 @@ const ChatMessage: React.FC<Props> = (props) => {
 
   const handleFeedbackSubmit = useCallback(
     (messageId: string, feedback: PutFeedbackRequest) => {
-      if (chatContent && conversationId) {
-        giveFeedback(messageId, feedback);
+      if (chatContent) {
+        props.onSubmitFeedback?.(messageId, feedback);
       }
       setIsFeedbackOpen(false);
     },
-    [chatContent, conversationId, giveFeedback]
+    [chatContent]
   );
 
   return (
