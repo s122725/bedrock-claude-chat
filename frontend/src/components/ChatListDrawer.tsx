@@ -84,7 +84,6 @@ const Item: React.FC<ItemProps> = (props) => {
 
   const onClickDelete = useCallback(() => {
     props.onDelete();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props]);
 
   useLayoutEffect(() => {

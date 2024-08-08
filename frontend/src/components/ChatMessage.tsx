@@ -49,7 +49,6 @@ const ChatMessage: React.FC<Props> = (props) => {
         )
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.chatContent]);
 
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
