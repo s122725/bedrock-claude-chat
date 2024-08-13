@@ -23,7 +23,7 @@ import { IBucket } from "aws-cdk-lib/aws-s3";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { UsageAnalysis } from "./usage-analysis";
-import { excludeDockerImage } from "./docker";
+import { excludeDockerImage } from "../constants/docker";
 
 export interface ApiProps {
   readonly vpc: ec2.IVpc;

@@ -12,7 +12,7 @@ import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import { excludeDockerImage } from "./constructs/docker"
+import { excludeDockerImage } from "./constants/docker"
 
 export interface VpcConfig {
   vpcId: string;

@@ -13,7 +13,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as cdk from "aws-cdk-lib";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { excludeDockerImage } from "./docker";
+import { excludeDockerImage } from "../constants/docker";
 import {
   DockerImageCode,
   DockerImageFunction,
