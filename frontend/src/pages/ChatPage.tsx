@@ -509,7 +509,7 @@ const ChatPage: React.FC = () => {
                 ? t('bot.label.notAvailableBotInputMessage')
                 : undefined
             }
-            hasRegenerate={messages.length > 1}
+            canRegenerate={messages.length > 1}
             isLoading={postingMessage}
             onSend={onSend}
             onRegenerate={onRegenerate}
@@ -527,8 +527,8 @@ const ChatPage: React.FC = () => {
                 ? t('bot.label.notAvailableBotInputMessage')
                 : undefined
             }
-            hasRegenerate={messages.length > 1}
-            hasContinue={getShouldContinue()}
+            canRegenerate={messages.length > 1}
+            canContinue={getShouldContinue()}
             isLoading={postingMessage}
             onSend={onSend}
             onRegenerate={onRegenerate}

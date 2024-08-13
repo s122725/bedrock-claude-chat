@@ -41,8 +41,8 @@ type Props = BaseProps & {
   disabled?: boolean;
   placeholder?: string;
   dndMode?: boolean;
-  hasRegenerate: boolean;
-  hasContinue: boolean;
+  canRegenerate: boolean;
+  canContinue: boolean;
   isLoading: boolean;
   onSend: (
     content: string,
@@ -535,9 +535,9 @@ const InputChatContent = forwardRef<HTMLElement, Props>((props, focusInputRef) =
             ))}
           </div>
         )}
-        {props.hasRegenerate && (
+        {props.canRegenerate && (
           <div className="absolute -top-14 right-0 flex space-x-2">
-            {props.hasContinue && !props.disabledContinue && !props.disabled && (
+            {props.canContinue && !props.disabledContinue && !props.disabled && (
               <Button
                 className="bg-aws-paper p-2 text-sm"
                 outlined

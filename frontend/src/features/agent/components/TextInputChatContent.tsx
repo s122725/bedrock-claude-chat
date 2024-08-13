@@ -19,7 +19,7 @@ type Props = BaseProps & {
   disabledRegenerate?: boolean;
   disabled?: boolean;
   placeholder?: string;
-  hasRegenerate: boolean;
+  canRegenerate: boolean;
   isLoading: boolean;
   onSend: (content: string, base64EncodedImages?: string[]) => void;
   onRegenerate: () => void;
@@ -97,7 +97,7 @@ export const TextInputChatContent = forwardRef<HTMLElement, Props>((props, focus
           />
         </div>
 
-        {props.hasRegenerate && (
+        {props.canRegenerate && (
           <Button
             className="absolute -top-14 right-0 bg-aws-paper p-2 text-sm"
             outlined

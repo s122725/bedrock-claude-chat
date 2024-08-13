@@ -7,7 +7,7 @@ import { AgentTool } from '../types';
 
 export const InputChatContent = () => (
   <TextInputChatContent
-    hasRegenerate={false}
+    canRegenerate={false}
     isLoading={false}
     onSend={() => {}}
     onRegenerate={() => {}}
@@ -18,7 +18,7 @@ export const InputChatContentLoading = () => (
   <TextInputChatContent
     disabledSend={true}
     disabledRegenerate={true}
-    hasRegenerate={false}
+    canRegenerate={false}
     isLoading={true}
     onSend={() => {}}
     onRegenerate={() => {}}
@@ -29,7 +29,7 @@ export const InputChatContentDisabled = () => {
   const { t } = useTranslation();
   return (
     <TextInputChatContent
-      hasRegenerate={false}
+      canRegenerate={false}
       isLoading={false}
       disabled={true}
       placeholder={t('bot.label.notAvailableBotInputMessage')}
@@ -39,9 +39,9 @@ export const InputChatContentDisabled = () => {
   );
 };
 
-export const InputChatContentHasRegenerate = () => (
+export const InputChatContentWithRegenerate = () => (
   <TextInputChatContent
-    hasRegenerate={true}
+    canRegenerate={true}
     isLoading={false}
     onSend={() => {}}
     onRegenerate={() => {}}

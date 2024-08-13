@@ -3,8 +3,8 @@ import InputChatContent from './InputChatContent';
 
 export const Ideal = () => (
   <InputChatContent
-    hasRegenerate={false}
-    hasContinue={false}
+    canRegenerate={false}
+    canContinue={false}
     isLoading={false}
     onSend={() => {}}
     onRegenerate={() => {}}
@@ -17,8 +17,8 @@ export const IdealLoading = () => (
     disabledSend={true}
     disabledRegenerate={true}
     disabledContinue={true}
-    hasRegenerate={false}
-    hasContinue={false}
+    canRegenerate={false}
+    canContinue={false}
     isLoading={true}
     onSend={() => {}}
     onRegenerate={() => {}}
@@ -30,8 +30,8 @@ export const IdealDisabled = () => {
   const { t } = useTranslation();
   return (
     <InputChatContent
-      hasRegenerate={false}
-      hasContinue={false}
+      canRegenerate={false}
+      canContinue={false}
       isLoading={false}
       disabled={true}
       placeholder={t('bot.label.notAvailableBotInputMessage')}
@@ -42,10 +42,10 @@ export const IdealDisabled = () => {
   );
 };
 
-export const HasRegenerate = () => (
+export const WithRegenerate = () => (
   <InputChatContent
-    hasRegenerate={true}
-    hasContinue={false}
+    canRegenerate={true}
+    canContinue={false}
     isLoading={false}
     onSend={() => {}}
     onRegenerate={() => {}}
@@ -53,10 +53,10 @@ export const HasRegenerate = () => (
   />
 );
 
-export const HasContinue = () => (
+export const WithContinue = () => (
   <InputChatContent
-    hasRegenerate={true}
-    hasContinue={true}
+    canRegenerate={true}
+    canContinue={true}
     isLoading={false}
     onSend={() => {}}
     onRegenerate={() => {}}
