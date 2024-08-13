@@ -147,9 +147,7 @@ def process_chat_input(
         last_data_to_send = json.dumps(
             dict(status="STREAMING_END", completion="", stop_reason="agent_finish")
         ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
+        gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
         return {"statusCode": 200, "body": "Message sent."}
 
@@ -261,9 +259,7 @@ def process_chat_input(
         last_data_to_send = json.dumps(
             dict(status="STREAMING_END", completion="", stop_reason=arg.stop_reason)
         ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
+        gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
     stream_handler = ConverseApiStreamHandler(
         model=chat_input.message.model,
@@ -278,7 +274,7 @@ def process_chat_input(
         logger.error(f"Failed to run stream handler: {e}")
         return {
             "statusCode": 500,
-            "body": "Failed to run stream handler.",
+            "body": f"Failed to run stream handler: {e}",
         }
 
     # Update bot last used time
