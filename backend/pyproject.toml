@@ -24,7 +24,7 @@ duckduckgo-search = "^6.1.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.10.0"
-black = "^24.4.2"
+black = "^24.8.0"
 
 
 [build-system]

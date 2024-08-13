@@ -278,7 +278,7 @@ def process_chat_input(
         logger.error(f"Failed to run stream handler: {e}")
         return {
             "statusCode": 500,
-            "body": "Failed to run stream handler.",
+            "body": f"Failed to run stream handler: {e}",
         }
 
     # Update bot last used time
