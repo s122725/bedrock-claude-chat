@@ -12,6 +12,7 @@ import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { excludeDockerImage } from "./constants/docker"
 
 export interface VpcConfig {
   vpcId: string;
@@ -91,6 +92,9 @@ export class ApiPublishmentStack extends Stack {
         {
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
+          exclude: [
+            ...excludeDockerImage
+          ]
         }
       ),
       vpc,
@@ -125,6 +129,9 @@ export class ApiPublishmentStack extends Stack {
             platform: Platform.LINUX_AMD64,
             file: "lambda.Dockerfile",
             cmd: ["app.sqs_consumer.handler"],
+            exclude: [
+              ...excludeDockerImage
+            ]
           }
         ),
         vpc,

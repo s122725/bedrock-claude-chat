@@ -13,6 +13,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as cdk from "aws-cdk-lib";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
+import { excludeDockerImage } from "../constants/docker";
 import {
   DockerImageCode,
   DockerImageFunction,
@@ -131,6 +132,9 @@ export class Embedding extends Construct {
       directory: path.join(__dirname, "../../../backend"),
       file: "embedding/Dockerfile",
       platform: Platform.LINUX_AMD64,
+      exclude: [
+        ...excludeDockerImage
+      ]
     });
     SociIndexBuild.fromDockerImageAsset(this, "Index", asset);
 
@@ -201,6 +205,9 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.update_bot_status.handler",
             ],
+            exclude: [
+              ...excludeDockerImage
+            ]
           }
         ),
         memorySize: 512,
@@ -227,6 +234,9 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.fetch_stack_output.handler",
             ],
+            exclude: [
+              ...excludeDockerImage
+            ]
           }
         ),
         memorySize: 512,
@@ -246,6 +256,9 @@ export class Embedding extends Construct {
             cmd: [
               "embedding_statemachine.bedrock_knowledge_base.store_knowledge_base_id.handler",
             ],
+            exclude: [
+              ...excludeDockerImage
+            ]
           }
         ),
         memorySize: 512,
@@ -638,6 +651,9 @@ export class Embedding extends Construct {
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
           cmd: ["app.bot_remove.handler"],
+          exclude: [
+            ...excludeDockerImage,
+          ]
         }
       ),
       vpc: props.vpc,

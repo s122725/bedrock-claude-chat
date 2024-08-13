@@ -19,6 +19,7 @@ import { CfnRouteResponse } from "aws-cdk-lib/aws-apigatewayv2";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { excludeDockerImage } from "../constants/docker";
 
 export interface WebSocketProps {
   readonly vpc: ec2.IVpc;
@@ -93,6 +94,9 @@ export class WebSocket extends Construct {
         {
           platform: Platform.LINUX_AMD64,
           file: "lambda.Dockerfile",
+          exclude: [
+            ...excludeDockerImage
+          ]
         }
       ),
       vpc: props.vpc,
