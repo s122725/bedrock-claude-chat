@@ -20,7 +20,7 @@ from app.repositories.models.conversation import ChunkModel, ContentModel, Messa
 from app.routes.schemas.conversation import ChatInput
 from app.stream import ConverseApiStreamHandler, OnStopInput
 from app.usecases.bot import modify_bot_last_used_time
-from app.usecases.chat import insert_knowledge, prepare_conversation, trace_to_root
+from app.usecases.chat import insert_knowledge, prepare_conversation
 from app.utils import get_current_time
 from app.vector_search import filter_used_results, get_source_link, search_related_docs
 from boto3.dynamodb.conditions import Attr, Key
@@ -34,6 +34,23 @@ table = dynamodb_client.Table(WEBSOCKET_SESSION_TABLE_NAME)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def trace_to_root(
+    node_id: str | None, message_map: dict[str, MessageModel]
+) -> list[MessageModel]:
+    """Trace message map from leaf node to root node."""
+    result = []
+    if not node_id or node_id == "system":
+        node_id = "instruction" if "instruction" in message_map else "system"
+
+    current_node = message_map.get(node_id)
+    while current_node:
+        result.append(current_node)
+        parent_id = current_node.parent
+        if parent_id is None:
+            break
+        current_node = message_map.get(parent_id)
+
+    return result[::-1]
 
 def process_chat_input(
     user_id: str, chat_input: ChatInput, gatewayapi, connection_id: str
