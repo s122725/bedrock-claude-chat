@@ -214,7 +214,10 @@ def trace_to_root(
     """Trace message map from leaf node to root node."""
     result = []
     if not node_id or node_id == "system":
-        node_id = "instruction" if "instruction" in message_map else "system"
+        if message_map:
+            node_id = list(message_map.keys())[-1]
+        else:
+            node_id = "system"
 
     current_node = message_map.get(node_id)
     while current_node:
