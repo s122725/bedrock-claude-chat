@@ -44,6 +44,7 @@ import { SyncStatus } from '../constants';
 
 import { BottomHelper } from '../features/helper/components/BottomHelper';
 import { useIsWindows } from '../hooks/useIsWindows';
+import { DisplayMessageContent, PutFeedbackRequest } from '../@types/conversation';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -313,6 +314,39 @@ const ChatPage: React.FC = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   });
 
+  const ChatMessageWithRelatedDocuments: React.FC<{
+    chatContent: DisplayMessageContent,
+    onChangeMessageId?: (messageId: string) => void;
+    onSubmit?: (messageId: string, content: string) => void;
+    onSubmitFeedback?: (messageId: string, feedback: PutFeedbackRequest) => void;
+  }> = React.memo(props => {
+    const { chatContent: message } = props;
+    const relatedDocuments = (() => {
+      if (message.usedChunks) {
+        // usedChunks is available for existing messages
+        return message.usedChunks.map(chunk => ({
+          chunkBody: chunk.content,
+          contentType: chunk.contentType,
+          sourceLink: chunk.source,
+          rank: chunk.rank,
+        }));
+      } else {
+        // For new messages, get related documents from the api
+        return getRelatedDocuments(message.id);
+      }
+    })();
+
+    return (
+      <ChatMessage
+        chatContent={message}
+        relatedDocuments={relatedDocuments}
+        onChangeMessageId={props.onChangeMessageId}
+        onSubmit={props.onSubmit}
+        onSubmitFeedback={props.onSubmitFeedback}
+      />
+    );
+  });
+
   return (
     <div
       className="relative flex h-full flex-1 flex-col"
@@ -413,24 +447,8 @@ const ChatPage: React.FC = () => {
                           processCount={agentThinking.context.count}
                         />
                       ) : (
-                        <ChatMessage
+                        <ChatMessageWithRelatedDocuments
                           chatContent={message}
-                          relatedDocuments={
-                            (() => {
-                              if (message.usedChunks) {
-                                // usedChunks is available for existing messages
-                                return message.usedChunks.map(chunk => ({
-                                  chunkBody: chunk.content,
-                                  contentType: chunk.contentType,
-                                  sourceLink: chunk.source,
-                                  rank: chunk.rank,
-                                }));
-                              } else {
-                                // For new messages, get related documents from the api
-                                return getRelatedDocuments(message.id);
-                              }
-                            })()
-                          }
                           onChangeMessageId={onChangeCurrentMessageId}
                           onSubmit={onSubmitEditedContent}
                           onSubmitFeedback={(messageId, feedback) => {

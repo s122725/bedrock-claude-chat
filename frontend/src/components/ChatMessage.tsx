@@ -37,7 +37,7 @@ const ChatMessage: React.FC<Props> = (props) => {
   const [changedContent, setChangedContent] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
-  const relatedDocuments = useMemo<RelatedDocument[] | undefined>(() => props.relatedDocuments, [props]);
+  const { relatedDocuments } = props;
 
   const [firstTextContent, setFirstTextContent] = useState(0);
 
