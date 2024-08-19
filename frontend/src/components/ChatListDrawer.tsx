@@ -23,20 +23,22 @@ import {
   PiX,
 } from 'react-icons/pi';
 import { PiCircleNotch } from 'react-icons/pi';
-import useConversation from '../hooks/useConversation';
 import LazyOutputText from './LazyOutputText';
 import { ConversationMeta } from '../@types/conversation';
+import { BotListItem } from '../@types/bot';
 import { isMobile } from 'react-device-detect';
 import useChat from '../hooks/useChat';
 import { useTranslation } from 'react-i18next';
 import Menu from './Menu';
-import useBot from '../hooks/useBot';
 import DrawerItem from './DrawerItem';
 import ExpandableDrawerGroup from './ExpandableDrawerGroup';
 import { usePageLabel } from '../routes';
 
 type Props = BaseProps & {
   isAdmin: boolean;
+  conversations?: ConversationMeta[];
+  starredBots?: BotListItem[];
+  recentlyUsedUnsterredBots?: BotListItem[];
   updateConversationTitle: (conversationId: string, title: string) => Promise<void>;
   onSignOut: () => void;
   onDeleteConversation: (conversation: ConversationMeta) => void;
@@ -187,8 +189,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
   const { t } = useTranslation();
   const { getPageLabel } = usePageLabel();
   const { opened, switchOpen } = useDrawer();
-  const { conversations } = useConversation();
-  const { starredBots, recentlyUsedUnsterredBots } = useBot();
+  const { conversations, starredBots, recentlyUsedUnsterredBots } = props;
 
   const [prevConversations, setPrevConversations] =
     useState<typeof conversations>();

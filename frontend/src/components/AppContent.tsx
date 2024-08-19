@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import useDrawer from '../hooks/useDrawer';
 import useConversation from '../hooks/useConversation';
+import useBot from '../hooks/useBot';
 import useChat from '../hooks/useChat';
 import { usePageLabel, usePageTitlePathPattern } from '../routes';
 import useUser from '../hooks/useUser';
@@ -28,7 +29,8 @@ const AppContent: React.FC<Props> = (props) => {
   const { switchOpen: switchDrawer } = useDrawer();
   const navigate = useNavigate();
   const { conversationId } = useParams();
-  const { getTitle, updateTitle, deleteConversation, clearConversations: clear } = useConversation();
+  const { conversations, getTitle, updateTitle, deleteConversation, clearConversations: clear } = useConversation();
+  const { starredBots, recentlyUsedUnsterredBots } = useBot();
   const { newChat, isGeneratedTitle } = useChat();
   const { isConversationOrNewChat, pathPattern } = usePageTitlePathPattern();
   const { isAdmin } = useUser();
@@ -75,6 +77,9 @@ const AppContent: React.FC<Props> = (props) => {
     <div className="relative flex h-dvh w-screen bg-aws-paper">
       <ChatListDrawer
         isAdmin={isAdmin}
+        conversations={conversations}
+        starredBots={starredBots}
+        recentlyUsedUnsterredBots={recentlyUsedUnsterredBots}
         updateConversationTitle={async (conversationId, title) => {
           await updateTitle(conversationId, title);
         }}

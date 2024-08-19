@@ -148,7 +148,6 @@ export class Frontend extends Construct {
             "dev-dist",
             ".env",
             ".env.local",
-            "public/mockServiceWorker.js",
             "../cdk/**/*",
             "../backend/**/*",
             "../example/**/*",
