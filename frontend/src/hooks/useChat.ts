@@ -14,11 +14,8 @@ import {
 import useConversation from './useConversation';
 import { create } from 'zustand';
 import usePostMessageStreaming from './usePostMessageStreaming';
-import useSnackbar from './useSnackbar';
-import { useNavigate } from 'react-router-dom';
 import { ulid } from 'ulid';
 import { convertMessageMapToArray } from '../utils/MessageUtils';
-import { useTranslation } from 'react-i18next';
 import useModel from './useModel';
 import useFeedbackApi from './useFeedbackApi';
 import { useMachine } from '@xstate/react';
@@ -246,7 +243,6 @@ const useChatState = create<{
 });
 
 const useChat = () => {
-  const { t } = useTranslation();
   const [agentThinking, send] = useMachine(agentThinkingState);
 
   const {
@@ -273,8 +269,6 @@ const useChat = () => {
     getShouldContinue,
     setShouldContinue,
   } = useChatState();
-  const { open: openSnackbar } = useSnackbar();
-  const navigate = useNavigate();
 
   const { post: postStreaming } = usePostMessageStreaming();
   const { modelId, setModelId } = useModel();
@@ -285,7 +279,7 @@ const useChat = () => {
     data,
     mutate,
     isLoading: loadingConversation,
-    error,
+    error: conversationError,
   } = conversationApi.getConversation(conversationId);
   const { syncConversations } = useConversation();
 
@@ -298,17 +292,6 @@ const useChat = () => {
     setConversationId('');
     setMessages('', {});
   }, [setConversationId, setMessages]);
-
-  // Error Handling
-  useEffect(() => {
-    if (error?.response?.status === 404) {
-      openSnackbar(t('error.notFoundConversation'));
-      navigate('');
-      newChat();
-    } else if (error) {
-      openSnackbar(error?.message ?? '');
-    }
-  }, [error, navigate, newChat, openSnackbar, t]);
 
   // when updated messages
   useEffect(() => {
@@ -703,6 +686,7 @@ const useChat = () => {
     setConversationId,
     conversationId,
     loadingConversation,
+    conversationError,
     postingMessage: postingMessage || loadingConversation,
     isGeneratedTitle,
     setIsGeneratedTitle,
