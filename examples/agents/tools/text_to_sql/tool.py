@@ -11,6 +11,7 @@ from langchain_core.callbacks import (
     AsyncCallbackManagerForToolRun,
     CallbackManagerForToolRun,
 )
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field, root_validator
@@ -337,7 +338,7 @@ class QuerySQLCheckerTool(BaseSQLDatabaseTool, BaseTool):
                 template=QUERY_CHECKER, input_variables=["dialect", "query"]
             )
             llm = values.get("llm")
-            values["llm_chain"] = prompt | llm  # type: ignore
+            values["llm_chain"] = prompt | llm | StrOutputParser()  # type: ignore
 
         return values
 
