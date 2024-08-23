@@ -156,6 +156,11 @@ export class Embedding extends Construct {
     });
     taskLogGroup.grantWrite(this._container.taskDefinition.executionRole!);
     props.dbSecrets.grantRead(this._container.taskDefinition.taskRole);
+    this._container.taskDefinition.executionRole?.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        "service-role/AmazonECSTaskExecutionRolePolicy"
+      )
+    );
     return this;
   }
 
