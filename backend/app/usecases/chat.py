@@ -329,7 +329,8 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
             message_map = conversation_with_context.message_map
 
         messages = trace_to_root(
-            node_id=chat_input.message.parent_message_id, message_map=message_map
+            node_id=conversation.message_map[user_msg_id].parent,
+            message_map=message_map,
         )
 
         if not chat_input.continue_generate:

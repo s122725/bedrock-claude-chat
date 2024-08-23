@@ -178,7 +178,7 @@ def process_chat_input(
         message_map = conversation_with_context.message_map
 
     messages = trace_to_root(
-        node_id=chat_input.message.parent_message_id,
+        node_id=conversation.message_map[user_msg_id].parent,
         message_map=message_map,
     )
 
