@@ -110,7 +110,7 @@ const translation = {
             'By providing external knowledge to the bot, it becomes able to handle data that it has not been pre-trained on.',
           url: 'The information from the specified URL will be used as Knowledge. If you set the URL of a YouTube video, the transcript of that video will be used as Knowledge.',
           s3url:
-            'By entering the S3 URI, you can add S3 as a data source. You can add up to 4 sources.',
+            'By entering the S3 URI, you can add S3 as a data source. You can add up to 4 sources. It only supports buckets that exist in the same account and the same region as the deployment destination.',
           sitemap:
             'By specifying the URL of the sitemap, the information obtained through automatically scraping websites within it will be used as Knowledge.',
           file: 'The uploaded files will be used as Knowledge.',
