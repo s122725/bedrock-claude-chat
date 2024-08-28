@@ -11,6 +11,7 @@ interface Props {
     step: number;
   };
   onChange: Dispatch<number>;
+  disabled?: boolean;
   errorMessage?: string;
   enableDecimal?: boolean;
 }
@@ -52,6 +53,7 @@ export const Slider: FC<Props> = (props) => {
           step={props.range.step}
           value={props.value}
           onChange={handleChange}
+          disabled={props.disabled}
         />
         <input
           className={twMerge(
@@ -64,6 +66,7 @@ export const Slider: FC<Props> = (props) => {
           max={props.range.max}
           min={props.range.min}
           onChange={handleChange}
+          disabled={props.disabled}
         />
       </div>
       {props.hint && !props.errorMessage && (

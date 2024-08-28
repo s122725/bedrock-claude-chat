@@ -44,7 +44,10 @@ import { SyncStatus } from '../constants';
 
 import { BottomHelper } from '../features/helper/components/BottomHelper';
 import { useIsWindows } from '../hooks/useIsWindows';
-import { DisplayMessageContent, PutFeedbackRequest } from '../@types/conversation';
+import {
+  DisplayMessageContent,
+  PutFeedbackRequest,
+} from '../@types/conversation';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -74,6 +77,9 @@ const ChatPage: React.FC = () => {
     getRelatedDocuments,
     giveFeedback,
   } = useChat();
+
+  // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
+  const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
 
   // Error Handling
   useEffect(() => {
@@ -115,7 +121,12 @@ const ChatPage: React.FC = () => {
     setIsAvailabilityBot(false);
     if (bot) {
       setIsAvailabilityBot(true);
-      setPageTitle(bot.title);
+      // Add "Unsupported" prefix for bots created under opposite VITE_APP_ENABLE_KB environment state
+      setPageTitle(
+        bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
+          ? bot.title
+          : `[${t('bot.label.unsupported')}] ${bot.title}`
+      );
     } else {
       setPageTitle(t('bot.label.normalChat'));
     }
@@ -294,9 +305,7 @@ const ChatPage: React.FC = () => {
           return event.metaKey && event.shiftKey;
         }
       })();
-      const isFocusChatInputCommand = (
-        event.code === 'Escape' && event.shiftKey
-      );
+      const isFocusChatInputCommand = event.code === 'Escape' && event.shiftKey;
 
       if (isNewConversationCommand) {
         event.preventDefault();
@@ -315,16 +324,19 @@ const ChatPage: React.FC = () => {
   });
 
   const ChatMessageWithRelatedDocuments: React.FC<{
-    chatContent: DisplayMessageContent,
+    chatContent: DisplayMessageContent;
     onChangeMessageId?: (messageId: string) => void;
     onSubmit?: (messageId: string, content: string) => void;
-    onSubmitFeedback?: (messageId: string, feedback: PutFeedbackRequest) => void;
-  }> = React.memo(props => {
+    onSubmitFeedback?: (
+      messageId: string,
+      feedback: PutFeedbackRequest
+    ) => void;
+  }> = React.memo((props) => {
     const { chatContent: message } = props;
     const relatedDocuments = (() => {
       if (message.usedChunks) {
         // usedChunks is available for existing messages
-        return message.usedChunks.map(chunk => ({
+        return message.usedChunks.map((chunk) => ({
           chunkBody: chunk.content,
           contentType: chunk.contentType,
           sourceLink: chunk.source,
@@ -373,7 +385,12 @@ const ChatPage: React.FC = () => {
                       onClickError={onClickSyncError}
                     />
                   )}
-                  <ButtonIcon onClick={onClickStar}>
+                  <ButtonIcon
+                    onClick={onClickStar}
+                    // Disable the star button for bots created under opposite VITE_APP_ENABLE_KB environment state
+                    disabled={
+                      bot?.ownedAndHasBedrockKnowledgeBase !== KB_ENABLED
+                    }>
                     {bot?.isPinned ? (
                       <PiStarFill className="text-aws-aqua" />
                     ) : (
@@ -382,23 +399,37 @@ const ChatPage: React.FC = () => {
                   </ButtonIcon>
                   <ButtonPopover className="mx-1" target="bottom-right">
                     {bot?.owned && (
+                      // Disable the edit action for bots created under opposite VITE_APP_ENABLE_KB environment state
                       <PopoverItem
                         onClick={() => {
-                          if (bot) {
+                          if (
+                            bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
+                          ) {
                             onClickBotEdit(bot.id);
                           }
-                        }}>
+                        }}
+                        className={`${
+                          bot.ownedAndHasBedrockKnowledgeBase !== KB_ENABLED &&
+                          'opacity-30 hover:filter-none'
+                        }`}>
                         <PiPencilLine />
                         {t('bot.titleSubmenu.edit')}
                       </PopoverItem>
                     )}
                     {bot?.isPublic && (
+                      // Disable the share action for bots created under opposite VITE_APP_ENABLE_KB environment state
                       <PopoverItem
                         onClick={() => {
-                          if (bot) {
+                          if (
+                            bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
+                          ) {
                             onClickCopyUrl(bot.id);
                           }
-                        }}>
+                        }}
+                        className={`${
+                          bot.ownedAndHasBedrockKnowledgeBase !== KB_ENABLED &&
+                          'opacity-30 hover:filter-none'
+                        }`}>
                         <PiLink />
                         {copyLabel}
                       </PopoverItem>

@@ -60,6 +60,7 @@ const translation = {
         recentlyUsedBots: 'Recently Used Shared Bots',
         knowledge: 'Knowledge',
         url: 'URL',
+        s3url: 'S3 Data Source',
         sitemap: 'Sitemap URL',
         file: 'File',
         loadingBot: 'Loading...',
@@ -92,6 +93,7 @@ const translation = {
           example: 'Conversation Example',
         },
         citeRetrievedContexts: 'Retrieved Context Citation',
+        unsupported: 'Unsupported, Read-only',
       },
       titleSubmenu: {
         edit: 'Edit',
@@ -107,6 +109,8 @@ const translation = {
           overview:
             'By providing external knowledge to the bot, it becomes able to handle data that it has not been pre-trained on.',
           url: 'The information from the specified URL will be used as Knowledge. If you set the URL of a YouTube video, the transcript of that video will be used as Knowledge.',
+          s3url:
+            'By entering the S3 URI, you can add S3 as a data source. You can add up to 4 sources.',
           sitemap:
             'By specifying the URL of the sitemap, the information obtained through automatically scraping websites within it will be used as Knowledge.',
           file: 'The uploaded files will be used as Knowledge.',
@@ -488,6 +492,69 @@ How would you categorize this email?`,
       maxResults: {
         label: 'Max Results',
         hint: 'The maximum number of records fetched from vector store',
+      },
+      searchType: {
+        label: 'Search Type',
+        hybrid: {
+          label: 'Hybrid search',
+          hint: 'Combines relevancy scores from semantic and text search to provide greater accuracy.',
+        },
+        semantic: {
+          label: 'Semantic search',
+          hint: 'Uses vector embeddings to deliver relevant results.',
+        },
+      },
+    },
+    knowledgeBaseSettings: {
+      title: 'Knowledge Detail Settings',
+      description:
+        'Select the embedded model for configuring knowledge, and set the method for splitting documents added as knowledge. These settings cannot be changed after creating the bot.',
+      embeddingModel: {
+        label: 'Embeddings Model',
+        titan_v1: {
+          label: 'Titan Embeddings G1 - Text v1.2',
+        },
+        cohere_multilingual_v3: {
+          label: 'Embed Multilingual v3',
+        },
+      },
+      chunkingStrategy: {
+        label: 'Chunking Strategy',
+        default: {
+          label: 'Default chunking',
+          hint: "Automatically splits text into chunks of about 300 tokens in size, by default. If a document is less than or already 300 tokens, it's not split any futher.",
+        },
+        fixed_size: {
+          label: 'Fixed-size chunking',
+          hint: 'Splits text into your set approximate token size.',
+        },
+        none: {
+          label: 'No chunking',
+          hint: 'Documents will not be split.',
+        },
+      },
+      chunkingMaxTokens: {
+        label: 'Max Tokens',
+        hint: 'The maximum number of tokens per chunk',
+      },
+      chunkingOverlapPercentage: {
+        label: 'Overlap Percentage between Chunks',
+        hint: 'Parent chunk overlap depends on the child token size and child percentage overlap you specify.',
+      },
+      opensearchAnalyzer: {
+        label: 'Analyzer (Tokenization, Normalization)',
+        hint: 'You can specify the analyzer to tokenize and normalize the documents registered as knowledge. Selecting an appropriate analyzer will improve search accuracy. Please choose the optimal analyzer that matches the language of your knowledge.',
+        icu: {
+          label: 'ICU Analysis',
+          hint: 'For tokenization, {{tokenizer}} is used, and for normalization, {{normalizer}} is used.',
+        },
+        kuromoji: {
+          label: 'Japanese (kuromoji) Analysis',
+          hint: 'For tokenization, {{tokenizer}} is used, and for normalization, {{normalizer}} is used.',
+        },
+        tokenizer: 'Tokenizer:',
+        normalizer: 'Normalizer:',
+        token_filter: 'Token Filter:',
       },
     },
     error: {
