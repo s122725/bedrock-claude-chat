@@ -211,11 +211,7 @@ const BotExplorePage: React.FC = () => {
                     <div className="mr-5">
                       {bot.isPinned ? (
                         <ButtonIcon
-                          // Disable the star button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                          disabled={
-                            !bot.available ||
-                            bot.hasBedrockKnowledgeBase !== KB_ENABLED
-                          }
+                          disabled={!bot.available}
                           onClick={() => {
                             updateMyBotStarred(bot.id, false);
                           }}>
@@ -223,11 +219,7 @@ const BotExplorePage: React.FC = () => {
                         </ButtonIcon>
                       ) : (
                         <ButtonIcon
-                          // Disable the star button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                          disabled={
-                            !bot.available ||
-                            bot.hasBedrockKnowledgeBase !== KB_ENABLED
-                          }
+                          disabled={!bot.available}
                           onClick={() => {
                             updateMyBotStarred(bot.id, true);
                           }}>
@@ -313,24 +305,16 @@ const BotExplorePage: React.FC = () => {
                   onClick={onClickBot}
                   className="last:border-b-0">
                   {bot.isPinned ? (
-                    // Disable the star button for bots created under opposite VITE_APP_ENABLE_KB environment state
                     <ButtonIcon
-                      disabled={
-                        !bot.available ||
-                        bot.hasBedrockKnowledgeBase !== KB_ENABLED
-                      }
+                      disabled={!bot.available}
                       onClick={() => {
                         updateSharedBotStarred(bot.id, false);
                       }}>
                       <PiStarFill className="text-aws-aqua" />
                     </ButtonIcon>
                   ) : (
-                    // Disable the star button for bots created under opposite VITE_APP_ENABLE_KB environment state
                     <ButtonIcon
-                      disabled={
-                        !bot.available ||
-                        bot.hasBedrockKnowledgeBase !== KB_ENABLED
-                      }
+                      disabled={!bot.available}
                       onClick={() => {
                         updateSharedBotStarred(bot.id, true);
                       }}>

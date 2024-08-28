@@ -123,7 +123,7 @@ const ChatPage: React.FC = () => {
       setIsAvailabilityBot(true);
       // Add "Unsupported" prefix for bots created under opposite VITE_APP_ENABLE_KB environment state
       setPageTitle(
-        bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
+        !bot.owned || bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
           ? bot.title
           : `[${t('bot.label.unsupported')}] ${bot.title}`
       );
@@ -385,12 +385,7 @@ const ChatPage: React.FC = () => {
                       onClickError={onClickSyncError}
                     />
                   )}
-                  <ButtonIcon
-                    onClick={onClickStar}
-                    // Disable the star button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                    disabled={
-                      bot?.ownedAndHasBedrockKnowledgeBase !== KB_ENABLED
-                    }>
+                  <ButtonIcon onClick={onClickStar}>
                     {bot?.isPinned ? (
                       <PiStarFill className="text-aws-aqua" />
                     ) : (
@@ -417,19 +412,12 @@ const ChatPage: React.FC = () => {
                       </PopoverItem>
                     )}
                     {bot?.isPublic && (
-                      // Disable the share action for bots created under opposite VITE_APP_ENABLE_KB environment state
                       <PopoverItem
                         onClick={() => {
-                          if (
-                            bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
-                          ) {
+                          if (bot) {
                             onClickCopyUrl(bot.id);
                           }
-                        }}
-                        className={`${
-                          bot.ownedAndHasBedrockKnowledgeBase !== KB_ENABLED &&
-                          'opacity-30 hover:filter-none'
-                        }`}>
+                        }}>
                         <PiLink />
                         {copyLabel}
                       </PopoverItem>
