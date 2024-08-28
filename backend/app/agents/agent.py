@@ -23,7 +23,9 @@ class AgentRunner:
             {
                 "role": message.role,
                 "content": [
-                    {"text": c.body} for c in message.content if c.content_type == "text"
+                    {"text": c.body}
+                    for c in message.content
+                    if c.content_type == "text"
                 ],
             }
             for message in conversation
