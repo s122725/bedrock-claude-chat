@@ -1,7 +1,4 @@
-from typing import Optional, Type
-
-from app.agents.tools.base import BaseTool, StructuredTool
-from langchain_core.pydantic_v1 import BaseModel, Field
+from app.agent.tools import AgentTool
 
 
 class BMIInput(BaseModel):
@@ -9,7 +6,9 @@ class BMIInput(BaseModel):
     weight: float = Field(description="Weight in kilograms (kg). e.g. 70.0")
 
 
-def calculate_bmi(height: float, weight: float) -> str:
+def calculate_bmi(arg: BMIInput) -> str:
+    height = arg.height
+    weight = arg.weight
     if height <= 0 or weight <= 0:
         return "Error: Height and weight must be positive numbers."
 
@@ -29,9 +28,36 @@ def calculate_bmi(height: float, weight: float) -> str:
     return f"Your BMI is {bmi_rounded}, which falls within the {category} range."
 
 
-bmi_tool = StructuredTool.from_function(
-    func=calculate_bmi,
+bmi_tool = AgentTool(
     name="calculate_bmi",
     description="Calculate the Body Mass Index (BMI) from height and weight",
     args_schema=BMIInput,
+    function=calculate_bmi,
 )
+
+# def calculate_bmi(height: float, weight: float) -> str:
+#     if height <= 0 or weight <= 0:
+#         return "Error: Height and weight must be positive numbers."
+
+#     height_in_meters = height / 100
+#     bmi = weight / (height_in_meters**2)
+#     bmi_rounded = round(bmi, 1)
+
+#     if bmi < 18.5:
+#         category = "Underweight"
+#     elif bmi < 25:
+#         category = "Normal weight"
+#     elif bmi < 30:
+#         category = "Overweight"
+#     else:
+#         category = "Obese"
+
+#     return f"Your BMI is {bmi_rounded}, which falls within the {category} range."
+
+
+# bmi_tool = StructuredTool.from_function(
+#     func=calculate_bmi,
+#     name="calculate_bmi",
+#     description="Calculate the Body Mass Index (BMI) from height and weight",
+#     args_schema=BMIInput,
+# )

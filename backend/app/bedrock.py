@@ -27,6 +27,17 @@ DEFAULT_GENERATION_CONFIG = (
 client = get_bedrock_client()
 
 
+class ConverseApiToolSpec(TypedDict):
+    name: str
+    description: str
+    inputSchema: dict
+
+
+class ConverseApiToolConfig(TypedDict):
+    tools: list[ConverseApiToolSpec]
+    toolChoice: dict
+
+
 class ConverseApiRequest(TypedDict):
     inference_config: dict
     additional_model_request_fields: dict
@@ -34,6 +45,7 @@ class ConverseApiRequest(TypedDict):
     messages: list[dict]
     stream: bool
     system: list[dict]
+    toolConfig: ConverseApiToolConfig
 
 
 class ConverseApiResponseMessageContent(TypedDict):
@@ -69,9 +81,7 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
+    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
