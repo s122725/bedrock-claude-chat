@@ -135,7 +135,7 @@ const ChatPage: React.FC = () => {
         setPageTitle(t('bot.label.notAvailableBot'));
       }
     }
-  }, [bot, botError, t]);
+  }, [KB_ENABLED, bot, botError, t]);
 
   const description = useMemo<string>(() => {
     if (!bot) {
