@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append(".")
+import json
 import unittest
 from pprint import pprint
 
@@ -37,6 +38,7 @@ class TestAgentTool(unittest.TestCase):
         # Output must be a JSON schema
         # https://json-schema.org/
         expected_spec = {
+            "name": "test",
             "description": "test",
             "inputSchema": {
                 "json": {
@@ -54,9 +56,8 @@ class TestAgentTool(unittest.TestCase):
                     "type": "object",
                 }
             },
-            "name": "test",
         }
-        self.assertEqual(spec, expected_spec)
+        self.assertEqual(json.dumps(spec), json.dumps(expected_spec))
 
     def test_run(self):
         arg = TestArg(
