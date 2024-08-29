@@ -32,7 +32,6 @@ import Toggle from '../../../components/Toggle';
 import { useAgent } from '../../../features/agent/hooks/useAgent';
 import { AgentTool } from '../../../features/agent/types';
 import { AvailableTools } from '../../../features/agent/components/AvailableTools';
-import DescriptiveSelect from '../components/DescriptiveSelect';
 import {
   DEFAULT_CHUNKING_MAX_TOKENS,
   DEFAULT_CHUNKING_OVERLAP_PERCENTAGE,
@@ -1089,7 +1088,7 @@ const BotKbEditPage: React.FC = () => {
                 </div>
 
                 <div className="mt-3">
-                  <DescriptiveSelect
+                  <Select
                     label={t('knowledgeBaseSettings.chunkingStrategy.label')}
                     value={chunkingStrategy}
                     options={chunkingStrategyOptions}
@@ -1160,7 +1159,7 @@ const BotKbEditPage: React.FC = () => {
 
                 {isNewBot && (
                   <div className="mt-3 grid gap-1">
-                    <DescriptiveSelect
+                    <Select
                       label={t(
                         'knowledgeBaseSettings.opensearchAnalyzer.label'
                       )}
@@ -1253,7 +1252,7 @@ const BotKbEditPage: React.FC = () => {
                   />
                 </div>
                 <div className="mt-3">
-                  <DescriptiveSelect
+                  <Select
                     label={t('searchSettings.searchType.label')}
                     value={searchParams.searchType}
                     options={searchTypeOptions}
