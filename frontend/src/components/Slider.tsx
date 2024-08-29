@@ -46,7 +46,10 @@ export const Slider: FC<Props> = (props) => {
       </label>
       <div className="flex gap-2">
         <input
-          className="w-full cursor-pointer"
+          className={twMerge(
+            'w-full cursor-pointer',
+            props.disabled && 'cursor-default'
+          )}
           type="range"
           min={props.range.min}
           max={props.range.max}

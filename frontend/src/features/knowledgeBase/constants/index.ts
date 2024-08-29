@@ -25,18 +25,25 @@ export const OPENSEARCH_ANALYZER: {
       ],
     },
   } as OpenSearchParams,
+  none: {
+    // as fallback
+    analyzer: null,
+  },
 } as const;
 
 export const DEFAULT_OPENSEARCH_ANALYZER: {
   [key: string]: string;
 } = {
-  en: 'icu',
   ja: 'kuromoji',
+  ko: 'icu',
+  zhhans: 'icu',
+  zhhant: 'icu',
 } as const;
 
 export const DEFAULT_BEDROCK_KNOWLEDGEBASE: BedrockKnowledgeBase = {
+  knowledgeBaseId: '',
   embeddingsModel: 'cohere_multilingual_v3',
-  openSearch: OPENSEARCH_ANALYZER['icu'],
+  openSearch: OPENSEARCH_ANALYZER['none'],
   chunkingStrategy: 'default',
   maxTokens: null,
   overlapPercentage: null,

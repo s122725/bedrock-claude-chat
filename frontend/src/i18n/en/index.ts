@@ -545,16 +545,21 @@ How would you categorize this email?`,
         label: 'Analyzer (Tokenization, Normalization)',
         hint: 'You can specify the analyzer to tokenize and normalize the documents registered as knowledge. Selecting an appropriate analyzer will improve search accuracy. Please choose the optimal analyzer that matches the language of your knowledge.',
         icu: {
-          label: 'ICU Analysis',
+          label: 'ICU analyzer',
           hint: 'For tokenization, {{tokenizer}} is used, and for normalization, {{normalizer}} is used.',
         },
         kuromoji: {
-          label: 'Japanese (kuromoji) Analysis',
+          label: 'Japanese (kuromoji) analyzer',
           hint: 'For tokenization, {{tokenizer}} is used, and for normalization, {{normalizer}} is used.',
+        },
+        none: {
+          label: 'System default analyzer',
+          hint: 'The default analyzer defined by the system will be used.',
         },
         tokenizer: 'Tokenizer:',
         normalizer: 'Normalizer:',
         token_filter: 'Token Filter:',
+        not_specified: 'Not specified',
       },
     },
     error: {

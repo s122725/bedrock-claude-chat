@@ -3,7 +3,7 @@ import ChatPage from './pages/ChatPage.tsx';
 import NotFound from './pages/NotFound.tsx';
 import BotExplorePage from './pages/BotExplorePage.tsx';
 import BotEditPage from './pages/BotEditPage.tsx';
-import BotEditPageV2 from './features/knowledgeBase/pages/BotEditPageV2.tsx';
+import BotKbEditPage from './features/knowledgeBase/pages/BotKbEditPage.tsx';
 import BotApiSettingsPage from './pages/BotApiSettingsPage.tsx';
 import AdminSharedBotAnalyticsPage from './pages/AdminSharedBotAnalyticsPage.tsx';
 import AdminApiManagementPage from './pages/AdminApiManagementPage.tsx';
@@ -30,11 +30,11 @@ const rootChildren = [
   },
   {
     path: '/bot/new',
-    element: KB_ENABLED ? <BotEditPageV2 /> : <BotEditPage />,
+    element: KB_ENABLED ? <BotKbEditPage /> : <BotEditPage />,
   },
   {
     path: '/bot/edit/:botId',
-    element: KB_ENABLED ? <BotEditPageV2 /> : <BotEditPage />,
+    element: KB_ENABLED ? <BotKbEditPage /> : <BotEditPage />,
   },
   {
     path: '/bot/api-settings/:botId',

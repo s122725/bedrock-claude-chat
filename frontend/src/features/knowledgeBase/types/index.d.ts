@@ -1,5 +1,5 @@
 export type BedrockKnowledgeBase = {
-  knowledgeBaseId?: string; // only present after bot is ready
+  knowledgeBaseId: string;
   dataSourceIds?: string[]; // only present after bot is ready
   embeddingsModel: EmbeddingsModel;
   chunkingStrategy: ChunkingStrategy;
@@ -18,7 +18,7 @@ export type OpenSearchParams = {
     characterFilters: CharacterFilter[];
     tokenizer: Tokenizer;
     tokenFilters: TokenFilter[];
-  };
+  } | null;
 };
 
 export type CharacterFilter = 'icu_normalizer'; // static

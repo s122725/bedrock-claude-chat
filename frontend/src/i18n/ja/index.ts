@@ -543,16 +543,21 @@ const translation = {
         label: 'アナライザー（トークナイズ・正規化）',
         hint: 'ナレッジに登録した文書のトークナイズや正規化を行うアナライザーを指定します。 適切なアナライザーを選択することで、検索精度が向上します。 ナレッジの言語に合わせて、最適なアナライザーを選択してください。',
         icu: {
-          label: 'ICU Analysis',
+          label: 'ICU analyzer',
           hint: 'トークナイズは {{tokenizer}} を利用し、正規化は {{normalizer}} を利用します。',
         },
         kuromoji: {
-          label: 'Japanese (kuromoji) Analysis',
+          label: 'Japanese (kuromoji) analyzer',
           hint: 'トークナイズは {{tokenizer}} を利用し、正規化は {{normalizer}} を利用します。',
+        },
+        none: {
+          label: 'デフォルトアナライザー',
+          hint: 'システムで定義されているデフォルトアナライザーを利用します。',
         },
         tokenizer: 'トークナイザー:',
         normalizer: 'ノーマライザー（正規化）:',
         token_filter: 'トークンフィルター:',
+        not_specified: '指定なし',
       },
     },
     error: {
