@@ -8,6 +8,7 @@ from pprint import pprint
 from app.agents.agent import AgentMessageModel, AgentRunner, OnStopInput
 from app.agents.tools.agent_tool import RunResult
 from app.agents.tools.internet_search import internet_search_tool
+from app.bedrock import ConverseApiToolResult
 from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.conversation import ContentModel, MessageModel
 from app.repositories.models.custom_bot import (
@@ -28,11 +29,11 @@ def on_thinking(conversation: list[AgentMessageModel]):
     pprint(conversation)
 
 
-def on_tool_result(tool_result: RunResult):
+def on_tool_result(tool_result: ConverseApiToolResult):
     print("====================================")
     print("Tool Result...")
     print("====================================")
-    pprint(tool_result)
+    pprint(tool_result["toolUseId"])
 
 
 def on_stop(on_stop_input: OnStopInput):
@@ -110,7 +111,7 @@ class TestAgentRunner(unittest.TestCase):
                 ContentModel(
                     content_type="text",
                     media_type=None,
-                    body="今日の東京の天気?",
+                    body="今日の東京の天気?あと宮崎の天気も",
                     file_name=None,
                 )
             ],
@@ -123,7 +124,8 @@ class TestAgentRunner(unittest.TestCase):
             thinking_log=None,
         )
         res = self.runner.run(conversation=[message])
-        # pprint(res)
+        print("====================================")
+        pprint(res)
 
 
 # class TestReactAgent(unittest.TestCase):

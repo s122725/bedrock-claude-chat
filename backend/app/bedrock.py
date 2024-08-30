@@ -66,8 +66,8 @@ class ConverseApiToolUseContent(TypedDict):
 
 
 class ConverseApiResponseMessageContent(TypedDict):
-    text: str
-    toolUse: ConverseApiToolUseContent
+    text: NotRequired[str]
+    toolUse: NotRequired[ConverseApiToolUseContent]
 
 
 class ConverseApiResponseMessage(TypedDict):

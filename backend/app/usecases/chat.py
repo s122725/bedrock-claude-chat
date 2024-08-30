@@ -2,17 +2,8 @@ import logging
 from copy import deepcopy
 from typing import Literal
 
-from app.agents.agent import AgentExecutor, create_react_agent, format_log_to_str
-from app.agents.handlers.token_count import get_token_count_callback
-from app.agents.handlers.used_chunk import get_used_chunk_callback
-from app.agents.langchain import BedrockLLM
-from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
-from app.bedrock import (
-    calculate_price,
-    call_converse_api,
-    compose_args_for_converse_api,
-)
+from app.bedrock import calculate_price, call_converse_api, compose_args_for_converse_api
 from app.prompt import build_rag_prompt
 from app.repositories.conversation import (
     RecordNotFoundError,
@@ -240,9 +231,7 @@ def insert_knowledge(
     logger.info(f"Inserted prompt: {inserted_prompt}")
 
     conversation_with_context = deepcopy(conversation)
-    conversation_with_context.message_map["instruction"].content[
-        0
-    ].body = inserted_prompt
+    conversation_with_context.message_map["instruction"].content[0].body = inserted_prompt
 
     return conversation_with_context
 
@@ -254,60 +243,60 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
     thinking_log = None
 
     if bot and bot.is_agent_enabled():
-        logger.info("Bot has agent tools. Using agent for response.")
-        llm = BedrockLLM.from_model(model=chat_input.message.model)
+        # TODO
+        ...
+        # logger.info("Bot has agent tools. Using agent for response.")
+        # llm = BedrockLLM.from_model(model=chat_input.message.model)
 
-        tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
+        # tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
 
-        if bot and bot.has_knowledge():
-            logger.info("Bot has knowledge. Adding answer with knowledge tool.")
-            answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
-                bot=bot,
-                llm=llm,
-            )
-            tools.append(answer_with_knowledge_tool)
+        # if bot and bot.has_knowledge():
+        #     logger.info("Bot has knowledge. Adding answer with knowledge tool.")
+        #     answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
+        #         bot=bot,
+        #         llm=llm,
+        #     )
+        #     tools.append(answer_with_knowledge_tool)
 
-        logger.info(f"Tools: {tools}")
-        agent = create_react_agent(
-            model=chat_input.message.model,
-            tools=tools,
-            generation_config=bot.generation_params,
-        )
-        executor = AgentExecutor(
-            name="Agent Executor",
-            agent=agent,
-            tools=tools,
-            return_intermediate_steps=True,
-            callbacks=[],
-            verbose=False,
-            max_iterations=15,
-            max_execution_time=None,
-            early_stopping_method="force",
-            handle_parsing_errors=True,
-        )
+        # logger.info(f"Tools: {tools}")
+        # agent = create_react_agent(
+        #     model=chat_input.message.model,
+        #     tools=tools,
+        #     generation_config=bot.generation_params,
+        # )
+        # executor = AgentExecutor(
+        #     name="Agent Executor",
+        #     agent=agent,
+        #     tools=tools,
+        #     return_intermediate_steps=True,
+        #     callbacks=[],
+        #     verbose=False,
+        #     max_iterations=15,
+        #     max_execution_time=None,
+        #     early_stopping_method="force",
+        #     handle_parsing_errors=True,
+        # )
 
-        with get_token_count_callback() as token_cb, get_used_chunk_callback() as chunk_cb:
-            agent_response = executor.invoke(
-                {
-                    "input": chat_input.message.content[0].body,  # type: ignore
-                },
-                config={
-                    "callbacks": [
-                        token_cb,
-                        chunk_cb,
-                    ],
-                },
-            )
-            price = token_cb.total_cost
-            if bot.display_retrieved_chunks and chunk_cb.used_chunks:
-                used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(
-                agent_response.get("intermediate_steps", [])
-            )
-            logger.info(f"Thinking log: {thinking_log}")
+        # with get_token_count_callback() as token_cb, get_used_chunk_callback() as chunk_cb:
+        #     agent_response = executor.invoke(
+        #         {
+        #             "input": chat_input.message.content[0].body,  # type: ignore
+        #         },
+        #         config={
+        #             "callbacks": [
+        #                 token_cb,
+        #                 chunk_cb,
+        #             ],
+        #         },
+        #     )
+        #     price = token_cb.total_cost
+        #     if bot.display_retrieved_chunks and chunk_cb.used_chunks:
+        #         used_chunks = chunk_cb.used_chunks
+        #     thinking_log = format_log_to_str(agent_response.get("intermediate_steps", []))
+        #     logger.info(f"Thinking log: {thinking_log}")
 
-        reply_txt = agent_response["output"]
-        conversation.should_continue = False
+        # reply_txt = agent_response["output"]
+        # conversation.should_continue = False
     else:
         message_map = conversation.message_map
         search_results = []

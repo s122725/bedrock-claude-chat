@@ -5,7 +5,6 @@ from app.bedrock import (
     ConverseApiRequest,
     ConverseApiResponse,
     ConverseApiToolResult,
-    ConverseApiToolResultContent,
     ConverseApiToolUseContent,
     calculate_price,
     get_bedrock_client,
@@ -42,6 +41,7 @@ class AgentMessageModel(BaseModel):
 
 class OnStopInput(BaseModel):
     thinking_conversation: list[AgentMessageModel]
+    last_response: ConverseApiResponse
     stop_reason: str
     input_token_count: int
     output_token_count: int
@@ -55,7 +55,7 @@ class AgentRunner:
         tools: list[AgentTool],
         model: type_model_name,
         on_thinking: Optional[Callable[[list[AgentMessageModel]], None]] = None,
-        on_tool_result: Optional[Callable[[RunResult], None]] = None,
+        on_tool_result: Optional[Callable[[ConverseApiToolResult], None]] = None,
         on_stop: Optional[Callable[[OnStopInput], None]] = None,
     ):
         self.bot = bot
@@ -70,47 +70,44 @@ class AgentRunner:
         self.total_output_tokens = 0
 
     def run(self, conversation: list[MessageModel]) -> ConverseApiResponse:
-        conv = [AgentMessageModel.from_message_model(message) for message in conversation]
+        conv = [
+            AgentMessageModel.from_message_model(message) for message in conversation
+        ]
         response = self._call_converse_api(conv)
 
-        while "toolUse" in response["output"]["message"]["content"][-1]:
-
-            assistant_message_content = [
-                AgentContentModel(
-                    content_type="toolUse" if "toolUse" in content else "text",
-                    body=content.get("toolUse") or content.get("text", ""),
-                )
+        while any(
+            "toolUse" in content
+            for content in response["output"]["message"]["content"][-1]
+        ):
+            tool_uses = [
+                content["toolUse"]
                 for content in response["output"]["message"]["content"]
+                if "toolUse" in content
             ]
+
             assistant_message = AgentMessageModel(
                 role="assistant",
-                content=assistant_message_content,
+                content=[
+                    AgentContentModel(content_type="toolUse", body=tool_use)
+                    for tool_use in tool_uses
+                ],
             )
             conv.append(assistant_message)
 
             if self.on_thinking:
                 self.on_thinking(conv)
 
-            tool_use = response["output"]["message"]["content"][-1]["toolUse"]
-            tool_result = self._invoke_tool(tool_use)
+            tool_results = self._invoke_tools(tool_uses)
 
-            new_message_body: ConverseApiToolResult = {
-                "toolUseId": tool_use["toolUseId"],
-                "content": [{"text": tool_result.body}],
-            }
-            if not tool_result.succeeded:
-                new_message_body["status"] = "error"
-
-            if self.on_tool_result:
-                self.on_tool_result(tool_result)
-
-            new_message = AgentMessageModel(
+            user_message = AgentMessageModel(
                 role="user",
                 content=[
-                    AgentContentModel(content_type="toolResult", body=new_message_body)
+                    AgentContentModel(content_type="toolResult", body=result)
+                    for result in tool_results
                 ],
             )
-            conv.append(new_message)
+            conv.append(user_message)
+
             response = self._call_converse_api(conv)
 
             # Update token counts
@@ -120,6 +117,7 @@ class AgentRunner:
         if self.on_stop:
             stop_input = OnStopInput(
                 thinking_conversation=conv,
+                last_response=response,
                 stop_reason=response["stopReason"],
                 input_token_count=self.total_input_tokens,
                 output_token_count=self.total_output_tokens,
@@ -136,7 +134,9 @@ class AgentRunner:
         args = self._compose_args(conversation)
         return self.client.converse(**args)
 
-    def _compose_args(self, conversation: list[AgentMessageModel]) -> ConverseApiRequest:
+    def _compose_args(
+        self, conversation: list[AgentMessageModel]
+    ) -> ConverseApiRequest:
         arg_messages = [
             {
                 "role": message.role,
@@ -171,19 +171,35 @@ class AgentRunner:
         return args  # type: ignore
 
     def _get_tool_config(self) -> dict:
-        # toolConfig specification:
-        # https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/tool-use-inference-call.html#tool-use-send-tool-info
         return {
             "tools": [
                 {"toolSpec": tool.to_converse_spec()} for tool in self.tools.values()
             ]
         }
 
-    def _invoke_tool(self, tool_use: ConverseApiToolUseContent) -> RunResult:
-        tool_name = tool_use["name"]
-        if tool_name in self.tools:
-            tool = self.tools[tool_name]
-            args = tool.args_schema(**tool_use["input"])
-            return tool.run(args)
-        else:
-            raise ValueError(f"Tool {tool_name} not found.")
+    def _invoke_tools(
+        self, tool_uses: list[ConverseApiToolUseContent]
+    ) -> list[ConverseApiToolResult]:
+        results = []
+        for tool_use in tool_uses:
+            tool_name = tool_use["name"]
+            if tool_name in self.tools:
+                tool = self.tools[tool_name]
+                args = tool.args_schema(**tool_use["input"])
+                result = tool.run(args)
+                tool_result: ConverseApiToolResult = {
+                    "toolUseId": tool_use["toolUseId"],
+                    "content": [{"text": result.body}],
+                }
+                if not result.succeeded:
+                    tool_result["status"] = "error"
+                else:
+                    tool_result["status"] = "success"
+
+                if self.on_tool_result:
+                    self.on_tool_result(tool_result)
+
+                results.append(tool_result)
+            else:
+                raise ValueError(f"Tool {tool_name} not found.")
+        return results
