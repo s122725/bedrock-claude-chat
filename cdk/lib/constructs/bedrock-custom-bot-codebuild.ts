@@ -53,7 +53,7 @@ export class BedrockCustomBotCodebuild extends Construct {
               // Extract BOT_ID from SK. Note that SK is given like <user-id>#BOT#<bot-id>
               `export BOT_ID=$(echo $SK | awk -F'#' '{print $3}')`,
               // Replace cdk's entrypoint. This is a workaround to avoid the issue that cdk synthesize all stacks.
-              "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-knowledge-base.ts|' cdk.json",
+              "sed -i 's|bin/bedrock-chat.ts|bin/bedrock-custom-bot.ts|' cdk.json",
               `cdk deploy --require-approval never BrChatKbStack$BOT_ID`,
             ],
           },

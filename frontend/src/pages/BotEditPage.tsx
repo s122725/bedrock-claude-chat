@@ -39,7 +39,6 @@ import Toggle from '../components/Toggle';
 import { useAgent } from '../features/agent/hooks/useAgent';
 import { AgentTool } from '../features/agent/types';
 import { AvailableTools } from '../features/agent/components/AvailableTools';
-import { GuardrailsFiltersThreshold, GroundingThreshold } from '../constants';
 
 const edgeGenerationParams =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true'
@@ -104,17 +103,6 @@ const BotEditPage: React.FC = () => {
     clearAll: clearErrorMessages,
   } = useErrorMessage();
 
-  const [ isGuardrailEnabled, setGuardrailEnabled] = useState<boolean>(false)
-  const [ hateThreshold, setHateThreshold ] = useState<number>(0)
-  const [ insultsThreshold, setInsultsThreshold ] = useState<number>(0)
-  const [ sexualThreshold, setSexualThreshold ] = useState<number>(0)
-  const [ violenceThreshold, setViolenceThreshold ] = useState<number>(0)
-  const [ misconductThreshold, setMisconductThreshold ] = useState<number>(0)
-  const [ groundingThreshold, setGroundingThreshold ] = useState<number>(0)
-  const [ relevanceThreshold, setRelevanceThreshold ] = useState<number>(0)
-  const [ guardrailsArn, setGuardrailsArn] = useState<string>("")
-  const [ guardrailsVersion, setGuardrailsVersion] = useState<string>("")
-
   const isNewBot = useMemo(() => {
     return paramsBotId ? false : true;
   }, [paramsBotId]);
@@ -176,32 +164,6 @@ const BotEditPage: React.FC = () => {
                   },
                 ]
           );
-          setGuardrailEnabled(bot.bedrockGuardrails.isGuardrailEnabled)
-          setGuardrailsArn(bot.bedrockGuardrails.guardrailsArn)
-          setGuardrailsVersion(
-            bot.bedrockGuardrails.guardrailsVersion ? bot.bedrockGuardrails.guardrailsVersion : ""
-          )
-          setHateThreshold(
-            bot.bedrockGuardrails.hateThreshold ? bot.bedrockGuardrails.hateThreshold : 0
-          )
-          setInsultsThreshold(
-            bot.bedrockGuardrails.insultsThreshold ? bot.bedrockGuardrails.insultsThreshold : 0
-          )
-          setSexualThreshold(
-            bot.bedrockGuardrails.sexualThreshold ? bot.bedrockGuardrails.sexualThreshold : 0
-          )
-          setViolenceThreshold(
-            bot.bedrockGuardrails.violenceThreshold ? bot.bedrockGuardrails.violenceThreshold : 0
-          )
-          setMisconductThreshold(
-            bot.bedrockGuardrails.misconductThreshold ? bot.bedrockGuardrails.misconductThreshold : 0
-          )
-          setGroundingThreshold(
-            bot.bedrockGuardrails.groundingThreshold ? bot.bedrockGuardrails.groundingThreshold : 0
-          )
-          setRelevanceThreshold(
-            bot.bedrockGuardrails.relevanceThreshold ? bot.bedrockGuardrails.relevanceThreshold : 0
-          )
         })
         .finally(() => {
           setIsLoading(false);
@@ -532,18 +494,6 @@ const BotEditPage: React.FC = () => {
       conversationQuickStarters: conversationQuickStarters.filter(
         (qs) => qs.title !== '' && qs.example !== ''
       ),
-      bedrockGuardrails: {
-        isGuardrailEnabled: isGuardrailEnabled,
-        hateThreshold: hateThreshold,
-        insultsThreshold: insultsThreshold,
-        sexualThreshold: sexualThreshold,
-        violenceThreshold: violenceThreshold,
-        misconductThreshold: misconductThreshold,
-        groundingThreshold: groundingThreshold,
-        relevanceThreshold: relevanceThreshold,
-        guardrailsArn: "",
-        guardrailsVersion: ""
-      },
     })
       .then(() => {
         navigate('/bot/explore');
@@ -614,18 +564,6 @@ const BotEditPage: React.FC = () => {
         conversationQuickStarters: conversationQuickStarters.filter(
           (qs) => qs.title !== '' && qs.example !== ''
         ),
-        bedrockGuardrails: {
-          isGuardrailEnabled: isGuardrailEnabled,
-          hateThreshold: hateThreshold,
-          insultsThreshold: insultsThreshold,
-          sexualThreshold: sexualThreshold,
-          violenceThreshold: violenceThreshold,
-          misconductThreshold: misconductThreshold,
-          groundingThreshold: groundingThreshold,
-          relevanceThreshold: relevanceThreshold,
-          guardrailsArn: guardrailsArn,
-          guardrailsVersion: guardrailsVersion,
-        },
       })
         .then(() => {
           navigate('/bot/explore');
@@ -1026,156 +964,6 @@ const BotEditPage: React.FC = () => {
                     errorMessage={errorMessages['maxResults']}
                   />
                 </div>
-              </ExpandableDrawerGroup>
-
-              <ExpandableDrawerGroup 
-                isDefaultShow={false}
-                label={t('guardrails.title')} 
-                className="py-2"
-              >
-                <div className="mt-2">
-                  <Toggle
-                    value={isGuardrailEnabled}
-                    label={t('guardrails.label')}
-                    hint={t('guardrails.hint')}
-                    onChange={()=> {
-                      setGuardrailEnabled(!isGuardrailEnabled);
-                    }}
-                  />
-                </div>
-                <ExpandableDrawerGroup 
-                  isDefaultShow={false}
-                  label={t('guardrails.harmfulCategories.label')} 
-                  className="py-2"
-                >
-                  <div className="mt-2">
-                    <Slider
-                      value={hateThreshold}
-                      hint={t('guardrails.harmfulCategories.hate.hint')}
-                      label={t('guardrails.harmfulCategories.hate.label')}
-                      range={{ 
-                        min: GuardrailsFiltersThreshold.MIN,
-                        max: GuardrailsFiltersThreshold.MAX, 
-                        step: GuardrailsFiltersThreshold.STEP,
-                      }}
-                      onChange={(hateThreshold) => {
-                        setHateThreshold(hateThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['hateThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={insultsThreshold}
-                      hint={t('guardrails.harmfulCategories.insults.hint')}
-                      label={t('guardrails.harmfulCategories.insults.label')}
-                      range={{ 
-                        min: GuardrailsFiltersThreshold.MIN,
-                        max: GuardrailsFiltersThreshold.MAX, 
-                        step: GuardrailsFiltersThreshold.STEP,
-                      }}
-                      onChange={(insultsThreshold) => {
-                        setInsultsThreshold(insultsThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['insultsThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={sexualThreshold}
-                      hint={t('guardrails.harmfulCategories.sexual.hint')}
-                      label={t('guardrails.harmfulCategories.sexual.label')}
-                      range={{ 
-                        min: GuardrailsFiltersThreshold.MIN,
-                        max: GuardrailsFiltersThreshold.MAX, 
-                        step: GuardrailsFiltersThreshold.STEP,
-                      }}
-                      onChange={(sexualThreshold) => {
-                        setSexualThreshold(sexualThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['sexualThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={violenceThreshold}
-                      hint={t('guardrails.harmfulCategories.violence.hint')}
-                      label={t('guardrails.harmfulCategories.violence.label')}
-                      range={{ 
-                        min: GuardrailsFiltersThreshold.MIN,
-                        max: GuardrailsFiltersThreshold.MAX, 
-                        step: GuardrailsFiltersThreshold.STEP,
-                      }}
-                      onChange={(violenceThreshold) => {
-                        setViolenceThreshold(violenceThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['violenceThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={misconductThreshold}
-                      hint={t('guardrails.harmfulCategories.misconduct.hint')}
-                      label={t('guardrails.harmfulCategories.misconduct.label')}
-                      range={{ 
-                        min: GuardrailsFiltersThreshold.MIN,
-                        max: GuardrailsFiltersThreshold.MAX, 
-                        step: GuardrailsFiltersThreshold.STEP,
-                      }}
-                      onChange={(misconductThreshold) => {
-                        setMisconductThreshold(misconductThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['misconductThreshold']}
-                    />
-                  </div>
-                </ExpandableDrawerGroup>  
-
-
-                <ExpandableDrawerGroup 
-                  isDefaultShow={false}
-                  label={t('guardrails.contextualGroundingCheck.label')} 
-                  className="py-2"
-                >
-                  <div className="mt-2">
-                    <Slider
-                      value={groundingThreshold}
-                      hint={t('guardrails.contextualGroundingCheck.groundingThreshold.hint')}
-                      label={t('guardrails.contextualGroundingCheck.groundingThreshold.label')}
-                      range={{ 
-                        min: GroundingThreshold.MIN,
-                        max: GroundingThreshold.MAX, 
-                        step: GroundingThreshold.STEP,
-                      }}
-                      onChange={(groundingThreshold) => {
-                        setGroundingThreshold(groundingThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['groundingThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={relevanceThreshold}
-                      hint={t('guardrails.contextualGroundingCheck.relevanceThreshold.hint')}
-                      label={t('guardrails.contextualGroundingCheck.relevanceThreshold.label')}
-                      range={{ 
-                        min: GroundingThreshold.MIN,
-                        max: GroundingThreshold.MAX, 
-                        step: GroundingThreshold.STEP,
-                      }}
-                      onChange={(relevanceThreshold) => {
-                        setRelevanceThreshold(relevanceThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['relevanceThreshold']}
-                    />
-                  </div>
-                </ExpandableDrawerGroup>
               </ExpandableDrawerGroup>
 
               {errorMessages['syncChunkError'] && (
