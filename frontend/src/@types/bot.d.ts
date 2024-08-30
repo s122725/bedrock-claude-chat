@@ -1,3 +1,5 @@
+import { BedrockKnowledgeBase } from '../features/knowledgeBase/types';
+
 export type BotKind = 'private' | 'mixed';
 
 export type BotMeta = {
@@ -45,6 +47,7 @@ export type BotSyncStatus = 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
 
 export type BotListItem = BotMeta & {
   available: boolean;
+  hasBedrockKnowledgeBase?: boolean;
 };
 
 export type GenerationParams = {
@@ -83,11 +86,13 @@ export type BotDetails = BotMeta & {
   displayRetrievedChunks: boolean;
   conversationQuickStarters: ConversationQuickStarter[];
   bedrockGuardrails: GuardrailsParams;
+  bedrockKnowledgeBase: BedrockKnowledgeBase | null;
 };
 
 export type BotSummary = BotMeta & {
   hasKnowledge: boolean;
   hasAgent: boolean;
+  ownedAndHasBedrockKnowledgeBase: boolean;
   conversationQuickStarters: ConversationQuickStarter[];
 };
 
@@ -104,13 +109,14 @@ export type RegisterBotRequest = {
   instruction: string;
   agent: AgentInput;
   description?: string;
-  embeddingParams?: EmdeddingParams;
+  embeddingParams?: EmdeddingParams | null;
   generationParams?: GenerationParams;
   searchParams?: SearchParams;
   knowledge?: BotKnowledge;
   displayRetrievedChunks: boolean;
   conversationQuickStarters: ConversationQuickStarter[];
   bedrockGuardrails?: GuardrailsParams;
+  bedrockKnowledgeBase?: BedrockKnowledgeBase;
 };
 
 export type RegisterBotResponse = BotDetails;
@@ -120,13 +126,14 @@ export type UpdateBotRequest = {
   instruction: string;
   description?: string;
   agent: AgentInput;
-  embeddingParams?: EmdeddingParams;
+  embeddingParams?: EmdeddingParams | null;
   generationParams?: BotGenerationConfig;
   searchParams?: SearchParams;
   knowledge?: BotKnowledgeDiff;
   displayRetrievedChunks: boolean;
   conversationQuickStarters: ConversationQuickStarter[];
   bedrockGuardrails?: GuardrailsParams;
+  bedrockKnowledgeBase?: BedrockKnowledgeBase;
 };
 
 export type UpdateBotResponse = {
@@ -140,6 +147,7 @@ export type UpdateBotResponse = {
   knowledge?: BotKnowledge;
   displayRetrievedChunks: boolean;
   conversationQuickStarters: ConversationQuickStarter[];
+  bedrockKnowledgeBase: BedrockKnowledgeBase;
 };
 
 export type UpdateBotPinnedRequest = {

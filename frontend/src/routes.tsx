@@ -3,6 +3,7 @@ import ChatPage from './pages/ChatPage.tsx';
 import NotFound from './pages/NotFound.tsx';
 import BotExplorePage from './pages/BotExplorePage.tsx';
 import BotEditPage from './pages/BotEditPage.tsx';
+import BotKbEditPage from './features/knowledgeBase/pages/BotKbEditPage.tsx';
 import BotApiSettingsPage from './pages/BotApiSettingsPage.tsx';
 import AdminSharedBotAnalyticsPage from './pages/AdminSharedBotAnalyticsPage.tsx';
 import AdminApiManagementPage from './pages/AdminApiManagementPage.tsx';
@@ -16,6 +17,8 @@ import {
 } from 'react-router-dom';
 import { useMemo } from 'react';
 
+const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
+
 const rootChildren = [
   {
     path: '/',
@@ -27,11 +30,11 @@ const rootChildren = [
   },
   {
     path: '/bot/new',
-    element: <BotEditPage />,
+    element: KB_ENABLED ? <BotKbEditPage /> : <BotEditPage />,
   },
   {
     path: '/bot/edit/:botId',
-    element: <BotEditPage />,
+    element: KB_ENABLED ? <BotKbEditPage /> : <BotEditPage />,
   },
   {
     path: '/bot/api-settings/:botId',

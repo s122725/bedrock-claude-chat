@@ -71,3 +71,63 @@ export const ClearableDisabled = () => {
     />
   );
 };
+
+export const Descriptive = () => {
+  const { t } = useTranslation();
+  const options: {
+    label: string;
+    value: string;
+    description: string;
+  }[] = [
+    {
+      label: t('searchSettings.searchType.hybrid.label'),
+      value: 'hybrid',
+      description: t('searchSettings.searchType.hybrid.hint'),
+    },
+    {
+      label: t('searchSettings.searchType.semantic.label'),
+      value: 'semantic',
+      description: t('searchSettings.searchType.semantic.hint'),
+    },
+  ];
+  const [value, setValue] = useState<string>(options[0].value);
+
+  return (
+    <Select
+      label={t('searchSettings.searchType.label')}
+      value={value}
+      options={options}
+      onChange={setValue}
+    />
+  );
+};
+
+export const DescriptiveDisabled = () => {
+  const { t } = useTranslation();
+  const options: {
+    label: string;
+    value: string;
+    description: string;
+  }[] = [
+    {
+      label: t('searchSettings.searchType.hybrid.label'),
+      value: 'hybrid',
+      description: t('searchSettings.searchType.hybrid.hint'),
+    },
+    {
+      label: t('searchSettings.searchType.semantic.label'),
+      value: 'semantic',
+      description: t('searchSettings.searchType.semantic.hint'),
+    },
+  ];
+
+  return (
+    <Select
+      label={t('searchSettings.searchType.label')}
+      value={options[0].value}
+      options={options}
+      disabled={true}
+      onChange={() => {}}
+    />
+  );
+};

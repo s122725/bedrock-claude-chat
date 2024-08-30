@@ -45,6 +45,7 @@ class BedrockKnowledgeBaseInput(BaseSchema):
     search_params: SearchParams
     max_tokens: int | None = None
     overlap_percentage: int | None = None
+    knowledge_base_id: str | None = None
 
 
 class BedrockKnowledgeBaseOutput(BaseSchema):
