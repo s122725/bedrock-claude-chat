@@ -26,6 +26,7 @@ const bots: BotListItem[] = [
     owned: false,
     syncStatus: 'SUCCEEDED',
     available: true,
+    hasBedrockKnowledgeBase: false,
   },
   {
     id: '2',
@@ -38,6 +39,7 @@ const bots: BotListItem[] = [
     owned: true,
     syncStatus: 'SUCCEEDED',
     available: true,
+    hasBedrockKnowledgeBase: false,
   },
 ];
 

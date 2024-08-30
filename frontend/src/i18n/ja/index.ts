@@ -63,6 +63,7 @@ const translation = {
         recentlyUsedBots: '最近使用した公開ボット',
         knowledge: 'ナレッジ',
         url: 'URL',
+        s3url: 'S3 データソース',
         sitemap: 'サイトマップURL',
         file: 'ファイル',
         loadingBot: 'Loading...',
@@ -95,6 +96,7 @@ const translation = {
           example: '会話例',
         },
         citeRetrievedContexts: '取得したコンテキストの引用',
+        unsupported: '非対応、読み取り専用',
       },
       titleSubmenu: {
         edit: 'ボットを編集',
@@ -110,6 +112,8 @@ const translation = {
           overview:
             '外部の情報をボットに提供することで、事前学習していないデータを扱えるようになります。',
           url: 'URLを指定すると、そのURLの情報がナレッジとして利用されます。YouTube の動画の URL を設定すると、その動画の字幕がナレッジとして利用されます。',
+          s3url:
+            'S3 の URI を入力し、S3 をデータソースとして追加します。最大 4 件追加できます。デプロイ先と同じアカウント・同じリージョンに存在するバケットのみ対応しています。',
           sitemap:
             'サイトマップのURLを指定すると、そのサイトマップ内のサイトを自動的にスクレイピングして得られた情報がナレッジとして利用されます。',
           file: 'アップロードしたファイルがナレッジとして利用されます。',
@@ -492,6 +496,68 @@ const translation = {
       maxResults: {
         label: '最大検索数',
         hint: 'ベクトルストアから検索するレコードの最大数',
+      },
+      searchType: {
+        label: '検索タイプ',
+        hybrid: {
+          label: 'ハイブリッド検索',
+          hint: 'セマンティック検索およびテキスト検索からの関連性スコアを組み合わせて、より高い精度を提供します。',
+        },
+        semantic: {
+          label: 'セマンティック検索',
+          hint: 'ベクトル埋め込みを使用して、関連する結果を提供します。',
+        },
+      },
+    },
+    knowledgeBaseSettings: {
+      title: 'ナレッジの詳細設定',
+      description:
+        'ナレッジを設定するための埋め込みモデルの選択や、ナレッジとして追加したドキュメントの分割方法などを設定します。ボット作成後の変更はできません。',
+      embeddingModel: {
+        label: '埋め込みモデル',
+      },
+      chunkingStrategy: {
+        label: 'チャンキング戦略',
+        default: {
+          label: 'デフォルトチャンキング',
+          hint: 'チャンクに自動的に分割します。各チャンクは最大 300 トークンです。ドキュメントに含まれるトークンが 300 未満である場合、それ以上分割されません。',
+        },
+        fixed_size: {
+          label: '固定サイズのチャンキング',
+          hint: 'テキストをほぼ固定サイズのチャンクに分割します。',
+        },
+        none: {
+          label: 'チャンキングなし',
+          hint: 'ドキュメントを分割しません。',
+        },
+      },
+      chunkingMaxTokens: {
+        label: '最大トークン数',
+        hint: '埋め込み時のチャンクあたりの最大トークン数を設定します。',
+      },
+      chunkingOverlapPercentage: {
+        label: 'チャンク間のオーバーラップの割合',
+        hint: 'チャンク間でオーバーラップするトークンのおおよその割合を設定します。',
+      },
+      opensearchAnalyzer: {
+        label: 'アナライザー（トークナイズ・正規化）',
+        hint: 'ナレッジに登録した文書のトークナイズや正規化を行うアナライザーを指定します。 適切なアナライザーを選択することで、検索精度が向上します。 ナレッジの言語に合わせて、最適なアナライザーを選択してください。',
+        icu: {
+          label: 'ICU analyzer',
+          hint: 'トークナイズは {{tokenizer}} を利用し、正規化は {{normalizer}} を利用します。',
+        },
+        kuromoji: {
+          label: 'Japanese (kuromoji) analyzer',
+          hint: 'トークナイズは {{tokenizer}} を利用し、正規化は {{normalizer}} を利用します。',
+        },
+        none: {
+          label: 'デフォルトアナライザー',
+          hint: 'システム (OpenSearch) で定義されているデフォルトアナライザーを利用します。',
+        },
+        tokenizer: 'トークナイザー:',
+        normalizer: 'ノーマライザー（正規化）:',
+        token_filter: 'トークンフィルター:',
+        not_specified: '指定なし',
       },
     },
     error: {

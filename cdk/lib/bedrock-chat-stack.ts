@@ -36,6 +36,7 @@ export interface BedrockChatStackProps extends StackProps {
   readonly autoJoinUserGroups: string[];
   readonly rdsSchedules: CronScheduleProps;
   readonly enableMistral: boolean;
+  readonly enableKB: boolean;
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
   readonly selfSignUpEnabled: boolean;
@@ -145,6 +146,7 @@ export class BedrockChatStack extends cdk.Stack {
       accessLogBucket,
       webAclId: props.webAclId,
       enableMistral: props.enableMistral,
+      enableKB: props.enableKB,
       enableIpV6: props.enableIpV6,
     });
 
@@ -212,6 +214,7 @@ export class BedrockChatStack extends cdk.Stack {
       webSocketApiEndpoint: websocket.apiEndpoint,
       userPoolDomainPrefix: props.userPoolDomainPrefix,
       enableMistral: props.enableMistral,
+      enableKB: props.enableKB,
       auth,
       idp,
     });

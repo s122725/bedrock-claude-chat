@@ -18,6 +18,7 @@ import { NagSuppressions } from "cdk-nag";
 export interface FrontendProps {
   readonly webAclId: string;
   readonly enableMistral: boolean;
+  readonly enableKB: boolean;
   readonly accessLogBucket?: IBucket;
   readonly enableIpV6: boolean;
 }
@@ -100,6 +101,7 @@ export class Frontend extends Construct {
     webSocketApiEndpoint,
     userPoolDomainPrefix,
     enableMistral,
+    enableKB,
     auth,
     idp,
   }: {
@@ -107,6 +109,7 @@ export class Frontend extends Construct {
     webSocketApiEndpoint: string;
     userPoolDomainPrefix: string;
     enableMistral: boolean;
+    enableKB: boolean;
     auth: Auth;
     idp: Idp;
   }) {
@@ -119,6 +122,7 @@ export class Frontend extends Construct {
         VITE_APP_USER_POOL_ID: auth.userPool.userPoolId,
         VITE_APP_USER_POOL_CLIENT_ID: auth.client.userPoolClientId,
         VITE_APP_ENABLE_MISTRAL: enableMistral.toString(),
+        VITE_APP_ENABLE_KB: enableKB.toString(),
         VITE_APP_REGION: region,
         VITE_APP_USE_STREAMING: "true",
       };

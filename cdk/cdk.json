@@ -74,6 +74,7 @@
     },
     "embeddingContainerVcpu": 2048,
     "embeddingContainerMemory": 4096,
-    "natgatewayCount": 2
+    "natgatewayCount": 2,
+    "useBedrockKnowledgeBaseForRag": false
   }
 }
