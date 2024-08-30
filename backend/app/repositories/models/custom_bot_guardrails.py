@@ -12,5 +12,5 @@ class BedrockGuardrailsModel(BaseModel):
     relevance_threshold: Decimal
     grounding_threshold: Decimal
     relevance_threshold: Decimal
-    guardrails_arn: str
-    guardrails_version: str
+    guardrail_arn: str
+    guardrail_version: str

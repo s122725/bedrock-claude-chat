@@ -42,6 +42,11 @@ def is_running_on_lambda():
 
 
 def get_bedrock_client(region=BEDROCK_REGION):
+    client = boto3.client("bedrock", region)
+    return client
+
+
+def get_bedrock_runtime_client(region=BEDROCK_REGION):
     client = boto3.client("bedrock-runtime", region)
     return client
 
@@ -238,14 +243,14 @@ def get_guardrails(user_id: str, bot_id: str | None) -> dict | None:
         logger.info(f"response: {response}")
         if response and "Item" in response and "GuardrailsParams" in response["Item"]:
             is_guardrail_enabled = response["Item"]["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in response["Item"]["GuardrailsParams"] else False
-            guardrails_arn = response["Item"]["GuardrailsParams"]["guardrails_arn"] if "guardrails_arn" in response["Item"]["GuardrailsParams"] else None
-            guardrails_version = response["Item"]["GuardrailsParams"]["guardrails_version"] if "guardrails_version" in response["Item"]["GuardrailsParams"] else None
-            logger.info(f"Got guardrails_arn for {bot_id} is {guardrails_arn}")
-            logger.info(f"Got guardrails_version for {bot_id} is {guardrails_version}")
+            guardrail_arn = response["Item"]["GuardrailsParams"]["guardrail_arn"] if "guardrail_arn" in response["Item"]["GuardrailsParams"] else None
+            guardrail_version = response["Item"]["GuardrailsParams"]["guardrail_version"] if "guardrail_version" in response["Item"]["GuardrailsParams"] else None
+            logger.info(f"Got guardrail_arn for {bot_id} is {guardrail_arn}")
+            logger.info(f"Got guardrail_version for {bot_id} is {guardrail_version}")
             return {
                 "is_guardrail_enabled": is_guardrail_enabled,
-                "guardrails_arn": guardrails_arn, 
-                "guardrails_version": guardrails_version
+                "guardrail_arn": guardrail_arn, 
+                "guardrail_version": guardrail_version
             }
 
     except RecordNotFoundError:
@@ -262,14 +267,14 @@ def get_guardrails(user_id: str, bot_id: str | None) -> dict | None:
         for item in response['Items']:
             if "GuardrailsParams" in item:
                 is_guardrail_enabled = item["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in item["GuardrailsParams"] else False
-                guardrails_arn = item["GuardrailsParams"]["guardrails_arn"] if "guardrails_arn" in item["GuardrailsParams"] else None
-                guardrails_version = item["GuardrailsParams"]["guardrails_version"] if "guardrails_version" in item["GuardrailsParams"] else None
-                logger.info(f"Got guardrails_arn for {bot_id} is {guardrails_arn}")
-                logger.info(f"Got guardrails_version for {bot_id} is {guardrails_version}")
+                guardrail_arn = item["GuardrailsParams"]["guardrail_arn"] if "guardrail_arn" in item["GuardrailsParams"] else None
+                guardrail_version = item["GuardrailsParams"]["guardrail_version"] if "guardrail_version" in item["GuardrailsParams"] else None
+                logger.info(f"Got guardrail_arn for {bot_id} is {guardrail_arn}")
+                logger.info(f"Got guardrail_version for {bot_id} is {guardrail_version}")
                 return {
                     "is_guardrail_enabled": is_guardrail_enabled,
-                    "guardrails_arn": guardrails_arn, 
-                    "guardrails_version": guardrails_version
+                    "guardrail_arn": guardrail_arn, 
+                    "guardrail_version": guardrail_version
                 }
 
     except RecordNotFoundError:

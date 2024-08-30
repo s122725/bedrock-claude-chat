@@ -12,6 +12,10 @@ import {
   S3DataSource,
 } from "@cdklabs/generative-ai-cdk-constructs/lib/cdk-lib/bedrock";
 import { KnowledgeBase } from "@cdklabs/generative-ai-cdk-constructs/lib/cdk-lib/bedrock";
+import {
+  aws_bedrock as bedrock
+} from "aws-cdk-lib";
+
 
 interface BedrockCustomBotStackProps extends StackProps {
   readonly ownerUserId: string;
@@ -24,7 +28,38 @@ interface BedrockCustomBotStackProps extends StackProps {
   readonly instruction?: string;
   readonly analyzer?: Analyzer;
   readonly overlapPercentage?: number;
+  readonly is_guardrail_enabled?: boolean;
+  readonly hateThreshold?: number;
+  readonly insultsThreshold?: number;
+  readonly sexualThreshold?: number;
+  readonly violenceThreshold?: number;
+  readonly misconductThreshold?: number;
+  readonly relevanceThreshold?: number;
+  readonly guardrailArn?: number;
+  readonly guardrailVersion?: number;
 }
+
+enum Threshold {
+  NONE = 'NONE',
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH'
+}
+
+function getThreshold(inputParam: number | undefined): Threshold {
+  if ( inputParam === undefined) {
+    return Threshold.NONE;
+  }
+  const threshold: { [key: number]: Threshold } = {
+    0: Threshold.NONE,
+    1: Threshold.LOW,
+    2: Threshold.MEDIUM,
+    3: Threshold.HIGH
+  };Threshold
+
+  return threshold[inputParam] || Threshold.NONE;
+}
+
 
 export class BedrockCustomBotStack extends Stack {
   constructor(
@@ -79,6 +114,51 @@ export class BedrockCustomBotStack extends Stack {
         inclusionPrefixes: inclusionPrefixes,
       });
     });
+
+    if (props.is_guardrail_enabled==true){
+      const guardrail = new bedrock.CfnGuardrail(this, 'Guardrail', {
+        name: props.botId,
+        blockedInputMessaging: "this message is blocked",
+        blockedOutputsMessaging: "this message is blocked",
+        contentPolicyConfig: {
+          filtersConfig: [
+            {
+              inputStrength: getThreshold(props.hateThreshold),
+              outputStrength: getThreshold(props.hateThreshold),
+              type: 'HATE',
+            },
+            {
+              inputStrength: getThreshold(props.insultsThreshold),
+              outputStrength: getThreshold(props.insultsThreshold),
+              type: 'INSULTS',
+            },
+            {
+              inputStrength: getThreshold(props.sexualThreshold),
+              outputStrength: getThreshold(props.sexualThreshold),
+              type: 'SEXUAL',
+            },
+            {
+              inputStrength: getThreshold(props.violenceThreshold),
+              outputStrength: getThreshold(props.violenceThreshold),
+              type: 'VIOLENCE',
+            },
+            {
+              inputStrength: getThreshold(props.misconductThreshold),
+              outputStrength: getThreshold(props.misconductThreshold),
+              type: 'MISCONDUCT',
+            }
+          ]
+        }
+      })
+
+      new CfnOutput(this, "GuardrailArn", {
+        value: guardrail.attrGuardrailArn
+      })
+      new CfnOutput(this, "GuardrailVersion", {
+        value: guardrail.attrVersion
+      })
+    }
+      
 
     new CfnOutput(this, "KnowledgeBaseId", {
       value: kb.knowledgeBaseId,

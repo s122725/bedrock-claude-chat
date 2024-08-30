@@ -31,6 +31,15 @@ def handler(event, context):
             knowledge_base_id = output["OutputValue"]
         elif output["OutputKey"].startswith("DataSource"):
             data_source_ids.append(output["OutputValue"])
+        
+        if output["OutputKey"] == "GuardrailArn":
+            guardrail_arn = output["OutputValue"]
+        else:
+            guardrail_arn = ""
+        if output["OutputKey"] == "GuardrailVersion":
+            guardrail_version = output["OutputValue"]
+        else:
+            guardrail_version = ""
 
     result = []
     for data_source_id in data_source_ids:
@@ -38,6 +47,8 @@ def handler(event, context):
             {
                 "KnowledgeBaseId": knowledge_base_id,
                 "DataSourceId": data_source_id,
+                "GuardrailArn": guardrail_arn,
+                "GuardrailVersion": guardrail_version,
                 "PK": pk,
                 "SK": sk,
             }

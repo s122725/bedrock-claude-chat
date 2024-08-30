@@ -35,6 +35,7 @@ export class BedrockCustomBotCodebuild extends Construct {
         },
         KNOWLEDGE: { value: "" },
         BEDROCK_KNOWLEDGE_BASE: { value: "" },
+        BEDROCK_GUARDRAILS: { value: "" },
       },
       buildSpec: codebuild.BuildSpec.fromObject({
         version: "0.2",

@@ -71,8 +71,8 @@ export type GuardrailsParams = {
   misconductThreshold: number;
   groundingThreshold: number;
   relevanceThreshold: number;
-  guardrailsArn: string
-  guardrailsVersion: string
+  guardrailArn: string
+  guardrailVersion: string
 };
 
 export type BotDetails = BotMeta & {

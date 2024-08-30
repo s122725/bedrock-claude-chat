@@ -112,8 +112,8 @@ const BotKbEditPage: React.FC = () => {
   const [ misconductThreshold, setMisconductThreshold ] = useState<number>(0)
   const [ groundingThreshold, setGroundingThreshold ] = useState<number>(0)
   const [ relevanceThreshold, setRelevanceThreshold ] = useState<number>(0)
-  const [ guardrailsArn, setGuardrailsArn] = useState<string>("")
-  const [ guardrailsVersion, setGuardrailsVersion] = useState<string>("")
+  const [ guardrailArn, setGuardrailArn] = useState<string>("")
+  const [ guardrailVersion, setGuardrailVersion] = useState<string>("")
 
   const embeddingsModelOptions: {
     label: string;
@@ -303,9 +303,9 @@ const BotKbEditPage: React.FC = () => {
           setOpenSearchParams(bot.bedrockKnowledgeBase!.openSearch);
           setSearchParams(bot.bedrockKnowledgeBase!.searchParams);
           setGuardrailEnabled(bot.bedrockGuardrails.isGuardrailEnabled)
-          setGuardrailsArn(bot.bedrockGuardrails.guardrailsArn)
-          setGuardrailsVersion(
-            bot.bedrockGuardrails.guardrailsVersion ? bot.bedrockGuardrails.guardrailsVersion : ""
+          setGuardrailArn(bot.bedrockGuardrails.guardrailArn)
+          setGuardrailVersion(
+            bot.bedrockGuardrails.guardrailVersion ? bot.bedrockGuardrails.guardrailVersion : ""
           )
           setHateThreshold(
             bot.bedrockGuardrails.hateThreshold ? bot.bedrockGuardrails.hateThreshold : 0
@@ -720,8 +720,8 @@ const BotKbEditPage: React.FC = () => {
         misconductThreshold: misconductThreshold,
         groundingThreshold: groundingThreshold,
         relevanceThreshold: relevanceThreshold,
-        guardrailsArn: "",
-        guardrailsVersion: ""
+        guardrailArn: "",
+        guardrailVersion: ""
       },
     })
       .then(() => {
@@ -816,8 +816,8 @@ const BotKbEditPage: React.FC = () => {
           misconductThreshold: misconductThreshold,
           groundingThreshold: groundingThreshold,
           relevanceThreshold: relevanceThreshold,
-          guardrailsArn: guardrailsArn,
-          guardrailsVersion: guardrailsVersion,
+          guardrailArn: guardrailArn,
+          guardrailVersion: guardrailVersion,
         },
       })
         .then(() => {

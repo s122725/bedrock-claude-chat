@@ -8,7 +8,7 @@ from app.repositories.common import (
 )
 from app.utils import get_bedrock_client
 
-def get_guardrails_arn(user_id: str, bot_id: str) -> str:
+def get_guardrail_arn(user_id: str, bot_id: str) -> str:
     table = _get_table_client(user_id)
     try:
         response = table.get_item(
@@ -18,14 +18,14 @@ def get_guardrails_arn(user_id: str, bot_id: str) -> str:
             },
             ConsistentRead=True,
         )
-        guardrails_arn = response["Item"]["GuardrailsParams"]["guardrails_arn"] if "Item" in response and "GuardrailsParams" in response["Item"] and "guardrails_arn" in response["Item"]["GuardrailsParams"] else ""
-        print(guardrails_arn)
-        return guardrails_arn
+        guardrail_arn = response["Item"]["GuardrailsParams"]["guardrail_arn"] if "Item" in response and "GuardrailsParams" in response["Item"] and "guardrail_arn" in response["Item"]["GuardrailsParams"] else ""
+        print(guardrail_arn)
+        return guardrail_arn
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             raise (f"Bot with id {bot_id} not found")
         else:
-            raise (f"Error getting guardrails_arn for bot: {bot_id}: {e}")
+            raise (f"Error getting guardrail_arn for bot: {bot_id}: {e}")
 
 def delete_guardrail(guardrail_id):
   client = get_bedrock_client()

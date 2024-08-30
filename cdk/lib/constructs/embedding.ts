@@ -44,6 +44,7 @@ export class Embedding extends Construct {
   private _updateSyncStatusHandler: IFunction;
   private _fetchStackOutputHandler: IFunction;
   private _StoreKnowledgeBaseIdHandler: IFunction;
+  private _StoreGuardrailArnHandler: IFunction;
   private _taskDefinition: ecs.FargateTaskDefinition;
   private _pipeRole: iam.Role;
   private _stateMachine: sfn.StateMachine;
@@ -277,6 +278,34 @@ export class Embedding extends Construct {
         role: handlerRole,
       }
     );
+    this._StoreGuardrailArnHandler = new DockerImageFunction(
+      this,
+      "StoreGuardrailArnHandler",
+      {
+        code: DockerImageCode.fromImageAsset(
+          path.join(__dirname, "../../../backend"),
+          {
+            platform: Platform.LINUX_AMD64,
+            file: "lambda.Dockerfile",
+            cmd: [
+              "embedding_statemachine.guardrails.store_guardrail_arn.handler",
+            ],
+            exclude: [
+              ...excludeDockerImage
+            ]
+          }
+        ),
+        memorySize: 512,
+        timeout: Duration.minutes(1),
+        environment: {
+          ACCOUNT: Stack.of(this).account,
+          REGION: Stack.of(this).region,
+          TABLE_NAME: props.database.tableName,
+          TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
+        },
+        role: handlerRole,
+      }
+    );
     return this;
   }
 
@@ -362,6 +391,12 @@ export class Embedding extends Construct {
               "States.JsonToString($.dynamodb.NewImage.BedrockKnowledgeBase.M)"
             ),
           },
+          BEDROCK_GUARDRAILS: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: sfn.JsonPath.stringAt(
+              "States.JsonToString($.dynamodb.NewImage.GuardrailsParams.M)"
+            ),
+          }
         },
         resultPath: "$.Build",
       }
@@ -422,6 +457,21 @@ export class Embedding extends Construct {
       }
     );
     storeKnowledgeBaseId.addCatch(fallback);
+
+    const storeGuardrailArn = new tasks.LambdaInvoke(
+      this,
+      "StoreGuardrailArn",
+      {
+        lambdaFunction: this._StoreGuardrailArnHandler,
+        payload: sfn.TaskInput.fromObject({
+          "pk.$": "$.dynamodb.NewImage.PK.S",
+          "sk.$": "$.dynamodb.NewImage.SK.S",
+          "stack_output.$": "$.StackOutput.Payload",
+        }),
+        resultPath: sfn.JsonPath.DISCARD,
+      }
+    );
+    storeGuardrailArn.addCatch(fallback);
 
     const startIngestionJob = new tasks.CallAwsService(
       this,
@@ -521,6 +571,7 @@ export class Embedding extends Construct {
           .next(startCustomBotBuild)
           .next(fetchStackOutput)
           .next(storeKnowledgeBaseId)
+          .next(storeGuardrailArn)
           .next(mapIngestionJobs)
           .next(updateSyncStatusSucceeded)
       )

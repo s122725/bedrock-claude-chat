@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 from app.bedrock import ConverseApiRequest, calculate_price, get_model_id
 from app.routes.schemas.conversation import type_model_name
-from app.utils import get_bedrock_client
+from app.utils import get_bedrock_runtime_client
 from langchain_core.outputs import GenerationChunk
 from pydantic import BaseModel
 
@@ -52,7 +52,7 @@ class ConverseApiStreamHandler:
         return self
 
     def run(self, args: ConverseApiRequest):
-        client = get_bedrock_client()
+        client = get_bedrock_runtime_client()
         response = client.converse_stream(
             modelId=args["model_id"],
             messages=args["messages"],

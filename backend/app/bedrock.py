@@ -12,7 +12,7 @@ from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.routes.schemas.conversation import type_model_name
-from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client
+from app.utils import convert_dict_keys_to_camel_case, get_bedrock_runtime_client
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ DEFAULT_GENERATION_CONFIG = (
     else DEFAULT_CLAUDE_GENERATION_CONFIG
 )
 
-client = get_bedrock_client()
+client = get_bedrock_runtime_client()
 
 
 class GuardrailConfig(TypedDict):
@@ -291,17 +291,17 @@ def compose_args_for_converse_api_with_guardrail(
     if instruction:
         args["system"].append({"text": instruction})
 
-    if guardrails and "guardrails_arn" in guardrails and "guardrails_version" in guardrails:
+    if guardrails and "guardrail_arn" in guardrails and "guardrail_version" in guardrails:
         args["guardrailConfig"]: GuardrailConfig = { # type: ignore
-            "guardrailIdentifier": guardrails["guardrails_arn"],
-            "guardrailVersion": guardrails["guardrails_version"],
+            "guardrailIdentifier": guardrails["guardrail_arn"],
+            "guardrailVersion": guardrails["guardrail_version"],
             "trace": "enabled",
             "streamProcessingMode": "sync"
         }
     return args
 
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
-    client = get_bedrock_client()
+    client = get_bedrock_runtime_client()
     messages = args["messages"]
     inference_config = args["inference_config"]
     additional_model_request_fields = args["additional_model_request_fields"]

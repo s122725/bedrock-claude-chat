@@ -37,7 +37,7 @@ from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
-from app.guardrails import get_guardrails_arn, delete_guardrail
+from app.guardrails import get_guardrail_arn, delete_guardrail
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "")
 ENABLE_MISTRAL = os.environ.get("ENABLE_MISTRAL", "") == "true"
@@ -302,28 +302,32 @@ def update_knowledge_base_id(
     return response
 
 
-def update_guardrails_id(
-    user_id: str, bot_id: str, guardrails_id: str
+def update_guardrails_params(
+    user_id: str, bot_id: str, guardrail_arn: str, guardrail_version: str
 ):
+    logger.info("update_guardrails_params")
     table = _get_table_client(user_id)
-    logger.info(f"Updating Guardrails id for bot: {bot_id}")
 
     try:
         response = table.update_item(
-            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
-            UpdateExpression="SET BedrockGuardrails.guardrails_id = :guardrails_id",
+            Key={
+                "PK": user_id, 
+                "SK": compose_bot_id(user_id, bot_id)
+            },
+            UpdateExpression="SET GuardrailsParams.guardrail_arn = :guardrail_arn, GuardrailsParams.guardrail_version = :guardrail_version",
             ExpressionAttributeValues={
-                ":guardrails_id": guardrails_id,
+                ":guardrail_arn": guardrail_arn,
+                ":guardrail_version": guardrail_version,
             },
             ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
             ReturnValues="ALL_NEW",
         )
-        logger.info(f"Updated guardrails id for bot: {bot_id} successfully")
+        logger.info(f"Updated guardrails_arn for bot: {bot_id} successfully")
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
+            raise (f"Bot with id {bot_id} not found")
         else:
-            raise e
+            raise (f"Error updating guardrails_arn for bot: {bot_id}: {e}")
 
     return response
 
@@ -539,14 +543,14 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
                 if "GuardrailsParams" in item and "relevance_threshold" in item["GuardrailsParams"] 
                 else 0
             ),
-            guardrails_arn = (
-                item["GuardrailsParams"]["guardrails_arn"]
-                if "GuardrailsParams" in item and "guardrails_arn" in item["GuardrailsParams"] 
+            guardrail_arn = (
+                item["GuardrailsParams"]["guardrail_arn"]
+                if "GuardrailsParams" in item and "guardrail_arn" in item["GuardrailsParams"] 
                 else ""
             ),
-            guardrails_version = (
-                item["GuardrailsParams"]["guardrails_version"]
-                if "GuardrailsParams" in item and "guardrails_version" in item["GuardrailsParams"] 
+            guardrail_version = (
+                item["GuardrailsParams"]["guardrail_version"]
+                if "GuardrailsParams" in item and "guardrail_version" in item["GuardrailsParams"] 
                 else ""
             ),
         ),
@@ -684,14 +688,14 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
                 if "GuardrailsParams" in item and "relevance_threshold" in item["GuardrailsParams"] 
                 else 0
             ),
-            guardrails_arn = (
-                item["GuardrailsParams"]["guardrails_arn"]
-                if "GuardrailsParams" in item and "guardrails_arn" in item["GuardrailsParams"] 
+            guardrail_arn = (
+                item["GuardrailsParams"]["guardrail_arn"]
+                if "GuardrailsParams" in item and "guardrail_arn" in item["GuardrailsParams"] 
                 else ""
             ),
-            guardrails_version = (
-                item["GuardrailsParams"]["guardrails_version"]
-                if "GuardrailsParams" in item and "guardrails_version" in item["GuardrailsParams"] 
+            guardrail_version = (
+                item["GuardrailsParams"]["guardrail_version"]
+                if "GuardrailsParams" in item and "guardrail_version" in item["GuardrailsParams"] 
                 else ""
             ),
         ),
@@ -820,7 +824,7 @@ def delete_bot_by_id(user_id: str, bot_id: str):
 
     # delete guardrail
     try:
-        guardrail_arn = get_guardrails_arn(user_id, bot_id)
+        guardrail_arn = get_guardrail_arn(user_id, bot_id)
         response = delete_guardrail(guardrail_id=guardrail_arn)
 
     except ClientError as e:
