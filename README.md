@@ -3,6 +3,9 @@
 ![](https://github.com/aws-samples/bedrock-claude-chat/actions/workflows/cdk.yml/badge.svg)
 
 > [!Warning]
+> A major update to v2 is planned soon. v2 will not be backward compatible with v1, and **existing RAG bots will no longer be usable.** For more details, please refer to the [migration guide](./docs/migration/V1_TO_V2.md).
+
+> [!Warning]
 > If you are using old version (e.g. `v0.4.x`) and wish to use the latest version, refer [migration guide](./docs/migration/V0_TO_V1.md). Without any care, **ALL DATA IN Aurora cluster WILL BE DESTROYED, and NO LONGER USERS CANNOT USE EXISTING BOTS WITH KNOWLEDGE AND CREATE NEW BOTS**.
 
 This repository is a sample chatbot using the Anthropic company's LLM [Claude](https://www.anthropic.com/), one of the foundational models provided by [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI.
