@@ -100,7 +100,7 @@ const BotKbEditPage: React.FC = () => {
     },
   ]);
 
-  const [knowledgeBaseId, setKnowledgeBaseId] = useState<string>(ulid());
+  const [knowledgeBaseId, setKnowledgeBaseId] = useState<string | null>(null); // Send null when creating a new bot
   const [embeddingsModel, setEmbeddingsModel] =
     useState<EmbeddingsModel>('titan_v1');
 

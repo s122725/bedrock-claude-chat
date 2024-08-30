@@ -554,7 +554,7 @@ How would you categorize this email?`,
         },
         none: {
           label: 'System default analyzer',
-          hint: 'The default analyzer defined by the system will be used.',
+          hint: 'The default analyzer defined by the system (OpenSearch) will be used.',
         },
         tokenizer: 'Tokenizer:',
         normalizer: 'Normalizer:',
