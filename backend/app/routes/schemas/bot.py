@@ -7,6 +7,10 @@ from app.routes.schemas.bot_kb import (
     BedrockKnowledgeBaseInput,
     BedrockKnowledgeBaseOutput,
 )
+from app.routes.schemas.bot_guardrails import (
+    BedrockGuardrailsInput,
+    BedrockGuardrailsOutput,
+)
 from pydantic import Field, root_validator, validator
 
 if TYPE_CHECKING:
@@ -109,6 +113,7 @@ class BotInput(BaseSchema):
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter] | None
     bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
+    bedrock_guardrails: BedrockGuardrailsInput | None = None
 
 
 class BotModifyInput(BaseSchema):
@@ -123,12 +128,29 @@ class BotModifyInput(BaseSchema):
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter] | None
     bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
+    bedrock_guardrails: BedrockGuardrailsInput | None = None
+
 
     def has_update_files(self) -> bool:
         return self.knowledge is not None and (
             len(self.knowledge.added_filenames) > 0
             or len(self.knowledge.deleted_filenames) > 0
         )
+    
+    def is_guardrails_required(self, current_bot_model: BotModel) -> bool:
+        # DynamoDBのステータスを変更するために、ここでGuardrailsのフラグを確認する
+        if (
+            self.bedrock_guardrails and 
+            (
+                self.bedrock_guardrails.is_guardrail_enabled == True or 
+                self.bedrock_guardrails.is_guardrail_enabled != current_bot_model.bedrock_guardrails.is_guardrail_enabled or 
+                self.bedrock_guardrails.grounding_threshold != current_bot_model.bedrock_guardrails.grounding_threshold or
+                self.bedrock_guardrails.relevance_threshold != current_bot_model.bedrock_guardrails.relevance_threshold
+            )
+        ):
+            return True
+        else: 
+            return False
 
     def is_embedding_required(self, current_bot_model: BotModel) -> bool:
         if self.has_update_files():
@@ -202,6 +224,7 @@ class BotOutput(BaseSchema):
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter]
     bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None
+    bedrock_guardrails: BedrockGuardrailsOutput | None
 
 
 class BotMetaOutput(BaseSchema):

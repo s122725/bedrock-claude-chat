@@ -7,7 +7,7 @@ import {
   getChunkingStrategy,
   getAnalyzer,
 } from "../lib/utils/bedrock-knowledge-base-args";
-import { BedrockKnowledgeBaseStack } from "../lib/bedrock-knowledge-base-stack";
+import { BedrockCustomBotStack } from "../lib/bedrock-custom-bot-stack";
 import { Analyzer } from "@cdklabs/generative-ai-cdk-constructs/lib/cdk-lib/opensearch-vectorindex";
 
 describe("Bedrock Chat Stack Test", () => {
@@ -349,9 +349,9 @@ describe("Bedrock Knowledge Base Stack", () => {
         ? Number(knowledgeBase.overlap_percentage.N)
         : undefined;
 
-    const stack = new BedrockKnowledgeBaseStack(
+    const stack = new BedrockCustomBotStack(
       app,
-      "BedrockKnowledgeBaseStack",
+      "BedrockCustomBotStackStack",
       {
         ownerUserId,
         botId,

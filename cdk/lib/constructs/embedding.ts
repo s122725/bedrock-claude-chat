@@ -33,7 +33,7 @@ export interface EmbeddingProps {
   readonly documentBucket: IBucket;
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
-  readonly bedrockKnowledgeBaseProject: codebuild.IProject;
+  readonly bedrockCustomBotProject: codebuild.IProject;
 }
 
 export class Embedding extends Construct {
@@ -328,11 +328,11 @@ export class Embedding extends Construct {
       },
     });
 
-    const startKnowledgeBaseBuild = new tasks.CodeBuildStartBuild(
+    const startCustomBotBuild = new tasks.CodeBuildStartBuild(
       this,
-      "StartKnowledgeBaseBuild",
+      "StartCustomBotBuild",
       {
-        project: props.bedrockKnowledgeBaseProject,
+        project: props.bedrockCustomBotProject,
         integrationPattern: sfn.IntegrationPattern.RUN_JOB,
         environmentVariablesOverride: {
           PK: {
@@ -396,7 +396,7 @@ export class Embedding extends Construct {
         error: "Knowledge base sync failed",
       })
     );
-    startKnowledgeBaseBuild.addCatch(fallback);
+    startCustomBotBuild.addCatch(fallback);
 
     const fetchStackOutput = new tasks.LambdaInvoke(this, "FetchStackOutput", {
       lambdaFunction: this._fetchStackOutputHandler,
@@ -518,7 +518,7 @@ export class Embedding extends Construct {
         sfn.Condition.isPresent("$[0].dynamodb.NewImage.BedrockKnowledgeBase"),
         extractFirstElement
           .next(updateSyncStatusRunning)
-          .next(startKnowledgeBaseBuild)
+          .next(startCustomBotBuild)
           .next(fetchStackOutput)
           .next(storeKnowledgeBaseId)
           .next(mapIngestionJobs)

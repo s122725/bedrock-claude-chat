@@ -538,6 +538,72 @@ How would you categorize this email?`,
         },
       },
     },
+    guardrails: {
+      title: "Guardrails",
+      label: "Enable Guardrails for Amazon Bedrock",
+      hint: "Guardrails for Amazon Bedrock are used to implement application-specific safeguards based on your use cases and responsible AI policies.",
+      harmfulCategories: {
+        label: "Harmful Categories",
+        hint: "Configure content filters by adjusting the degree of filtering to detect and block harmful user inputs and model responses that violate your usage policies.",
+        hate: {
+          label: "Hate",
+          hint: "Describes input prompts and model responses that discriminate, criticize, insult, denounce, or dehumanize a person or group on the basis of an identity (such as race, ethnicity, gender, religion, sexual orientation, ability, and national origin).",
+        },
+        insults: {
+          label: "Insults",
+          hint: "Describes input prompts and model responses that includes demeaning, humiliating, mocking, insulting, or belittling language. This type of language is also labeled as bullying."
+        },
+        sexual: {
+          label: "Sexual",
+          hint: "Describes input prompts and model responses that indicates sexual interest, activity, or arousal using direct or indirect references to body parts, physical traits, or sex."
+        },
+        violence: {
+          label: "Violence",
+          hint: "Describes input prompts and model responses that includes glorification of or threats to inflict physical pain, hurt, or injury toward a person, group or thing."
+        },
+        misconduct: {
+          label: "Misconduct",
+          hint: "Describes input prompts and model responses that seeks or provides information about engaging in misconduct activity, or harming, defrauding, or taking advantage of a person, group or institution."
+        }
+      },
+      promptAttacks: {
+        hint: "Describes user prompts intended to bypass the safety and moderation capabilities of a foundation model in order to generate harmful content (also known as jailbreak), and ignore and override instructions specified by the developer (referred to as prompt injection). Please refer to Prompt Attack for more details to use it with input tagging."
+      },
+      deniedTopics : {
+        hint: "Add up to 30 denied topics to block user inputs or model responses associated with the topic."
+      },
+      wordFilters: {
+        hint: "Use these filters to block certain words and phrases in user inputs and model responses.",
+        profanityFilter: {
+          hint: "Enable this feature to block profane words in user inputs and model responses. The list of words is based on the global definition of profanity and is subject to change."
+        },
+        customWordsAndPhrases: {
+          hint: "Specify up to 10,000 words or phrases (max 3 words) to be blocked by the guardrail. A blocked message will show if user input or model responses contain these words or phrases."
+        }
+      },
+      sensitiveInformationFilters: {
+        hint: "Use these filters to handle any data related to privacy.",
+        personallyIdentifiableInformationTypes: {
+          PIITypes: {
+          },
+          regexPatterns: {
+          }
+        }
+      },
+      contextualGroundingCheck: {
+        label: "Contextual Grounding Check",
+        hint: "Use this policy to validate if model responses are grounded in the reference source and relevant to user’s query to filter model hallucination.",
+        groundingThreshold: {
+          label: "Grounding",
+          hint: "Validate if the model responses are grounded and factually correct based on the information provided in the reference source, and block responses that are below the defined threshold of grounding."
+        },
+        relevanceThreshold: {
+          label: "Relevance",
+          hint: "Validate if the model responses are relevant to the user's query and block responses that are below the defined threshold of relevance."
+        }
+      }
+      
+    }
   },
 };
 

@@ -14,7 +14,7 @@ from app.agents.langchain import BedrockLLM
 from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
-from app.bedrock import compose_args_for_converse_api
+from app.bedrock import compose_args_for_converse_api, ConverseApiRequest, compose_args_for_converse_api_with_guardrail
 from app.repositories.conversation import RecordNotFoundError, store_conversation
 from app.repositories.models.conversation import ChunkModel, ContentModel, MessageModel
 from app.routes.schemas.conversation import ChatInput
@@ -22,6 +22,7 @@ from app.stream import ConverseApiStreamHandler, OnStopInput
 from app.usecases.bot import modify_bot_last_used_time
 from app.usecases.chat import insert_knowledge, prepare_conversation, trace_to_root
 from app.utils import get_current_time
+from app.utils import get_current_time, get_guardrails
 from app.vector_search import filter_used_results, get_source_link, search_related_docs
 from boto3.dynamodb.conditions import Attr, Key
 from ulid import ULID
@@ -185,17 +186,46 @@ def process_chat_input(
     if not chat_input.continue_generate:
         messages.append(chat_input.message)  # type: ignore
 
-    args = compose_args_for_converse_api(
-        messages,
-        chat_input.message.model,
-        instruction=(
-            message_map["instruction"].content[0].body  # type: ignore[union-attr]
-            if "instruction" in message_map
-            else None
-        ),
-        stream=True,
-        generation_params=(bot.generation_params if bot else None),
-    )
+    # guardrailsの情報をDynamodbから取得する
+    guardrails = get_guardrails(user_id=user_id, bot_id=chat_input.bot_id)
+    logger.info(f"guardrails: {guardrails}")
+
+    args: ConverseApiRequest
+    if guardrails and guardrails["is_guardrail_enabled"] == True:
+        grounding_source = {
+            'text': {
+                'text': "\n\n".join(x.content for x in search_results),
+                'qualifiers': ["grounding_source"]
+            }
+        }
+
+        # Create payload to invoke Bedrock
+        args = compose_args_for_converse_api_with_guardrail(
+            messages=messages,
+            model=chat_input.message.model,
+            instruction=(
+                message_map["instruction"].content[0].body
+                if "instruction" in message_map
+                else None  # type: ignore[union-attr]
+            ),
+            generation_params=(bot.generation_params if bot else None),
+            grounding_source=grounding_source,
+            guardrails=guardrails
+        )
+        logger.info(f"args: {args}")
+    else:
+        # Create payload to invoke Bedrock
+        args = compose_args_for_converse_api(
+            messages=messages,
+            model=chat_input.message.model,
+            instruction=(
+                message_map["instruction"].content[0].body
+                if "instruction" in message_map
+                else None  # type: ignore[union-attr]
+            ),
+            generation_params=(bot.generation_params if bot else None),
+        )
+        logger.info(f"args: {args}")
 
     def on_stream(token: str, **kwargs) -> None:
         # Send completion

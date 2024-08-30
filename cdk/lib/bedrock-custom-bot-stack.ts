@@ -13,7 +13,7 @@ import {
 } from "@cdklabs/generative-ai-cdk-constructs/lib/cdk-lib/bedrock";
 import { KnowledgeBase } from "@cdklabs/generative-ai-cdk-constructs/lib/cdk-lib/bedrock";
 
-interface BedrockKnowledgeBaseStackProps extends StackProps {
+interface BedrockCustomBotStackProps extends StackProps {
   readonly ownerUserId: string;
   readonly botId: string;
   readonly embeddingsModel: BedrockFoundationModel;
@@ -26,11 +26,11 @@ interface BedrockKnowledgeBaseStackProps extends StackProps {
   readonly overlapPercentage?: number;
 }
 
-export class BedrockKnowledgeBaseStack extends Stack {
+export class BedrockCustomBotStack extends Stack {
   constructor(
     scope: Construct,
     id: string,
-    props: BedrockKnowledgeBaseStackProps
+    props: BedrockCustomBotStackProps
   ) {
     super(scope, id, props);
 
@@ -99,7 +99,7 @@ export class BedrockKnowledgeBaseStack extends Stack {
     });
   }
 
-  private setupBucketsAndPrefixes(props: BedrockKnowledgeBaseStackProps): {
+  private setupBucketsAndPrefixes(props: BedrockCustomBotStackProps): {
     docBucketsAndPrefixes: { bucket: s3.IBucket; prefix: string }[];
   } {
     /**

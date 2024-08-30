@@ -10,6 +10,7 @@ import pg8000
 from aws_lambda_powertools.utilities import parameters
 from botocore.client import Config
 from botocore.exceptions import ClientError
+from app.repositories.common import _get_table_client, _get_table_public_client, compose_bot_id, RecordNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -218,3 +219,60 @@ def query_postgres(
     if include_columns:
         return columns, res
     return res
+
+def get_guardrails(user_id: str, bot_id: str | None) -> dict | None:
+    logger.info("get_guardrails")
+
+    if bot_id == None:
+        return None
+
+    try:
+        table = _get_table_client(user_id)
+        response = table.get_item(
+            Key={
+                "PK": user_id,
+                "SK": compose_bot_id(user_id, bot_id)
+            },
+            ConsistentRead=True,
+        )
+        logger.info(f"response: {response}")
+        if response and "Item" in response and "GuardrailsParams" in response["Item"]:
+            is_guardrail_enabled = response["Item"]["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in response["Item"]["GuardrailsParams"] else False
+            guardrails_arn = response["Item"]["GuardrailsParams"]["guardrails_arn"] if "guardrails_arn" in response["Item"]["GuardrailsParams"] else None
+            guardrails_version = response["Item"]["GuardrailsParams"]["guardrails_version"] if "guardrails_version" in response["Item"]["GuardrailsParams"] else None
+            logger.info(f"Got guardrails_arn for {bot_id} is {guardrails_arn}")
+            logger.info(f"Got guardrails_version for {bot_id} is {guardrails_version}")
+            return {
+                "is_guardrail_enabled": is_guardrail_enabled,
+                "guardrails_arn": guardrails_arn, 
+                "guardrails_version": guardrails_version
+            }
+
+    except RecordNotFoundError:
+        pass
+
+    try:
+        table = _get_table_public_client()  # Use public client
+
+        response = table.query(
+            IndexName="PublicBotIdIndex",
+            KeyConditionExpression=Key("PublicBotId").eq(bot_id),
+        )
+        logger.info(f"response: {response}")
+        for item in response['Items']:
+            if "GuardrailsParams" in item:
+                is_guardrail_enabled = item["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in item["GuardrailsParams"] else False
+                guardrails_arn = item["GuardrailsParams"]["guardrails_arn"] if "guardrails_arn" in item["GuardrailsParams"] else None
+                guardrails_version = item["GuardrailsParams"]["guardrails_version"] if "guardrails_version" in item["GuardrailsParams"] else None
+                logger.info(f"Got guardrails_arn for {bot_id} is {guardrails_arn}")
+                logger.info(f"Got guardrails_version for {bot_id} is {guardrails_version}")
+                return {
+                    "is_guardrail_enabled": is_guardrail_enabled,
+                    "guardrails_arn": guardrails_arn, 
+                    "guardrails_version": guardrails_version
+                }
+
+    except RecordNotFoundError:
+        pass
+    
+    return None

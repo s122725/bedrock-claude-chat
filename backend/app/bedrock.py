@@ -27,6 +27,13 @@ DEFAULT_GENERATION_CONFIG = (
 client = get_bedrock_client()
 
 
+class GuardrailConfig(TypedDict):
+    guardrailIdentifier: str
+    guardrailVersion: str
+    trace: str
+    streamProcessingMode: str
+
+
 class ConverseApiRequest(TypedDict):
     inference_config: dict
     additional_model_request_fields: dict
@@ -34,6 +41,7 @@ class ConverseApiRequest(TypedDict):
     messages: list[dict]
     stream: bool
     system: list[dict]
+    guardrailConfig: GuardrailConfig | None
 
 
 class ConverseApiResponseMessageContent(TypedDict):
@@ -187,6 +195,110 @@ def compose_args_for_converse_api(
         args["system"].append({"text": instruction})
     return args
 
+def compose_args_for_converse_api_with_guardrail(
+    messages: list[MessageModel],
+    model: type_model_name,
+    instruction: str | None = None,
+    stream: bool = False,
+    generation_params: GenerationParamsModel | None = None,
+    grounding_source: dict | None = None,
+    guardrails: dict | None = None
+) -> ConverseApiRequest:
+    """Compose arguments for Converse API.
+    Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
+    """
+    arg_messages = []
+    for message in messages:
+        if message.role not in ["system", "instruction"]:
+            content_blocks = []
+            for c in message.content:
+                if c.content_type == "text":
+                    if message.role == 'user':
+                        content_blocks.append({
+                            "guardContent": grounding_source
+                        })
+                        content_blocks.append({
+                            "guardContent": {
+                                "text": {
+                                    "text": c.body,
+                                    "qualifiers": ["query"]
+                                },
+                            }
+                        })
+                    elif message.role == 'assistant':
+                        content_blocks.append({
+                            "text": c.body
+                        })
+                elif c.content_type == "image":
+                    # e.g. "image/png" -> "png"
+                    format = c.media_type.split("/")[1]
+                    content_blocks.append(
+                        {
+                            "image": {
+                                "format": format,
+                                # decode base64 encoded image
+                                "source": {"bytes": base64.b64decode(c.body)},
+                            }
+                        }
+                    )
+                elif c.content_type == "textAttachment":
+                    content_blocks.append(
+                        {
+                            "document": {
+                                "format": _get_converse_supported_format(
+                                    Path(c.file_name).suffix[
+                                        1:
+                                    ],  # e.g. "document.txt" -> "txt"
+                                ),
+                                "name": Path(
+                                    c.file_name
+                                ).stem,  # e.g. "document.txt" -> "document"
+                                # encode text attachment body
+                                "source": {"bytes": c.body.encode("utf-8")},
+                            }
+                        }
+                    )
+                else:
+                    raise NotImplementedError()
+            arg_messages.append({"role": message.role, "content": content_blocks})
+
+    inference_config = {
+        **DEFAULT_GENERATION_CONFIG,
+        **(
+            {
+                "maxTokens": generation_params.max_tokens,
+                "temperature": generation_params.temperature,
+                "topP": generation_params.top_p,
+                "stopSequences": generation_params.stop_sequences,
+            }
+            if generation_params
+            else {}
+        ),
+    }
+
+    # `top_k` is configured in `additional_model_request_fields` instead of `inference_config`
+    additional_model_request_fields = {"top_k": inference_config["top_k"]}
+    del inference_config["top_k"]
+
+    args: ConverseApiRequest = {
+        "inference_config": convert_dict_keys_to_camel_case(inference_config),
+        "additional_model_request_fields": additional_model_request_fields,
+        "model_id": get_model_id(model),
+        "messages": arg_messages,
+        "stream": stream,
+        "system": [],
+    }
+    if instruction:
+        args["system"].append({"text": instruction})
+
+    if guardrails and "guardrails_arn" in guardrails and "guardrails_version" in guardrails:
+        args["guardrailConfig"]: GuardrailConfig = { # type: ignore
+            "guardrailIdentifier": guardrails["guardrails_arn"],
+            "guardrailVersion": guardrails["guardrails_version"],
+            "trace": "enabled",
+            "streamProcessingMode": "sync"
+        }
+    return args
 
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     client = get_bedrock_client()
@@ -196,15 +308,23 @@ def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     model_id = args["model_id"]
     system = args["system"]
 
-    response = client.converse(
-        modelId=model_id,
-        messages=messages,
-        inferenceConfig=inference_config,
-        system=system,
-        additionalModelRequestFields=additional_model_request_fields,
-    )
-
-    return response
+    if args and "guardrailConfig" in args:
+        return client.converse(
+            modelId=model_id,
+            messages=messages,
+            inferenceConfig=inference_config,
+            system=system,
+            additionalModelRequestFields=additional_model_request_fields,
+            guardrailConfig=args["guardrailConfig"],
+        )
+    else:
+        return client.converse(
+            modelId=model_id,
+            messages=messages,
+            inferenceConfig=inference_config,
+            system=system,
+            additionalModelRequestFields=additional_model_request_fields,
+        )
 
 
 def calculate_price(

@@ -4,16 +4,16 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { NagSuppressions } from "cdk-nag";
 
-export interface BedrockKnowledgeBaseCodebuildProps {
+export interface BedrockCustomBotCodebuildProps {
   readonly sourceBucket: s3.Bucket;
 }
 
-export class BedrockKnowledgeBaseCodebuild extends Construct {
+export class BedrockCustomBotCodebuild extends Construct {
   public readonly project: codebuild.Project;
   constructor(
     scope: Construct,
     id: string,
-    props: BedrockKnowledgeBaseCodebuildProps
+    props: BedrockCustomBotCodebuildProps
   ) {
     super(scope, id);
 

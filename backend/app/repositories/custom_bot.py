@@ -32,10 +32,12 @@ from app.repositories.models.custom_bot import (
     SearchParamsModel,
 )
 from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
+from app.repositories.models.custom_bot_guardrails import BedrockGuardrailsModel
 from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
+from app.guardrails import get_guardrails_arn, delete_guardrail
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "")
 ENABLE_MISTRAL = os.environ.get("ENABLE_MISTRAL", "") == "true"
@@ -81,6 +83,8 @@ def store_bot(user_id: str, custom_bot: BotModel):
     }
     if custom_bot.bedrock_knowledge_base:
         item["BedrockKnowledgeBase"] = custom_bot.bedrock_knowledge_base.model_dump()
+    if custom_bot.bedrock_guardrails:
+        item["GuardrailsParams"] = custom_bot.bedrock_guardrails.model_dump()
 
     response = table.put_item(Item=item)
     return response
@@ -102,6 +106,7 @@ def update_bot(
     display_retrieved_chunks: bool,
     conversation_quick_starters: list[ConversationQuickStarterModel],
     bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
+    bedrock_guardrails: BedrockGuardrailsModel | None = None,
 ):
     """Update bot title, description, and instruction.
     NOTE: Use `update_bot_visibility` to update visibility.
@@ -144,6 +149,12 @@ def update_bot(
         update_expression += ", BedrockKnowledgeBase = :bedrock_knowledge_base"
         expression_attribute_values[":bedrock_knowledge_base"] = (
             bedrock_knowledge_base.model_dump()
+        )
+
+    if bedrock_guardrails:
+        update_expression += ", GuardrailsParams = :bedrock_guardrails"
+        expression_attribute_values[":bedrock_guardrails"] = (
+            bedrock_guardrails.model_dump()
         )
 
     try:
@@ -290,6 +301,31 @@ def update_knowledge_base_id(
 
     return response
 
+
+def update_guardrails_id(
+    user_id: str, bot_id: str, guardrails_id: str
+):
+    table = _get_table_client(user_id)
+    logger.info(f"Updating Guardrails id for bot: {bot_id}")
+
+    try:
+        response = table.update_item(
+            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
+            UpdateExpression="SET BedrockGuardrails.guardrails_id = :guardrails_id",
+            ExpressionAttributeValues={
+                ":guardrails_id": guardrails_id,
+            },
+            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
+            ReturnValues="ALL_NEW",
+        )
+        logger.info(f"Updated guardrails id for bot: {bot_id} successfully")
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
+        else:
+            raise e
+
+    return response
 
 def find_private_bots_by_user_id(
     user_id: str, limit: int | None = None
@@ -461,6 +497,59 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             if "BedrockKnowledgeBase" in item
             else None
         ),
+
+        bedrock_guardrails = BedrockGuardrailsModel(
+            is_guardrail_enabled = (
+                item["GuardrailsParams"]["is_guardrail_enabled"]
+                if "GuardrailsParams" in item and "is_guardrail_enabled" in item["GuardrailsParams"] 
+                else False
+            ),
+            hate_threshold = (
+                item["GuardrailsParams"]["hate_threshold"]
+                if "GuardrailsParams" in item and "hate_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            insults_threshold = (
+                item["GuardrailsParams"]["insults_threshold"]
+                if "GuardrailsParams" in item and "insults_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            sexual_threshold = (
+                item["GuardrailsParams"]["sexual_threshold"]
+                if "GuardrailsParams" in item and "sexual_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            violence_threshold = (
+                item["GuardrailsParams"]["violence_threshold"]
+                if "GuardrailsParams" in item and "violence_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            misconduct_threshold = (
+                item["GuardrailsParams"]["misconduct_threshold"]
+                if "GuardrailsParams" in item and "misconduct_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            grounding_threshold = (
+                item["GuardrailsParams"]["grounding_threshold"]
+                if "GuardrailsParams" in item and "grounding_threshold" in item["GuardrailsParams"] 
+                else 0
+            ),
+            relevance_threshold = (
+                item["GuardrailsParams"]["relevance_threshold"]
+                if "GuardrailsParams" in item and "relevance_threshold" in item["GuardrailsParams"] 
+                else 0
+            ),
+            guardrails_arn = (
+                item["GuardrailsParams"]["guardrails_arn"]
+                if "GuardrailsParams" in item and "guardrails_arn" in item["GuardrailsParams"] 
+                else ""
+            ),
+            guardrails_version = (
+                item["GuardrailsParams"]["guardrails_version"]
+                if "GuardrailsParams" in item and "guardrails_version" in item["GuardrailsParams"] 
+                else ""
+            ),
+        ),
     )
 
     logger.info(f"Found bot: {bot}")
@@ -553,6 +642,58 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"])
             if "BedrockKnowledgeBase" in item
             else None
+        ),
+        bedrock_guardrails = BedrockGuardrailsModel(
+            is_guardrail_enabled = (
+                item["GuardrailsParams"]["is_guardrail_enabled"]
+                if "GuardrailsParams" in item and "is_guardrail_enabled" in item["GuardrailsParams"] 
+                else False
+            ),
+            hate_threshold = (
+                item["GuardrailsParams"]["hate_threshold"]
+                if "GuardrailsParams" in item and "hate_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            insults_threshold = (
+                item["GuardrailsParams"]["insults_threshold"]
+                if "GuardrailsParams" in item and "insults_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            sexual_threshold = (
+                item["GuardrailsParams"]["sexual_threshold"]
+                if "GuardrailsParams" in item and "sexual_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            violence_threshold = (
+                item["GuardrailsParams"]["violence_threshold"]
+                if "GuardrailsParams" in item and "violence_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            misconduct_threshold = (
+                item["GuardrailsParams"]["misconduct_threshold"]
+                if "GuardrailsParams" in item and "misconduct_threshold" in item["GuardrailsParams"]
+                else 0
+            ),
+            grounding_threshold = (
+                item["GuardrailsParams"]["grounding_threshold"]
+                if "GuardrailsParams" in item and "grounding_threshold" in item["GuardrailsParams"] 
+                else 0
+            ),
+            relevance_threshold = (
+                item["GuardrailsParams"]["relevance_threshold"]
+                if "GuardrailsParams" in item and "relevance_threshold" in item["GuardrailsParams"] 
+                else 0
+            ),
+            guardrails_arn = (
+                item["GuardrailsParams"]["guardrails_arn"]
+                if "GuardrailsParams" in item and "guardrails_arn" in item["GuardrailsParams"] 
+                else ""
+            ),
+            guardrails_version = (
+                item["GuardrailsParams"]["guardrails_version"]
+                if "GuardrailsParams" in item and "guardrails_version" in item["GuardrailsParams"] 
+                else ""
+            ),
         ),
     )
     logger.info(f"Found public bot: {bot}")
@@ -676,6 +817,14 @@ def delete_bot_publication(user_id: str, bot_id: str):
 def delete_bot_by_id(user_id: str, bot_id: str):
     table = _get_table_client(user_id)
     logger.info(f"Deleting bot with id: {bot_id}")
+
+    # delete guardrail
+    try:
+        guardrail_arn = get_guardrails_arn(user_id, bot_id)
+        response = delete_guardrail(guardrail_id=guardrail_arn)
+
+    except ClientError as e:
+        logger.warn(e)
 
     try:
         response = table.delete_item(

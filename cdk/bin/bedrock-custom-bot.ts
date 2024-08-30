@@ -1,6 +1,6 @@
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import { BedrockKnowledgeBaseStack } from "../lib/bedrock-knowledge-base-stack";
+import { BedrockCustomBotStack } from "../lib/bedrock-custom-bot-stack";
 import {
   getEmbeddingModel,
   getChunkingStrategy,
@@ -69,7 +69,7 @@ if (analyzer) {
 
 console.log("overlapPercentage: ", overlapPercentage);
 
-const knowledgeBaseStack = new BedrockKnowledgeBaseStack(
+const bedrockCustomBotStack = new BedrockCustomBotStack(
   app,
   `BrChatKbStack${botId}`,
   {

@@ -23,7 +23,7 @@ import { WebAclForPublishedApi } from "./constructs/webacl-for-published-api";
 import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
-import { BedrockKnowledgeBaseCodebuild } from "./constructs/bedrock-knowledge-base-codebuild";
+import { BedrockCustomBotCodebuild } from "./constructs/bedrock-custom-bot-codebuild";
 
 export interface BedrockChatStackProps extends StackProps {
   readonly bedrockRegion: string;
@@ -118,6 +118,8 @@ export class BedrockChatStack extends cdk.Stack {
             "**/.gitignore",
             "**/test/**",
             "**/tests/**",
+            "**/backend/embedding_statemachine/pdf_ai_ocr/**",
+            "**/backend/guardrails/**",
           ],
         }),
       ],
@@ -133,7 +135,7 @@ export class BedrockChatStack extends cdk.Stack {
       }
     );
     // CodeBuild used for KnowledgeBase
-    const bedrockKnowledgeBaseCodebuild = new BedrockKnowledgeBaseCodebuild(
+    const bedrockCustomBotCodebuild = new BedrockCustomBotCodebuild(
       this,
       "BedrockKnowledgeBaseCodebuild",
       {
@@ -186,7 +188,7 @@ export class BedrockChatStack extends cdk.Stack {
       dbSecrets: vectorStore.secret,
       documentBucket,
       apiPublishProject: apiPublishCodebuild.project,
-      bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
+      bedrockCustomBotProject: bedrockCustomBotCodebuild.project,
       usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,
@@ -232,7 +234,7 @@ export class BedrockChatStack extends cdk.Stack {
       documentBucket,
       embeddingContainerVcpu: props.embeddingContainerVcpu,
       embeddingContainerMemory: props.embeddingContainerMemory,
-      bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
+      bedrockCustomBotProject: bedrockCustomBotCodebuild.project,
     });
     documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
 
