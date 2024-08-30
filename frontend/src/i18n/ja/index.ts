@@ -552,7 +552,7 @@ const translation = {
         },
         none: {
           label: 'デフォルトアナライザー',
-          hint: 'システムで定義されているデフォルトアナライザーを利用します。',
+          hint: 'システム (OpenSearch) で定義されているデフォルトアナライザーを利用します。',
         },
         tokenizer: 'トークナイザー:',
         normalizer: 'ノーマライザー（正規化）:',
