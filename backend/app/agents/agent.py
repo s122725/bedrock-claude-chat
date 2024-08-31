@@ -1,9 +1,11 @@
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal, Optional, no_type_check
 
 from app.agents.tools.agent_tool import AgentTool, RunResult
 from app.bedrock import (
+    DEFAULT_GENERATION_CONFIG,
     ConverseApiRequest,
     ConverseApiResponse,
+    ConverseApiToolConfig,
     ConverseApiToolResult,
     ConverseApiToolUseContent,
     calculate_price,
@@ -13,6 +15,7 @@ from app.bedrock import (
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import BotModel
 from app.routes.schemas.conversation import type_model_name
+from app.utils import convert_dict_keys_to_camel_case
 from pydantic import BaseModel
 
 
@@ -22,7 +25,7 @@ class AgentContentModel(BaseModel):
 
 
 class AgentMessageModel(BaseModel):
-    role: Literal["user", "assistant"]
+    role: str
     content: list[AgentContentModel]
 
     @classmethod
@@ -69,9 +72,12 @@ class AgentRunner:
         self.total_input_tokens = 0
         self.total_output_tokens = 0
 
-    def run(self, conversation: list[MessageModel]) -> ConverseApiResponse:
+    def run(self, messages: list[MessageModel]) -> ConverseApiResponse:
+        print(f"Running agent with messages: {messages}")
         conv = [
-            AgentMessageModel.from_message_model(message) for message in conversation
+            AgentMessageModel.from_message_model(message)
+            for message in messages
+            if message.role in ["user", "assistant"]
         ]
         response = self._call_converse_api(conv)
 
@@ -129,14 +135,28 @@ class AgentRunner:
         return response
 
     def _call_converse_api(
-        self, conversation: list[AgentMessageModel]
+        self, messages: list[AgentMessageModel]
     ) -> ConverseApiResponse:
-        args = self._compose_args(conversation)
-        return self.client.converse(**args)
+        args = self._compose_args(messages)
 
-    def _compose_args(
-        self, conversation: list[AgentMessageModel]
-    ) -> ConverseApiRequest:
+        messages = args["messages"]
+        inference_config = args["inference_config"]
+        additional_model_request_fields = args["additional_model_request_fields"]
+        model_id = args["model_id"]
+        system = args["system"]
+        tool_config = args["tool_config"]  # type: ignore
+
+        return self.client.converse(
+            modelId=model_id,
+            messages=messages,
+            inferenceConfig=inference_config,
+            additionalModelRequestFields=additional_model_request_fields,
+            system=system,
+            toolConfig=tool_config,
+        )
+
+    @no_type_check
+    def _compose_args(self, messages: list[AgentMessageModel]) -> ConverseApiRequest:
         arg_messages = [
             {
                 "role": message.role,
@@ -153,29 +173,54 @@ class AgentRunner:
                     for c in message.content
                 ],
             }
-            for message in conversation
+            for message in messages
         ]
 
-        args = {
-            "modelId": self.model_id,
-            "messages": arg_messages,
-            "toolConfig": self._get_tool_config(),
-            "inferenceConfig": {
-                "maxTokens": self.bot.generation_params.max_tokens,
-                "temperature": self.bot.generation_params.temperature,
-                "topP": self.bot.generation_params.top_p,
-                "stopSequences": self.bot.generation_params.stop_sequences,
-            },
-            "system": [{"text": self.bot.instruction}] if self.bot.instruction else [],
+        generation_params = self.bot.generation_params
+        inference_config = {
+            **DEFAULT_GENERATION_CONFIG,
+            **(
+                {
+                    "maxTokens": generation_params.max_tokens,
+                    "temperature": generation_params.temperature,
+                    "topP": generation_params.top_p,
+                    "stopSequences": generation_params.stop_sequences,
+                }
+                if generation_params
+                else {}
+            ),
         }
-        return args  # type: ignore
 
-    def _get_tool_config(self) -> dict:
-        return {
-            "tools": [
+        additional_model_request_fields = {"top_k": inference_config["top_k"]}
+        del inference_config["top_k"]
+
+        args: ConverseApiRequest = {
+            "inference_config": convert_dict_keys_to_camel_case(inference_config),
+            "additional_model_request_fields": additional_model_request_fields,
+            # "modelId": self.model_id,
+            "model_id": self.model_id,
+            "messages": arg_messages,
+            "system": [],
+            "tool_config": self._get_tool_config(),
+            # "inferenceConfig": {
+            #     "maxTokens": self.bot.generation_params.max_tokens,
+            #     "temperature": self.bot.generation_params.temperature,
+            #     "topP": self.bot.generation_params.top_p,
+            #     "stopSequences": self.bot.generation_params.stop_sequences,
+            # },
+            # "system": [{"text": self.bot.instruction}] if self.bot.instruction else [],
+        }
+        if self.bot.instruction:
+            args["system"] = [{"text": self.bot.instruction}]
+        return args
+
+    def _get_tool_config(self) -> ConverseApiToolConfig:
+        tool_config: ConverseApiToolConfig = {
+            "tools": [  # type: ignore
                 {"toolSpec": tool.to_converse_spec()} for tool in self.tools.values()
             ]
         }
+        return tool_config
 
     def _invoke_tools(
         self, tool_uses: list[ConverseApiToolUseContent]

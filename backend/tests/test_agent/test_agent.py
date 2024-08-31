@@ -123,7 +123,7 @@ class TestAgentRunner(unittest.TestCase):
             used_chunks=None,
             thinking_log=None,
         )
-        res = self.runner.run(conversation=[message])
+        res = self.runner.run(messages=[message])
         print("====================================")
         pprint(res)
 

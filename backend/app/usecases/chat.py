@@ -3,7 +3,11 @@ from copy import deepcopy
 from typing import Literal
 
 from app.agents.utils import get_tool_by_name
-from app.bedrock import calculate_price, call_converse_api, compose_args_for_converse_api
+from app.bedrock import (
+    calculate_price,
+    call_converse_api,
+    compose_args_for_converse_api,
+)
 from app.prompt import build_rag_prompt
 from app.repositories.conversation import (
     RecordNotFoundError,
@@ -231,7 +235,9 @@ def insert_knowledge(
     logger.info(f"Inserted prompt: {inserted_prompt}")
 
     conversation_with_context = deepcopy(conversation)
-    conversation_with_context.message_map["instruction"].content[0].body = inserted_prompt
+    conversation_with_context.message_map["instruction"].content[
+        0
+    ].body = inserted_prompt
 
     return conversation_with_context
 

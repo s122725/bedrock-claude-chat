@@ -52,6 +52,7 @@ class ConverseApiStreamHandler:
         return self
 
     def run(self, args: ConverseApiRequest):
+        print("args", args)
         client = get_bedrock_client()
         response = client.converse_stream(
             modelId=args["model_id"],
@@ -64,13 +65,16 @@ class ConverseApiStreamHandler:
         stop_reason = ""
         for event in response["stream"]:
             if "contentBlockDelta" in event:
+                print(f"event: {event}")
                 text = event["contentBlockDelta"]["delta"]["text"]
                 completions.append(text)
                 response = self.on_stream(text)
                 yield response
             elif "messageStop" in event:
+                print(f"event: {event}")
                 stop_reason = event["messageStop"]["stopReason"]
             elif "metadata" in event:
+                print(f"event: {event}")
                 metadata = event["metadata"]
                 usage = metadata["usage"]
                 input_token_count = usage["inputTokens"]

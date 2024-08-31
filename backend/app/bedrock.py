@@ -56,7 +56,7 @@ class ConverseApiRequest(TypedDict):
     messages: list[dict]
     stream: bool
     system: list[dict]
-    toolConfig: ConverseApiToolConfig
+    tool_config: NotRequired[ConverseApiToolConfig]
 
 
 class ConverseApiToolUseContent(TypedDict):

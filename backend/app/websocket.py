@@ -23,6 +23,7 @@ from app.repositories.models.conversation import (
     ConversationModel,
     MessageModel,
 )
+from app.repositories.models.custom_bot import BotModel
 from app.routes.schemas.conversation import ChatInput
 from app.stream import ConverseApiStreamHandler, OnStopInput
 from app.usecases.bot import modify_bot_last_used_time
@@ -42,8 +43,13 @@ logger.setLevel(logging.INFO)
 
 
 def on_stream(token: str, gatewayapi, connection_id: str) -> None:
+    print(f"api_gateway: {gatewayapi}")
+    print(f"Connection ID: {connection_id}")
     # Send completion
-    data_to_send = json.dumps(dict(status="STREAMING", completion=token)).encode("utf-8")
+    data_to_send = json.dumps(dict(status="STREAMING", completion=token)).encode(
+        "utf-8"
+    )
+    print(f"Data to send: {data_to_send}")
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=data_to_send)
 
 
@@ -54,7 +60,8 @@ def on_stop(
     user_id: str,
     conversation: ConversationModel,
     chat_input: ChatInput,
-    bot=None,
+    user_msg_id: str,
+    bot: BotModel | None = None,
     search_results=[],
 ) -> None:
     if chat_input.continue_generate:
@@ -99,15 +106,12 @@ def on_stop(
             thinking_log=None,
         )
         conversation.message_map[assistant_msg_id] = message
-        conversation.message_map[conversation.last_message_id].children.append(
-            assistant_msg_id
-        )
+        conversation.message_map[user_msg_id].children.append(assistant_msg_id)
         conversation.last_message_id = assistant_msg_id
 
     conversation.total_price += arg.price
 
     conversation.should_continue = arg.stop_reason == "max_tokens"
-
     # Store conversation before finish streaming so that front-end can avoid 404 issue
     store_conversation(user_id, conversation)
     last_data_to_send = json.dumps(
@@ -116,7 +120,9 @@ def on_stop(
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
 
-def on_agent_thinking(agent_log: list[AgentMessageModel], gatewayapi, connection_id: str):
+def on_agent_thinking(
+    agent_log: list[AgentMessageModel], gatewayapi, connection_id: str
+):
     assert len(agent_log) > 0
     assert agent_log[-1].role == "assistant"
     to_send = dict()
@@ -140,7 +146,9 @@ def on_agent_tool_result(
         "status": tool_result["status"],  # type: ignore
         "content": tool_result["content"],
     }
-    data_to_send = json.dumps(dict(status="TOOL_RESULT", result=to_send)).encode("utf-8")
+    data_to_send = json.dumps(dict(status="TOOL_RESULT", result=to_send)).encode(
+        "utf-8"
+    )
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=data_to_send)
 
 
@@ -151,7 +159,15 @@ def on_agent_stop(
     user_id: str,
     conversation: ConversationModel,
     chat_input: ChatInput,
+    user_msg_id: str,
 ):
+    print(f"arg: {arg}")
+    print(f"gatewayapi: {gatewayapi}")
+    print(f"connection_id: {connection_id}")
+    print(f"user_id: {user_id}")
+    print(f"conversation: {conversation}")
+    print(f"chat_input: {chat_input}")
+
     # Append entire completion as the last message
     assistant_msg_id = str(ULID())
     message = MessageModel(
@@ -173,9 +189,7 @@ def on_agent_stop(
         thinking_log=None,
     )
     conversation.message_map[assistant_msg_id] = message
-    conversation.message_map[conversation.last_message_id].children.append(
-        assistant_msg_id
-    )
+    conversation.message_map[user_msg_id].children.append(assistant_msg_id)
     conversation.last_message_id = assistant_msg_id
     conversation.total_price += arg.price
 
@@ -230,7 +244,13 @@ def process_chat_input(
                 result, gatewayapi, connection_id
             ),
             on_stop=lambda arg: on_agent_stop(
-                arg, gatewayapi, connection_id, user_id, conversation, chat_input
+                arg,
+                gatewayapi,
+                connection_id,
+                user_id,
+                conversation,
+                chat_input,
+                user_msg_id,
             ),
         )
         message_map = conversation.message_map
@@ -238,6 +258,12 @@ def process_chat_input(
             node_id=conversation.message_map[user_msg_id].parent,
             message_map=message_map,
         )
+        messages.append(chat_input.message)  # type: ignore
+        print(f"conversation: {conversation}")
+        print(f"message_map: {message_map}")
+        print(f"user_msg_id: {user_msg_id}")
+        print(f"node_id: {conversation.message_map[user_msg_id].parent}")
+        print(f"messages: {messages}")
         response = runner.run(messages)
 
         # ---
@@ -361,6 +387,11 @@ def process_chat_input(
         node_id=conversation.message_map[user_msg_id].parent,
         message_map=message_map,
     )
+    print(f"conversation: {conversation}")
+    print(f"message_map: {message_map}")
+    print(f"user_msg_id: {user_msg_id}")
+    print(f"node_id: {conversation.message_map[user_msg_id].parent}")
+    print(f"messages: {messages}")
 
     if not chat_input.continue_generate:
         messages.append(chat_input.message)  # type: ignore
@@ -453,6 +484,7 @@ def process_chat_input(
             user_id,
             conversation,
             chat_input,
+            user_msg_id,
             bot,
             search_results,
         ),
