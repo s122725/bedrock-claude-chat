@@ -8,7 +8,7 @@ from pprint import pprint
 from app.agents.agent import AgentMessageModel, AgentRunner, OnStopInput
 from app.agents.tools.agent_tool import RunResult
 from app.agents.tools.internet_search import internet_search_tool
-from app.bedrock import ConverseApiToolResult
+from app.bedrock import ConverseApiToolResult, ConverseApiToolUseContent
 from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.conversation import ContentModel, MessageModel
 from app.repositories.models.custom_bot import (
@@ -22,18 +22,33 @@ from app.repositories.models.custom_bot import (
 from app.routes.schemas.conversation import type_model_name
 
 
-def on_thinking(conversation: list[AgentMessageModel]):
+def on_thinking(agent_log: list[AgentMessageModel]):
     print("====================================")
     print("Thinking...")
     print("====================================")
-    pprint(conversation)
+    assert len(agent_log) > 0
+    assert agent_log[-1].role == "assistant"
+    to_send = dict()
+    for c in agent_log[-1].content:
+        to_send[c.body["toolUseId"]] = {
+            "name": c.body["name"],
+            "input": c.body["input"],
+        }
+    pprint(to_send)
+    # pprint(agent_log)
 
 
 def on_tool_result(tool_result: ConverseApiToolResult):
     print("====================================")
     print("Tool Result...")
     print("====================================")
-    pprint(tool_result["toolUseId"])
+    to_send = {
+        "toolUseId": tool_result["toolUseId"],
+        "status": tool_result["status"],  # type: ignore
+        "content": tool_result["content"],
+    }
+    pprint(to_send["toolUseId"])
+    pprint(to_send["status"])
 
 
 def on_stop(on_stop_input: OnStopInput):

@@ -44,7 +44,10 @@ import { SyncStatus } from '../constants';
 
 import { BottomHelper } from '../features/helper/components/BottomHelper';
 import { useIsWindows } from '../hooks/useIsWindows';
-import { DisplayMessageContent, PutFeedbackRequest } from '../@types/conversation';
+import {
+  DisplayMessageContent,
+  PutFeedbackRequest,
+} from '../@types/conversation';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -294,9 +297,7 @@ const ChatPage: React.FC = () => {
           return event.metaKey && event.shiftKey;
         }
       })();
-      const isFocusChatInputCommand = (
-        event.code === 'Escape' && event.shiftKey
-      );
+      const isFocusChatInputCommand = event.code === 'Escape' && event.shiftKey;
 
       if (isNewConversationCommand) {
         event.preventDefault();
@@ -315,16 +316,19 @@ const ChatPage: React.FC = () => {
   });
 
   const ChatMessageWithRelatedDocuments: React.FC<{
-    chatContent: DisplayMessageContent,
+    chatContent: DisplayMessageContent;
     onChangeMessageId?: (messageId: string) => void;
     onSubmit?: (messageId: string, content: string) => void;
-    onSubmitFeedback?: (messageId: string, feedback: PutFeedbackRequest) => void;
-  }> = React.memo(props => {
+    onSubmitFeedback?: (
+      messageId: string,
+      feedback: PutFeedbackRequest
+    ) => void;
+  }> = React.memo((props) => {
     const { chatContent: message } = props;
     const relatedDocuments = (() => {
       if (message.usedChunks) {
         // usedChunks is available for existing messages
-        return message.usedChunks.map(chunk => ({
+        return message.usedChunks.map((chunk) => ({
           chunkBody: chunk.content,
           contentType: chunk.contentType,
           sourceLink: chunk.source,

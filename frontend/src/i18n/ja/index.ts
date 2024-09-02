@@ -28,6 +28,15 @@ const translation = {
       progress: {
         label: 'エージェント思考中...',
       },
+      progressCard: {
+        toolName: 'ツール名: ',
+        toolInput: '入力: ',
+        status: {
+          running: '実行中...',
+          success: '成功',
+          error: 'エラー',
+        },
+      },
       tools: {
         get_weather: {
           name: '現在の天気',

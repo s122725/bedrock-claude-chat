@@ -97,7 +97,7 @@ def on_stop(
             ],
             model=chat_input.message.model,
             children=[],
-            parent=conversation.last_message_id,
+            parent=user_msg_id,
             create_time=get_current_time(),
             feedback=None,
             used_chunks=used_chunks,
@@ -123,8 +123,6 @@ def on_agent_thinking(agent_log: list[AgentMessageModel], gatewayapi, connection
     assert agent_log[-1].role == "assistant"
     to_send = dict()
     for c in agent_log[-1].content:
-        if type(c.body) != ConverseApiToolUseContent:
-            continue
         to_send[c.body["toolUseId"]] = {
             "name": c.body["name"],
             "input": c.body["input"],
@@ -178,7 +176,7 @@ def on_agent_stop(
         ],
         model=chat_input.message.model,
         children=[],
-        parent=conversation.last_message_id,
+        parent=user_msg_id,
         create_time=get_current_time(),
         feedback=None,
         used_chunks=None,
@@ -194,7 +192,7 @@ def on_agent_stop(
 
     store_conversation(user_id, conversation)
     last_data_to_send = json.dumps(
-        dict(status="AGENT__END", completion="", stop_reason=arg.stop_reason)
+        dict(status="STREAMING_END", completion="", stop_reason=arg.stop_reason)
     ).encode("utf-8")
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 

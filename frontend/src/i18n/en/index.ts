@@ -25,6 +25,15 @@ const translation = {
       progress: {
         label: 'Agent Thinking...',
       },
+      progressCard: {
+        toolName: 'Tool Name: ',
+        toolInput: 'Input: ',
+        status: {
+          running: 'Running...',
+          success: 'Success',
+          error: 'Error',
+        },
+      },
       tools: {
         get_weather: {
           name: 'Current Weather',

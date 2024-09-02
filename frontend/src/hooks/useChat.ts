@@ -19,7 +19,8 @@ import { convertMessageMapToArray } from '../utils/MessageUtils';
 import useModel from './useModel';
 import useFeedbackApi from './useFeedbackApi';
 import { useMachine } from '@xstate/react';
-import { agentThinkingState } from '../features/agent/xstates/agentThinkProgress';
+// import { agentThinkingState } from '../features/agent/xstates/agentThinkProgress';
+import { agentThinkingState } from '../features/agent/xstates/agentThink';
 
 type ChatStateType = {
   [id: string]: MessageMap;
@@ -447,7 +448,7 @@ const useChat = () => {
             editMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT, c);
           },
           thinkingDispatch: (event) => {
-            send({ type: event });
+            send(event);
           },
         })
           .then((message) => {
@@ -543,7 +544,7 @@ const useChat = () => {
         editMessage(conversationId, currentMessage.id, currentContentBody + c);
       },
       thinkingDispatch: (event) => {
-        send({ type: event });
+        send(event);
       },
     })
       .then(() => {
@@ -642,7 +643,7 @@ const useChat = () => {
         editMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT, c);
       },
       thinkingDispatch: (event) => {
-        send({ type: event });
+        send(event);
       },
     })
       .then(() => {

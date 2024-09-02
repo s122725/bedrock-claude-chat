@@ -4,6 +4,9 @@ import { TextInputChatContent } from './TextInputChatContent';
 import { AgentProcessingIndicator } from './AgentProcessingIndicator';
 import { AvailableTools } from './AvailableTools';
 import { AgentTool } from '../types';
+import ToolCard from './ToolCard';
+import AgentToolList from './AgentToolList';
+import { AgentToolState } from '../xstates/agentThink';
 
 export const InputChatContent = () => (
   <TextInputChatContent
@@ -49,7 +52,7 @@ export const InputChatContentWithRegenerate = () => (
 );
 
 export const ProcessingIndicator = () => (
-  <AgentProcessingIndicator processCount={5}/>
+  <AgentProcessingIndicator processCount={5} />
 );
 
 export const Tools = () => {
@@ -87,4 +90,39 @@ export const Tools = () => {
       setTools={setTools}
     />
   );
+};
+
+export const ToolCardRunning = () => (
+  <ToolCard toolUseId="tool1" name="internet_search" status="running" />
+);
+
+export const ToolCardSuccess = () => (
+  <ToolCard
+    toolUseId="tool2"
+    name="Database Query"
+    status="success"
+    content=""
+  />
+);
+
+export const ToolCardError = () => (
+  <ToolCard toolUseId="tool3" name="API Call" status="error" />
+);
+
+export const ToolCardList = () => {
+  const tools = {
+    tool1: {
+      name: 'internet_search',
+      status: 'running' as AgentToolState,
+      input: { country: 'jp-jp', query: '東京 天気', time_limit: 'd' },
+    },
+    tool2: {
+      name: 'database_query',
+      status: 'success' as AgentToolState,
+      content: '{"result": "success", "data": "some data"}',
+    },
+    tool3: { name: 'API Call', status: 'error' as AgentToolState },
+  };
+
+  return <AgentToolList tools={tools} />;
 };
