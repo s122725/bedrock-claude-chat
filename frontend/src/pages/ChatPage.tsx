@@ -38,10 +38,9 @@ import Alert from '../components/Alert';
 import useBotSummary from '../hooks/useBotSummary';
 import useModel from '../hooks/useModel';
 import { TextInputChatContent } from '../features/agent/components/TextInputChatContent';
-import { AgentProcessingIndicator } from '../features/agent/components/AgentProcessingIndicator';
-import { AgentState } from '../features/agent/xstates/agentThinkProgress';
+import { AgentState } from '../features/agent/xstates/agentThink';
 import { SyncStatus } from '../constants';
-
+import AgentToolList from '../features/agent/components/AgentToolList';
 import { BottomHelper } from '../features/helper/components/BottomHelper';
 import { useIsWindows } from '../hooks/useIsWindows';
 import {
@@ -77,7 +76,6 @@ const ChatPage: React.FC = () => {
     getRelatedDocuments,
     giveFeedback,
   } = useChat();
-
   // Error Handling
   useEffect(() => {
     if (conversationError) {
@@ -447,9 +445,10 @@ const ChatPage: React.FC = () => {
                       [AgentState.THINKING, AgentState.LEAVING].some(
                         (v) => v == agentThinking.value
                       ) ? (
-                        <AgentProcessingIndicator
-                          processCount={agentThinking.context.count}
-                        />
+                        <>
+                          {/* <AgentToolList tools={agentThinking.context.tools} /> */}
+                          <AgentToolList tools={agentThinking.context.tools} />
+                        </>
                       ) : (
                         <ChatMessageWithRelatedDocuments
                           chatContent={message}

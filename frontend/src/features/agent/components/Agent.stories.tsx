@@ -93,7 +93,12 @@ export const Tools = () => {
 };
 
 export const ToolCardRunning = () => (
-  <ToolCard toolUseId="tool1" name="internet_search" status="running" />
+  <ToolCard
+    toolUseId="tool1"
+    name="internet_search"
+    status="running"
+    input={{ country: 'jp-jp', query: '東京 天気', time_limit: 'd' }}
+  />
 );
 
 export const ToolCardSuccess = () => (
@@ -101,6 +106,7 @@ export const ToolCardSuccess = () => (
     toolUseId="tool2"
     name="Database Query"
     status="success"
+    input={{ query: 'SELECT * FROM table' }}
     content=""
   />
 );
@@ -119,6 +125,7 @@ export const ToolCardList = () => {
     tool2: {
       name: 'database_query',
       status: 'success' as AgentToolState,
+      input: { query: 'SELECT * FROM table' },
       content: '{"result": "success", "data": "some data"}',
     },
     tool3: { name: 'API Call', status: 'error' as AgentToolState },

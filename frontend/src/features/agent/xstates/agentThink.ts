@@ -26,13 +26,12 @@ export type AgentEventKeys = AgentEvent['type'];
 export const agentThinkingState = setup({
   types: {
     context: {} as {
-      count: number;
       tools: Record<
         string,
         {
           name: string;
           input: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-          status: string;
+          status: AgentToolState;
           content?: string;
         }
       >;
@@ -41,7 +40,6 @@ export const agentThinkingState = setup({
   },
   actions: {
     reset: assign({
-      count: () => 0,
       tools: () => ({}),
     }),
     addTool: assign({
@@ -52,7 +50,7 @@ export const agentThinkingState = setup({
             [event.toolUseId]: {
               name: event.name,
               input: event.input,
-              status: 'running',
+              status: 'running' as AgentToolState,
             },
           };
         }
@@ -62,13 +60,13 @@ export const agentThinkingState = setup({
     updateToolResult: assign({
       tools: ({ context, event }) => {
         if (event.type === 'tool-result') {
+          // Update status and content of the tool
           return {
             ...context.tools,
             [event.toolUseId]: {
               ...context.tools[event.toolUseId],
               status: event.status,
-              // Preview of content
-              content: event.content.slice(0, 20),
+              content: event.content,
             },
           };
         }
@@ -76,13 +74,13 @@ export const agentThinkingState = setup({
       },
     }),
     close: assign({
-      count: () => 100,
+      tools: () => ({}),
     }),
   },
 }).createMachine({
   context: {
-    count: 0,
     tools: {},
+    areAllToolsSuccessful: false,
   },
   initial: 'sleeping',
   states: {
@@ -100,7 +98,7 @@ export const agentThinkingState = setup({
           actions: 'addTool',
         },
         'tool-result': {
-          actions: 'updateToolResult',
+          actions: ['updateToolResult'],
         },
         goodbye: {
           actions: 'close',

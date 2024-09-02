@@ -197,18 +197,10 @@ class AgentRunner:
         args: ConverseApiRequest = {
             "inference_config": convert_dict_keys_to_camel_case(inference_config),
             "additional_model_request_fields": additional_model_request_fields,
-            # "modelId": self.model_id,
             "model_id": self.model_id,
             "messages": arg_messages,
             "system": [],
             "tool_config": self._get_tool_config(),
-            # "inferenceConfig": {
-            #     "maxTokens": self.bot.generation_params.max_tokens,
-            #     "temperature": self.bot.generation_params.temperature,
-            #     "topP": self.bot.generation_params.top_p,
-            #     "stopSequences": self.bot.generation_params.stop_sequences,
-            # },
-            # "system": [{"text": self.bot.instruction}] if self.bot.instruction else [],
         }
         if self.bot.instruction:
             args["system"] = [{"text": self.bot.instruction}]

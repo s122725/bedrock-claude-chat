@@ -98,19 +98,25 @@ const usePostMessageStreaming = create<{
                   dispatch(i18next.t('bot.label.retrievingKnowledge'));
                   break;
                 case PostStreamingStatus.AGENT_THINKING:
-                  thinkingDispatch({
-                    type: 'go-on',
-                    toolUseId: data.toolUseId,
-                    name: data.name,
-                    input: data.input,
+                  Object.entries(data.log).forEach(([toolUseId, toolInfo]) => {
+                    const typedToolInfo = toolInfo as {
+                      name: string;
+                      input: Record<string, any>;
+                    };
+                    thinkingDispatch({
+                      type: 'go-on',
+                      toolUseId: toolUseId,
+                      name: typedToolInfo.name,
+                      input: typedToolInfo.input,
+                    });
                   });
                   break;
                 case PostStreamingStatus.AGENT_TOOL_RESULT:
                   thinkingDispatch({
                     type: 'tool-result',
-                    toolUseId: data.toolUseId,
-                    status: data.status,
-                    content: data.content,
+                    toolUseId: data.result.toolUseId,
+                    status: data.result.status,
+                    content: data.result.content,
                   });
                   break;
                 case PostStreamingStatus.STREAMING:
