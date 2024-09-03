@@ -10,6 +10,7 @@ import './i18n';
 import { validateSocialProvider } from './utils/SocialProviderUtils';
 import AppContent from './components/AppContent';
 import { IPublicClientApplication } from '@azure/msal-browser';
+import { MsalProvider } from "@azure/msal-react";
 
 const customProviderEnabled =
   import.meta.env.VITE_APP_CUSTOM_PROVIDER_ENABLED === 'true';
@@ -54,7 +55,10 @@ const App: React.FC<AppProps> = ({ pca }: AppProps) => {
 
   return (
     <>
-      {customProviderEnabled ? (
+    <MsalProvider instance={pca}>
+      <AppContent />
+    </MsalProvider>
+      {/* {customProviderEnabled ? (
         <AuthCustom>
           <AppContent />
         </AuthCustom>
@@ -64,7 +68,7 @@ const App: React.FC<AppProps> = ({ pca }: AppProps) => {
             <AppContent />
           </AuthAmplify>
         </Authenticator.Provider>
-      )}
+      )} */}
     </>
   );
 };
