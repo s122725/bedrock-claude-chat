@@ -26,7 +26,7 @@ export const msalInstance = new PublicClientApplication(msalConfig);
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <App pca={msalInstance} />,
     children: [
       {
         path: '/',
