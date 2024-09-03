@@ -1,4 +1,4 @@
-import { TFunction } from 'i18next';
+import { exists, TFunction } from 'i18next';
 import { AgentTool } from '../types';
 
 // Please add a corresponding case branch for the Tool Name in the following function when the AgentTool returned from the backend is updated.
@@ -26,9 +26,15 @@ export const formatDescription = (tool: AgentTool, t: TFunction) => {
       )}`;
     case 'internet_search':
       return `${t(`agent.tools.internet_search.name`)}:${t(
-        `agent.tools.internet_search.desciription`
+        `agent.tools.internet_search.description`
       )}`;
     default:
+      if (exists(`agent.tools.${tool.name}`)) {
+        return `${t(`agent.tools.${tool.name}.name` as never)}:${t(
+          `agent.tools.${tool.name}.description` as never
+        )}`;
+      }
+
       return `${tool.name}:${tool.description}`;
   }
 };
