@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInputChatContent } from './TextInputChatContent';
-import { AgentProcessingIndicator } from './AgentProcessingIndicator';
 import { AvailableTools } from './AvailableTools';
 import { AgentTool } from '../types';
 import ToolCard from './ToolCard';
@@ -49,10 +48,6 @@ export const InputChatContentWithRegenerate = () => (
     onSend={() => {}}
     onRegenerate={() => {}}
   />
-);
-
-export const ProcessingIndicator = () => (
-  <AgentProcessingIndicator processCount={5} />
 );
 
 export const Tools = () => {
