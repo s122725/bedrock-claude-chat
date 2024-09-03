@@ -31,6 +31,7 @@ const translation = {
       progressCard: {
         toolName: 'ツール名: ',
         toolInput: '入力: ',
+        toolOutput: '出力: ',
         status: {
           running: '実行中...',
           success: '成功',

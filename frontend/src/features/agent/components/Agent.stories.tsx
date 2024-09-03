@@ -112,7 +112,12 @@ export const ToolCardSuccess = () => (
 );
 
 export const ToolCardError = () => (
-  <ToolCard toolUseId="tool3" name="API Call" status="error" />
+  <ToolCard
+    toolUseId="tool3"
+    name="API Call"
+    status="error"
+    input={{ query: 'SELECT * FROM table' }}
+  />
 );
 
 export const ToolCardList = () => {
@@ -128,8 +133,13 @@ export const ToolCardList = () => {
       input: { query: 'SELECT * FROM table' },
       content: '{"result": "success", "data": "some data"}',
     },
-    tool3: { name: 'API Call', status: 'error' as AgentToolState },
+    tool4: {
+      name: 'API Call',
+      status: 'error' as AgentToolState,
+      input: { country: 'jp-jp', query: '東京 天気', time_limit: 'd' },
+      content: 'Error! Connection Timeout',
+    },
   };
 
-  return <AgentToolList tools={tools} />;
+  return <AgentToolList tools={tools} isRunning={true} />;
 };

@@ -445,10 +445,10 @@ const ChatPage: React.FC = () => {
                       [AgentState.THINKING, AgentState.LEAVING].some(
                         (v) => v == agentThinking.value
                       ) ? (
-                        <>
-                          {/* <AgentToolList tools={agentThinking.context.tools} /> */}
-                          <AgentToolList tools={agentThinking.context.tools} />
-                        </>
+                        <AgentToolList
+                          tools={agentThinking.context.tools}
+                          isRunning={true}
+                        />
                       ) : (
                         <ChatMessageWithRelatedDocuments
                           chatContent={message}

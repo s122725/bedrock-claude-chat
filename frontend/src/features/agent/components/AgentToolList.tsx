@@ -9,15 +9,23 @@ type AgentToolListProps = {
     {
       name: string;
       status: AgentToolState;
-      input?: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+      input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
       content?: string;
     }
   >;
+  isRunning: boolean;
 };
 
-const AgentToolList: React.FC<AgentToolListProps> = ({ tools }) => {
+const AgentToolList: React.FC<AgentToolListProps> = ({ tools, isRunning }) => {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 rounded-lg bg-aws-paper p-4 shadow">
+      {isRunning && (
+        <div className="text-md mb-4 flex items-center text-aws-font-color">
+          <AiOutlineLoading3Quarters className="mr-2 animate-spin" />
+          思考中...
+        </div>
+      )}
+
       {Object.keys(tools).map((toolUseId) => (
         <ToolCard
           key={toolUseId}
@@ -28,11 +36,6 @@ const AgentToolList: React.FC<AgentToolListProps> = ({ tools }) => {
           content={tools[toolUseId].content}
         />
       ))}
-
-      <div className="text-gray-700 text-md mt-4 flex items-center text-left">
-        <AiOutlineLoading3Quarters className="mr-2 animate-spin" />
-        思考中...
-      </div>
     </div>
   );
 };
