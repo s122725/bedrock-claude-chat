@@ -12,6 +12,10 @@ import BotApiSettingsPage from './pages/BotApiSettingsPage.tsx';
 import AdminSharedBotAnalyticsPage from './pages/AdminSharedBotAnalyticsPage.tsx';
 import AdminApiManagementPage from './pages/AdminApiManagementPage.tsx';
 import AdminBotManagementPage from './pages/AdminBotManagementPage.tsx';
+import { PublicClientApplication } from '@azure/msal-browser';
+import { msalConfig } from './authConfig.ts';
+
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 const router = createBrowserRouter([
   {
