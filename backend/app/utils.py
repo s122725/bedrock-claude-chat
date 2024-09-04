@@ -71,7 +71,7 @@ def generate_presigned_url(
     # See: https://github.com/boto/boto3/issues/421#issuecomment-1849066655
     client = boto3.client(
         "s3",
-        region_name=REGION,
+        region_name=BEDROCK_REGION,
         config=Config(signature_version="v4", s3={"addressing_style": "path"}),
     )
     params = {"Bucket": bucket, "Key": key}

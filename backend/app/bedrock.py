@@ -297,7 +297,7 @@ def compose_args_for_converse_api_with_guardrail(
             "guardrailIdentifier": guardrail["guardrail_arn"],
             "guardrailVersion": guardrail["guardrail_version"],
             "trace": "enabled",
-            "streamProcessingMode": "sync"
+            "streamProcessingMode": "async"
         }
     return args
 
