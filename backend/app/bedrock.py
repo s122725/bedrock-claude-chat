@@ -214,7 +214,7 @@ def compose_args_for_converse_api_with_guardrail(
             for c in message.content:
                 if c.content_type == "text":
                     if message.role == 'user':
-                        if guardrail['grounding_threshold'] > 0:
+                        if guardrail and guardrail['grounding_threshold'] > 0:
                             content_blocks.append({
                                 "guardContent": grounding_source
                             })
@@ -228,11 +228,13 @@ def compose_args_for_converse_api_with_guardrail(
                         })
                     elif message.role == 'assistant':
                         content_blocks.append({
-                            "text": c.body
+                            "text": {"content": c.body} if isinstance(c.body, str) else None
                         })
+    
                 elif c.content_type == "image":
                     # e.g. "image/png" -> "png"
-                    format = c.media_type.split("/")[1]
+                    format = c.media_type.split("/")[1] if c.media_type is not None else "unknown"
+                
                     content_blocks.append(
                         {
                             "image": {
@@ -242,6 +244,7 @@ def compose_args_for_converse_api_with_guardrail(
                             }
                         }
                     )
+                
                 elif c.content_type == "textAttachment":
                     content_blocks.append(
                         {
@@ -288,17 +291,20 @@ def compose_args_for_converse_api_with_guardrail(
         "messages": arg_messages,
         "stream": stream,
         "system": [],
+        "guardrailConfig": None,  # Initialize with None
     }
+    
     if instruction:
         args["system"].append({"text": instruction})
-
+    
     if guardrail and "guardrail_arn" in guardrail and "guardrail_version" in guardrail:
-        args["guardrailConfig"]: GuardrailConfig = { # type: ignore
+        args["guardrailConfig"] = {  # Update the value
             "guardrailIdentifier": guardrail["guardrail_arn"],
             "guardrailVersion": guardrail["guardrail_version"],
             "trace": "enabled",
             "streamProcessingMode": "async"
         }
+    
     return args
 
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:

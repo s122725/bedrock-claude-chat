@@ -138,19 +138,26 @@ class BotModifyInput(BaseSchema):
         )
     
     def is_guardrails_required(self, current_bot_model: BotModel) -> bool:
-        # DynamoDBのステータスを変更するために、ここでGuardrailsのフラグを確認する
+        # Check if self.bedrock_guardrails is None
+        if not self.bedrock_guardrails:
+            return False
+
+        # Check if guardrails are enabled or any of the settings have changed
         if (
-            self.bedrock_guardrails and 
-            (
-                self.bedrock_guardrails.is_guardrail_enabled == True or 
-                self.bedrock_guardrails.is_guardrail_enabled != current_bot_model.bedrock_guardrails.is_guardrail_enabled or 
-                self.bedrock_guardrails.grounding_threshold != current_bot_model.bedrock_guardrails.grounding_threshold or
-                self.bedrock_guardrails.relevance_threshold != current_bot_model.bedrock_guardrails.relevance_threshold
+            self.bedrock_guardrails.is_guardrail_enabled == True
+            or (
+                current_bot_model.bedrock_guardrails
+                and (
+                    self.bedrock_guardrails.is_guardrail_enabled != current_bot_model.bedrock_guardrails.is_guardrail_enabled
+                    or self.bedrock_guardrails.grounding_threshold != current_bot_model.bedrock_guardrails.grounding_threshold
+                    or self.bedrock_guardrails.relevance_threshold != current_bot_model.bedrock_guardrails.relevance_threshold
+                )
             )
         ):
             return True
-        else: 
-            return False
+
+        # If none of the conditions above are met, guardrails are not required
+        return False
 
     def is_embedding_required(self, current_bot_model: BotModel) -> bool:
         if self.has_update_files():
@@ -200,6 +207,7 @@ class BotModifyOutput(BaseSchema):
     knowledge: Knowledge
     conversation_quick_starters: list[ConversationQuickStarter]
     bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None
+    bedrock_guardrails: BedrockGuardrailsOutput | None
 
 
 class BotOutput(BaseSchema):

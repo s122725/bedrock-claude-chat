@@ -1,15 +1,15 @@
 import json
 import logging
 import os
-import re
 from datetime import datetime
-from typing import Any, List, Literal
+from typing import Any, Literal
 
 import boto3
 import pg8000
 from aws_lambda_powertools.utilities import parameters
 from botocore.client import Config
 from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Key
 from app.repositories.common import _get_table_client, _get_table_public_client, compose_bot_id, RecordNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -228,7 +228,7 @@ def query_postgres(
 def get_guardrail(user_id: str, bot_id: str | None) -> dict | None:
     logger.info("get_guardrail")
 
-    if bot_id == None:
+    if bot_id is None:
         return None
 
     try:

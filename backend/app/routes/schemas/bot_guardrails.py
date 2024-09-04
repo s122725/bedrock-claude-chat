@@ -10,10 +10,6 @@ class BedrockGuardrailsInput(BaseSchema):
     misconduct_threshold: Decimal
     grounding_threshold: Decimal
     relevance_threshold: Decimal
-    grounding_threshold: Decimal
-    relevance_threshold: Decimal
-    grounding_threshold: Decimal
-    relevance_threshold: Decimal
     guardrail_arn: str
     guardrail_version: str
 
@@ -24,10 +20,6 @@ class BedrockGuardrailsOutput(BaseSchema):
     sexual_threshold: Decimal
     violence_threshold: Decimal
     misconduct_threshold: Decimal
-    grounding_threshold: Decimal
-    relevance_threshold: Decimal
-    grounding_threshold: Decimal
-    relevance_threshold: Decimal
     grounding_threshold: Decimal
     relevance_threshold: Decimal
     guardrail_arn: str

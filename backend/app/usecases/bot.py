@@ -470,7 +470,7 @@ def modify_owned_bot(
             else None
         ),
         bedrock_guardrails=(
-            BedrockGuardrailsModel(
+            BedrockGuardrailsOutput(
                 **modify_input.bedrock_guardrails.model_dump()
             )
             if modify_input.bedrock_guardrails

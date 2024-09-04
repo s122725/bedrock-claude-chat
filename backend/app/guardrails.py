@@ -1,12 +1,15 @@
-import boto3
 from botocore.exceptions import ClientError
-import os
-from decimal import Decimal
 from app.repositories.common import (
   _get_table_client,
   compose_bot_id
 )
 from app.utils import get_bedrock_client
+
+class BotNotFoundException(Exception):
+    pass
+
+class GuardrailArnRetrievalError(Exception):
+    pass
 
 def get_guardrail_arn(user_id: str, bot_id: str) -> str:
     table = _get_table_client(user_id)
@@ -23,9 +26,9 @@ def get_guardrail_arn(user_id: str, bot_id: str) -> str:
         return guardrail_arn
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise (f"Bot with id {bot_id} not found")
+            raise BotNotFoundException(f"Bot with id {bot_id} not found")
         else:
-            raise (f"Error getting guardrail_arn for bot: {bot_id}: {e}")
+            raise GuardrailArnRetrievalError(f"Error getting guardrail_arn for bot: {bot_id}: {e}")
 
 def delete_guardrail(guardrail_id):
   client = get_bedrock_client()

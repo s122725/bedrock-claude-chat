@@ -51,6 +51,13 @@ DEFAULT_GENERATION_CONFIG = (
 logger = logging.getLogger(__name__)
 sts_client = boto3.client("sts")
 
+class BotNotFoundException(Exception):
+    """Exception raised when a bot is not found."""
+    pass
+
+class BotUpdateError(Exception):
+    """Exception raised when there's an error updating a bot."""
+    pass
 
 def store_bot(user_id: str, custom_bot: BotModel):
     table = _get_table_client(user_id)
@@ -325,9 +332,9 @@ def update_guardrails_params(
         logger.info(f"Updated guardrails_arn for bot: {bot_id} successfully")
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise (f"Bot with id {bot_id} not found")
+            raise BotNotFoundException(f"Bot with id {bot_id} not found")
         else:
-            raise (f"Error updating guardrails_arn for bot: {bot_id}: {e}")
+            raise BotUpdateError(f"Error updating guardrails_arn for bot: {bot_id}: {e}")
 
     return response
 
