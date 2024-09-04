@@ -248,6 +248,9 @@ export class Embedding extends Construct {
         memorySize: 512,
         timeout: Duration.minutes(1),
         role: handlerRole,
+        environment: {
+          BEDROCK_REGION: props.bedrockRegion,
+        },
       }
     );
     this._StoreKnowledgeBaseIdHandler = new DockerImageFunction(
@@ -473,20 +476,21 @@ export class Embedding extends Construct {
     );
     storeGuardrailArn.addCatch(fallback);
 
-    const startIngestionJob = new tasks.CallAwsService(
+    const startIngestionJob = new tasks.CallAwsServiceCrossRegion(
       this,
       "StartIngestionJob",
       {
-        service: "bedrockagent",
+        service: "bedrock-agent",
         action: "startIngestionJob",
         iamAction: "bedrock:StartIngestionJob",
+        region: props.bedrockRegion,
         parameters: {
-          DataSourceId: sfn.JsonPath.stringAt("$.DataSourceId"),
-          KnowledgeBaseId: sfn.JsonPath.stringAt("$.KnowledgeBaseId"),
+          dataSourceId: sfn.JsonPath.stringAt("$.DataSourceId"),
+          knowledgeBaseId: sfn.JsonPath.stringAt("$.KnowledgeBaseId"),
         },
         // Ref: https://docs.aws.amazon.com/ja_jp/service-authorization/latest/reference/list_amazonbedrock.html#amazonbedrock-knowledge-base
         iamResources: [
-          `arn:${Stack.of(this).partition}:bedrock:${Stack.of(this).region}:${
+          `arn:${Stack.of(this).partition}:bedrock:${props.bedrockRegion}:${
             Stack.of(this).account
           }:knowledge-base/*`,
         ],
@@ -494,24 +498,25 @@ export class Embedding extends Construct {
       }
     );
 
-    const getIngestionJob = new tasks.CallAwsService(this, "GetIngestionJob", {
-      service: "bedrockagent",
+    const getIngestionJob = new tasks.CallAwsServiceCrossRegion(this, "GetIngestionJob", {
+      service: "bedrock-agent",
       action: "getIngestionJob",
       iamAction: "bedrock:GetIngestionJob",
+      region: props.bedrockRegion,
       parameters: {
-        DataSourceId: sfn.JsonPath.stringAt(
-          "$.IngestionJob.IngestionJob.DataSourceId"
+        dataSourceId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.ingestionJob.dataSourceId"
         ),
-        KnowledgeBaseId: sfn.JsonPath.stringAt(
-          "$.IngestionJob.IngestionJob.KnowledgeBaseId"
+        knowledgeBaseId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.ingestionJob.knowledgeBaseId"
         ),
-        IngestionJobId: sfn.JsonPath.stringAt(
-          "$.IngestionJob.IngestionJob.IngestionJobId"
+        ingestionJobId: sfn.JsonPath.stringAt(
+          "$.IngestionJob.ingestionJob.ingestionJobId"
         ),
       },
       // Ref: https://docs.aws.amazon.com/ja_jp/service-authorization/latest/reference/list_amazonbedrock.html#amazonbedrock-knowledge-base
       iamResources: [
-        `arn:${Stack.of(this).partition}:bedrock:${Stack.of(this).region}:${
+        `arn:${Stack.of(this).partition}:bedrock:${props.bedrockRegion}:${
           Stack.of(this).account
         }:knowledge-base/*`,
       ],
@@ -528,14 +533,14 @@ export class Embedding extends Construct {
     )
       .when(
         sfn.Condition.stringEquals(
-          "$.IngestionJob.IngestionJob.Status",
+          "$.IngestionJob.ingestionJob.status",
           "COMPLETE"
         ),
         new sfn.Pass(this, "IngestionJobCompleted")
       )
       .when(
         sfn.Condition.stringEquals(
-          "$.IngestionJob.IngestionJob.Status",
+          "$.IngestionJob.ingestionJob.status",
           "FAILED"
         ),
         new tasks.LambdaInvoke(this, "UpdateSyncStatusFailedForIngestion", {
@@ -718,6 +723,7 @@ export class Embedding extends Construct {
       environment: {
         ACCOUNT: Stack.of(this).account,
         REGION: Stack.of(this).region,
+        BEDROCK_REGION: props.bedrockRegion,
         TABLE_NAME: props.database.tableName,
         TABLE_ACCESS_ROLE_ARN: props.tableAccessRole.roleArn,
         DB_SECRETS_ARN: props.dbSecrets.secretArn,

@@ -21,8 +21,7 @@ from app.routes.schemas.conversation import ChatInput
 from app.stream import ConverseApiStreamHandler, OnStopInput
 from app.usecases.bot import modify_bot_last_used_time
 from app.usecases.chat import insert_knowledge, prepare_conversation, trace_to_root
-from app.utils import get_current_time
-from app.utils import get_current_time, get_guardrails
+from app.utils import get_current_time, get_guardrail
 from app.vector_search import filter_used_results, get_source_link, search_related_docs
 from boto3.dynamodb.conditions import Attr, Key
 from ulid import ULID
@@ -186,12 +185,12 @@ def process_chat_input(
     if not chat_input.continue_generate:
         messages.append(chat_input.message)  # type: ignore
 
-    # guardrailsの情報をDynamodbから取得する
-    guardrails = get_guardrails(user_id=user_id, bot_id=chat_input.bot_id)
-    logger.info(f"guardrails: {guardrails}")
+    # guardrailの情報をDynamodbから取得する
+    guardrail = get_guardrail(user_id=user_id, bot_id=chat_input.bot_id)
+    logger.info(f"guardrail: {guardrail}")
 
     args: ConverseApiRequest
-    if guardrails and guardrails["is_guardrail_enabled"] == True:
+    if guardrail and guardrail["is_guardrail_enabled"] == True:
         grounding_source = {
             'text': {
                 'text': "\n\n".join(x.content for x in search_results),
@@ -210,7 +209,7 @@ def process_chat_input(
             ),
             generation_params=(bot.generation_params if bot else None),
             grounding_source=grounding_source,
-            guardrails=guardrails
+            guardrail=guardrail
         )
         logger.info(f"args: {args}")
     else:

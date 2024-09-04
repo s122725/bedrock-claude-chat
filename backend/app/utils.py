@@ -51,7 +51,7 @@ def get_bedrock_runtime_client(region=BEDROCK_REGION):
     return client
 
 
-def get_bedrock_agent_client(region=REGION):
+def get_bedrock_agent_client(region=BEDROCK_REGION):
     client = boto3.client("bedrock-agent-runtime", region)
     return client
 
@@ -107,7 +107,7 @@ def compose_upload_document_s3_path(user_id: str, bot_id: str, filename: str) ->
 
 
 def delete_file_from_s3(bucket: str, key: str):
-    client = boto3.client("s3")
+    client = boto3.client("s3", BEDROCK_REGION)
 
     # Check if the file exists
     try:
@@ -124,7 +124,7 @@ def delete_file_from_s3(bucket: str, key: str):
 
 def delete_files_with_prefix_from_s3(bucket: str, prefix: str):
     """Delete all objects with the given prefix from the given bucket."""
-    client = boto3.client("s3")
+    client = boto3.client("s3", BEDROCK_REGION)
     response = client.list_objects_v2(Bucket=bucket, Prefix=prefix)
 
     if "Contents" not in response:
@@ -135,7 +135,7 @@ def delete_files_with_prefix_from_s3(bucket: str, prefix: str):
 
 
 def check_if_file_exists_in_s3(bucket: str, key: str):
-    client = boto3.client("s3")
+    client = boto3.client("s3", BEDROCK_REGION)
 
     # Check if the file exists
     try:
@@ -150,7 +150,7 @@ def check_if_file_exists_in_s3(bucket: str, key: str):
 
 
 def move_file_in_s3(bucket: str, key: str, new_key: str):
-    client = boto3.client("s3")
+    client = boto3.client("s3", BEDROCK_REGION)
 
     # Check if the file exists
     try:
@@ -225,8 +225,8 @@ def query_postgres(
         return columns, res
     return res
 
-def get_guardrails(user_id: str, bot_id: str | None) -> dict | None:
-    logger.info("get_guardrails")
+def get_guardrail(user_id: str, bot_id: str | None) -> dict | None:
+    logger.info("get_guardrail")
 
     if bot_id == None:
         return None
@@ -245,12 +245,28 @@ def get_guardrails(user_id: str, bot_id: str | None) -> dict | None:
             is_guardrail_enabled = response["Item"]["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in response["Item"]["GuardrailsParams"] else False
             guardrail_arn = response["Item"]["GuardrailsParams"]["guardrail_arn"] if "guardrail_arn" in response["Item"]["GuardrailsParams"] else None
             guardrail_version = response["Item"]["GuardrailsParams"]["guardrail_version"] if "guardrail_version" in response["Item"]["GuardrailsParams"] else None
+
+            hate_threshold = response["Item"]["GuardrailsParams"]["hate_threshold"] if "hate_threshold" in response["Item"]["GuardrailsParams"] else 0
+            insults_threshold = response["Item"]["GuardrailsParams"]["insults_threshold"] if "insults_threshold" in response["Item"]["GuardrailsParams"] else 0
+            misconduct_threshold = response["Item"]["GuardrailsParams"]["misconduct_threshold"] if "misconduct_threshold" in response["Item"]["GuardrailsParams"] else 0
+            sexual_threshold = response["Item"]["GuardrailsParams"]["sexual_threshold"] if "sexual_threshold" in response["Item"]["GuardrailsParams"] else 0
+            violence_threshold = response["Item"]["GuardrailsParams"]["violence_threshold"] if "violence_threshold" in response["Item"]["GuardrailsParams"] else 0
+
+            grounding_threshold = response["Item"]["GuardrailsParams"]["grounding_threshold"] if "grounding_threshold" in response["Item"]["GuardrailsParams"] else 0
+            relevance_threshold = response["Item"]["GuardrailsParams"]["relevance_threshold"] if "relevance_threshold" in response["Item"]["GuardrailsParams"] else 0
             logger.info(f"Got guardrail_arn for {bot_id} is {guardrail_arn}")
             logger.info(f"Got guardrail_version for {bot_id} is {guardrail_version}")
             return {
                 "is_guardrail_enabled": is_guardrail_enabled,
                 "guardrail_arn": guardrail_arn, 
-                "guardrail_version": guardrail_version
+                "guardrail_version": guardrail_version,
+                "hate_threshold": hate_threshold,
+                "insults_threshold": insults_threshold,
+                "misconduct_threshold": misconduct_threshold,
+                "sexual_threshold": sexual_threshold,
+                "violence_threshold": violence_threshold,
+                "grounding_threshold": grounding_threshold,
+                "relevance_threshold": relevance_threshold,
             }
 
     except RecordNotFoundError:

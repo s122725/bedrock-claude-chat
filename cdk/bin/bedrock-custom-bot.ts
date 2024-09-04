@@ -9,6 +9,8 @@ import {
 
 const app = new cdk.App();
 
+const BEDROCK_REGION = app.node.tryGetContext("bedrockRegion");
+
 const PK: string = process.env.PK!;
 const SK: string = process.env.SK!;
 const BEDROCK_CLAUDE_CHAT_DOCUMENT_BUCKET_NAME: string =
@@ -115,6 +117,10 @@ const bedrockCustomBotStack = new BedrockCustomBotStack(
   app,
   `BrChatKbStack${botId}`,
   {
+    env: {
+      // account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: BEDROCK_REGION,
+    },
     ownerUserId,
     botId,
     embeddingsModel,

@@ -8,7 +8,7 @@ from langchain_core.outputs import GenerationChunk
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 
 class OnStopInput(BaseModel):
     full_token: str
@@ -53,12 +53,28 @@ class ConverseApiStreamHandler:
 
     def run(self, args: ConverseApiRequest):
         client = get_bedrock_runtime_client()
-        response = client.converse_stream(
-            modelId=args["model_id"],
-            messages=args["messages"],
-            inferenceConfig=args["inference_config"],
-            system=args["system"],
-        )
+        response = None
+        try:
+            if args and "guardrailConfig" in args:
+                logger.info(f"args before converse_stream: {args}")
+                response = client.converse_stream(
+                    modelId=args["model_id"],
+                    messages=args["messages"],
+                    inferenceConfig=args["inference_config"],
+                    system=args["system"],
+                    guardrailConfig=args["guardrailConfig"]
+                )
+            else:
+                response = client.converse_stream(
+                    modelId=args["model_id"],
+                    messages=args["messages"],
+                    inferenceConfig=args["inference_config"],
+                    system=args["system"],
+                )
+            logger.info(f"response of converse_stream: {response}")
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            raise e
 
         completions = []
         stop_reason = ""
@@ -88,4 +104,5 @@ class ConverseApiStreamHandler:
                         price=price,
                     )
                 )
+                logger.info(f"event of converse_stream: {event}")
                 yield response

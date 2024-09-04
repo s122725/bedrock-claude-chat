@@ -104,7 +104,6 @@ const BotKbEditPage: React.FC = () => {
   const [embeddingsModel, setEmbeddingsModel] =
     useState<EmbeddingsModel>('titan_v1');
 
-  const [ isGuardrailEnabled, setGuardrailEnabled] = useState<boolean>(false)
   const [ hateThreshold, setHateThreshold ] = useState<number>(0)
   const [ insultsThreshold, setInsultsThreshold ] = useState<number>(0)
   const [ sexualThreshold, setSexualThreshold ] = useState<number>(0)
@@ -223,7 +222,7 @@ const BotKbEditPage: React.FC = () => {
   ];
 
   const {
-    errorMessages,
+    errorMessages, 
     setErrorMessage: setErrorMessages,
     clearAll: clearErrorMessages,
   } = useErrorMessage();
@@ -302,7 +301,6 @@ const BotKbEditPage: React.FC = () => {
           );
           setOpenSearchParams(bot.bedrockKnowledgeBase!.openSearch);
           setSearchParams(bot.bedrockKnowledgeBase!.searchParams);
-          setGuardrailEnabled(bot.bedrockGuardrails.isGuardrailEnabled)
           setGuardrailArn(bot.bedrockGuardrails.guardrailArn)
           setGuardrailVersion(
             bot.bedrockGuardrails.guardrailVersion ? bot.bedrockGuardrails.guardrailVersion : ""
@@ -712,7 +710,17 @@ const BotKbEditPage: React.FC = () => {
         searchParams: searchParams,
       },
       bedrockGuardrails: {
-        isGuardrailEnabled: isGuardrailEnabled,
+        isGuardrailEnabled: 
+          true ? (
+            // guardrailのパラメータのうち一つが設定されていればtrueにする
+            hateThreshold > 0 ||
+            insultsThreshold > 0 ||
+            sexualThreshold > 0 ||
+            violenceThreshold > 0 ||
+            misconductThreshold > 0 ||
+            groundingThreshold > 0 ||
+            relevanceThreshold > 0
+          ) : false,
         hateThreshold: hateThreshold,
         insultsThreshold: insultsThreshold,
         sexualThreshold: sexualThreshold,
@@ -808,7 +816,16 @@ const BotKbEditPage: React.FC = () => {
           searchParams: searchParams,
         },
         bedrockGuardrails: {
-          isGuardrailEnabled: isGuardrailEnabled,
+          isGuardrailEnabled: true ? (
+            // guardrailのパラメータのうち一つが設定されていればtrueにする
+            hateThreshold > 0 ||
+            insultsThreshold > 0 ||
+            sexualThreshold > 0 ||
+            violenceThreshold > 0 ||
+            misconductThreshold > 0 ||
+            groundingThreshold > 0 ||
+            relevanceThreshold > 0
+          ) : false,
           hateThreshold: hateThreshold,
           insultsThreshold: insultsThreshold,
           sexualThreshold: sexualThreshold,
@@ -1336,16 +1353,6 @@ const BotKbEditPage: React.FC = () => {
                 label={t('guardrails.title')} 
                 className="py-2"
               >
-                <div className="mt-2">
-                  <Toggle
-                    value={isGuardrailEnabled}
-                    label={t('guardrails.label')}
-                    hint={t('guardrails.hint')}
-                    onChange={()=> {
-                      setGuardrailEnabled(!isGuardrailEnabled);
-                    }}
-                  />
-                </div>
                 <ExpandableDrawerGroup 
                   isDefaultShow={false}
                   label={t('guardrails.harmfulCategories.label')} 

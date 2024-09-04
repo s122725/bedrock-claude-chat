@@ -6,6 +6,9 @@ import {
   HttpMethods,
   ObjectOwnership,
 } from "aws-cdk-lib/aws-s3";
+import {
+  CloudFrontWebDistribution,
+} from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 import { Auth } from "./constructs/auth";
 import { Api } from "./constructs/api";
@@ -42,6 +45,7 @@ export interface BedrockChatStackProps extends StackProps {
   readonly selfSignUpEnabled: boolean;
   readonly enableIpV6: boolean;
   readonly natgatewayCount: number;
+  readonly documentBucket: Bucket
 }
 
 export class BedrockChatStack extends cdk.Stack {
@@ -72,17 +76,6 @@ export class BedrockChatStack extends cdk.Stack {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-    });
-
-    const documentBucket = new Bucket(this, "DocumentBucket", {
-      encryption: BucketEncryption.S3_MANAGED,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      objectOwnership: ObjectOwnership.OBJECT_WRITER,
-      autoDeleteObjects: true,
-      serverAccessLogsBucket: accessLogBucket,
-      serverAccessLogsPrefix: "DocumentBucket",
     });
 
     // Bucket for source code
@@ -188,14 +181,14 @@ export class BedrockChatStack extends cdk.Stack {
       bedrockRegion: props.bedrockRegion,
       tableAccessRole: database.tableAccessRole,
       dbSecrets: vectorStore.secret,
-      documentBucket,
+      documentBucket: props.documentBucket,
       apiPublishProject: apiPublishCodebuild.project,
       bedrockCustomBotProject: bedrockCustomBotCodebuild.project,
       usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,
     });
-    documentBucket.grantReadWrite(backendApi.handler);
+    props.documentBucket.grantReadWrite(backendApi.handler);
 
     // For streaming response
     const websocket = new WebSocket(this, "WebSocket", {
@@ -208,7 +201,7 @@ export class BedrockChatStack extends cdk.Stack {
       auth,
       bedrockRegion: props.bedrockRegion,
       largeMessageBucket,
-      documentBucket,
+      documentBucket: props.documentBucket,
       enableMistral: props.enableMistral,
     });
     frontend.buildViteApp({
@@ -221,11 +214,16 @@ export class BedrockChatStack extends cdk.Stack {
       idp,
     });
 
-    documentBucket.addCorsRule({
-      allowedMethods: [HttpMethods.PUT],
-      allowedOrigins: [frontend.getOrigin(), "http://localhost:5173", "*"],
-      allowedHeaders: ["*"],
-      maxAge: 3000,
+    const cloudFrontWebDistribution = frontend.cloudFrontWebDistribution.node.defaultChild as CloudFrontWebDistribution;
+    props.documentBucket.addCorsRule({
+        allowedMethods: [HttpMethods.PUT],
+        allowedOrigins: [
+          `https://${cloudFrontWebDistribution.distributionDomainName}`, // frontend.getOrigin() is cyclic reference
+          "http://localhost:5173",
+          "*"
+        ],
+        allowedHeaders: ["*"],
+        maxAge: 3000,
     });
 
     const embedding = new Embedding(this, "Embedding", {
@@ -234,12 +232,12 @@ export class BedrockChatStack extends cdk.Stack {
       database: database.table,
       dbSecrets: vectorStore.secret,
       tableAccessRole: database.tableAccessRole,
-      documentBucket,
+      documentBucket: props.documentBucket,
       embeddingContainerVcpu: props.embeddingContainerVcpu,
       embeddingContainerMemory: props.embeddingContainerMemory,
       bedrockCustomBotProject: bedrockCustomBotCodebuild.project,
     });
-    documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
+    props.documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
 
     vectorStore.allowFrom(embedding.taskSecurityGroup);
     vectorStore.allowFrom(embedding.removalHandler);
@@ -257,7 +255,7 @@ export class BedrockChatStack extends cdk.Stack {
     );
 
     new CfnOutput(this, "DocumentBucketName", {
-      value: documentBucket.bucketName,
+      value: props.documentBucket.bucketName,
     });
     new CfnOutput(this, "FrontendURL", {
       value: frontend.getOrigin(),

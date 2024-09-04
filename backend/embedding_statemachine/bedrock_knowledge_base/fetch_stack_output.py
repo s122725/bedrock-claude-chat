@@ -1,12 +1,12 @@
-import json
+import os
 import boto3
 from app.repositories.custom_bot import (
-    compose_bot_id,
     decompose_bot_id,
-    find_private_bot_by_id,
 )
 
-cf_client = boto3.client("cloudformation")
+BEDROCK_REGION = os.environ.get("BEDROCK_REGION")
+
+cf_client = boto3.client("cloudformation", BEDROCK_REGION)
 
 
 def handler(event, context):
@@ -25,21 +25,18 @@ def handler(event, context):
 
     knowledge_base_id = None
     data_source_ids = []
+    guardrail_arn = None
+    guardrail_version = None
 
     for output in outputs:
         if output["OutputKey"] == "KnowledgeBaseId":
             knowledge_base_id = output["OutputValue"]
         elif output["OutputKey"].startswith("DataSource"):
             data_source_ids.append(output["OutputValue"])
-        
-        if output["OutputKey"] == "GuardrailArn":
+        elif output["OutputKey"] == "GuardrailArn":
             guardrail_arn = output["OutputValue"]
-        else:
-            guardrail_arn = ""
-        if output["OutputKey"] == "GuardrailVersion":
+        elif output["OutputKey"] == "GuardrailVersion":
             guardrail_version = output["OutputValue"]
-        else:
-            guardrail_version = ""
 
     result = []
     for data_source_id in data_source_ids:
@@ -47,8 +44,8 @@ def handler(event, context):
             {
                 "KnowledgeBaseId": knowledge_base_id,
                 "DataSourceId": data_source_id,
-                "GuardrailArn": guardrail_arn,
-                "GuardrailVersion": guardrail_version,
+                "GuardrailArn": guardrail_arn if guardrail_arn != None else "",
+                "GuardrailVersion": guardrail_version if guardrail_version != None else "",
                 "PK": pk,
                 "SK": sk,
             }

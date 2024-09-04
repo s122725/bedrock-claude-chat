@@ -202,7 +202,7 @@ def compose_args_for_converse_api_with_guardrail(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
     grounding_source: dict | None = None,
-    guardrails: dict | None = None
+    guardrail: dict | None = None
 ) -> ConverseApiRequest:
     """Compose arguments for Converse API.
     Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
@@ -214,9 +214,10 @@ def compose_args_for_converse_api_with_guardrail(
             for c in message.content:
                 if c.content_type == "text":
                     if message.role == 'user':
-                        content_blocks.append({
-                            "guardContent": grounding_source
-                        })
+                        if guardrail['grounding_threshold'] > 0:
+                            content_blocks.append({
+                                "guardContent": grounding_source
+                            })
                         content_blocks.append({
                             "guardContent": {
                                 "text": {
@@ -291,10 +292,10 @@ def compose_args_for_converse_api_with_guardrail(
     if instruction:
         args["system"].append({"text": instruction})
 
-    if guardrails and "guardrail_arn" in guardrails and "guardrail_version" in guardrails:
+    if guardrail and "guardrail_arn" in guardrail and "guardrail_version" in guardrail:
         args["guardrailConfig"]: GuardrailConfig = { # type: ignore
-            "guardrailIdentifier": guardrails["guardrail_arn"],
-            "guardrailVersion": guardrails["guardrail_version"],
+            "guardrailIdentifier": guardrail["guardrail_arn"],
+            "guardrailVersion": guardrail["guardrail_version"],
             "trace": "enabled",
             "streamProcessingMode": "sync"
         }
