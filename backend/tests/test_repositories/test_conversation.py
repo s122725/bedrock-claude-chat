@@ -22,7 +22,13 @@ from app.repositories.custom_bot import (
     find_private_bots_by_user_id,
     store_bot,
 )
-from app.repositories.models.conversation import ChunkModel, FeedbackModel
+from app.repositories.models.conversation import (
+    AgentContentModel,
+    AgentMessageModel,
+    AgentToolUseContentModel,
+    ChunkModel,
+    FeedbackModel,
+)
 from app.repositories.models.custom_bot import (
     AgentModel,
     AgentToolModel,
@@ -153,7 +159,25 @@ class TestConversationRepository(unittest.TestCase):
                             content_type="url",
                         ),
                     ],
-                    thinking_log="test thinking log",
+                    thinking_log=[
+                        AgentMessageModel(
+                            role="agent",
+                            content=[
+                                AgentContentModel(
+                                    content_type="toolUse",
+                                    body=AgentToolUseContentModel(
+                                        tool_use_id="xyz1234",
+                                        name="internet_search",
+                                        input={
+                                            "query": "Google news",
+                                            "country": "us-en",
+                                            "time_limit": "d",
+                                        },
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
                 )
             },
             last_message_id="x",
@@ -170,9 +194,7 @@ class TestConversationRepository(unittest.TestCase):
         self.assertEqual(len(conversations), 1)
 
         # Test finding conversation by id
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         self.assertEqual(found_conversation.id, "1")
         message_map = found_conversation.message_map
         # Assert whether the message map is correctly reconstructed
@@ -192,11 +214,23 @@ class TestConversationRepository(unittest.TestCase):
         self.assertEqual(message_map["a"].parent, "z")
         self.assertEqual(message_map["a"].create_time, 1627984879.9)
         self.assertEqual(len(message_map["a"].used_chunks), 1)  # type: ignore
-        self.assertEqual(message_map["a"].thinking_log, "test thinking log")
         self.assertEqual(found_conversation.last_message_id, "x")
         self.assertEqual(found_conversation.total_price, 100)
         self.assertEqual(found_conversation.bot_id, None)
         self.assertEqual(found_conversation.should_continue, False)
+
+        # Agent thinking log
+        assert message_map["a"].thinking_log is not None
+        self.assertEqual(message_map["a"].thinking_log[0].role, "agent")
+        self.assertEqual(
+            message_map["a"].thinking_log[0].content[0].content_type, "toolUse"
+        )
+        self.assertEqual(
+            message_map["a"].thinking_log[0].content[0].body.name, "internet_search"  # type: ignore
+        )
+        self.assertEqual(
+            message_map["a"].thinking_log[0].content[0].body.input["query"], "Google news"  # type: ignore
+        )
 
         # Test update title
         response = change_conversation_title(
@@ -204,9 +238,7 @@ class TestConversationRepository(unittest.TestCase):
             conversation_id="1",
             new_title="Updated title",
         )
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         self.assertEqual(found_conversation.title, "Updated title")
 
         # Test give a feedback
@@ -219,9 +251,7 @@ class TestConversationRepository(unittest.TestCase):
                 thumbs_up=True, category="Good", comment="The response is pretty good."
             ),
         )
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         feedback = found_conversation.message_map["a"].feedback
         self.assertIsNotNone(feedback)
         self.assertEqual(feedback.thumbs_up, True)  # type: ignore
@@ -280,9 +310,7 @@ class TestConversationRepository(unittest.TestCase):
         self.assertIsNotNone(response)
 
         # Test finding large conversation by id
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="2"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="2")
         self.assertEqual(found_conversation.id, "2")
         self.assertEqual(found_conversation.title, "Large Conversation")
         self.assertEqual(found_conversation.total_price, 200)

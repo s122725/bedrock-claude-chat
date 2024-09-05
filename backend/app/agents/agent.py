@@ -12,34 +12,17 @@ from app.bedrock import (
     get_bedrock_client,
     get_model_id,
 )
-from app.repositories.models.conversation import MessageModel
+from app.repositories.models.conversation import (
+    AgentContentModel,
+    AgentMessageModel,
+    AgentToolResultModel,
+    AgentToolUseContentModel,
+    MessageModel,
+)
 from app.repositories.models.custom_bot import BotModel
 from app.routes.schemas.conversation import type_model_name
 from app.utils import convert_dict_keys_to_camel_case
 from pydantic import BaseModel
-
-
-class AgentContentModel(BaseModel):
-    content_type: Literal["text", "toolUse", "toolResult"]
-    body: str | ConverseApiToolUseContent | ConverseApiToolResult
-
-
-class AgentMessageModel(BaseModel):
-    role: str
-    content: list[AgentContentModel]
-
-    @classmethod
-    def from_message_model(cls, message: MessageModel):
-        return AgentMessageModel(
-            role=message.role,  # type: ignore
-            content=[
-                AgentContentModel(
-                    content_type=content.content_type,  # type: ignore
-                    body=content.body,
-                )
-                for content in message.content
-            ],
-        )
 
 
 class OnStopInput(BaseModel):
@@ -72,7 +55,7 @@ class AgentRunner:
         self.total_input_tokens = 0
         self.total_output_tokens = 0
 
-    def run(self, messages: list[MessageModel]) -> ConverseApiResponse:
+    def run(self, messages: list[MessageModel]) -> OnStopInput:
         print(f"Running agent with messages: {messages}")
         conv = [
             AgentMessageModel.from_message_model(message)
@@ -94,7 +77,10 @@ class AgentRunner:
             assistant_message = AgentMessageModel(
                 role="assistant",
                 content=[
-                    AgentContentModel(content_type="toolUse", body=tool_use)
+                    AgentContentModel(
+                        content_type="toolUse",
+                        body=AgentToolUseContentModel.from_tool_use_content(tool_use),
+                    )
                     for tool_use in tool_uses
                 ],
             )
@@ -108,7 +94,10 @@ class AgentRunner:
             user_message = AgentMessageModel(
                 role="user",
                 content=[
-                    AgentContentModel(content_type="toolResult", body=result)
+                    AgentContentModel(
+                        content_type="toolResult",
+                        body=AgentToolResultModel.from_tool_result(result),
+                    )
                     for result in tool_results
                 ],
             )
@@ -120,26 +109,28 @@ class AgentRunner:
             self.total_input_tokens += response["usage"]["inputTokens"]
             self.total_output_tokens += response["usage"]["outputTokens"]
 
+        stop_input = OnStopInput(
+            thinking_conversation=conv,
+            last_response=response,
+            stop_reason=response["stopReason"],
+            input_token_count=self.total_input_tokens,
+            output_token_count=self.total_output_tokens,
+            price=calculate_price(
+                self.model, self.total_input_tokens, self.total_output_tokens
+            ),
+        )
+
         if self.on_stop:
-            stop_input = OnStopInput(
-                thinking_conversation=conv,
-                last_response=response,
-                stop_reason=response["stopReason"],
-                input_token_count=self.total_input_tokens,
-                output_token_count=self.total_output_tokens,
-                price=calculate_price(
-                    self.model, self.total_input_tokens, self.total_output_tokens
-                ),
-            )
             self.on_stop(stop_input)
-        return response
+
+        return stop_input
 
     def _call_converse_api(
         self, messages: list[AgentMessageModel]
     ) -> ConverseApiResponse:
         args = self._compose_args(messages)
 
-        messages = args["messages"]
+        messages = args["messages"]  # type: ignore
         inference_config = args["inference_config"]
         additional_model_request_fields = args["additional_model_request_fields"]
         model_id = args["model_id"]
@@ -165,9 +156,28 @@ class AgentRunner:
                         {"text": c.body}
                         if c.content_type == "text"
                         else (
-                            {"toolUse": c.body}
+                            {
+                                "toolUse": {
+                                    "toolUseId": c.body.tool_use_id,
+                                    "name": c.body.name,
+                                    "input": c.body.input,
+                                }
+                            }
                             if c.content_type == "toolUse"
-                            else {"toolResult": c.body}
+                            else {
+                                "toolResult": {
+                                    "toolUseId": c.body.tool_use_id,
+                                    "status": c.body.status,
+                                    "content": [
+                                        (
+                                            {"json": content.json_}
+                                            if content.json_
+                                            else {"text": content.text}
+                                        )
+                                        for content in c.body.content
+                                    ],
+                                }
+                            }
                         )
                     )
                     for c in message.content

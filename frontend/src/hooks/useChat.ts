@@ -19,7 +19,6 @@ import { convertMessageMapToArray } from '../utils/MessageUtils';
 import useModel from './useModel';
 import useFeedbackApi from './useFeedbackApi';
 import { useMachine } from '@xstate/react';
-// import { agentThinkingState } from '../features/agent/xstates/agentThinkProgress';
 import { agentThinkingState } from '../features/agent/xstates/agentThink';
 
 type ChatStateType = {

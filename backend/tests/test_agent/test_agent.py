@@ -10,7 +10,11 @@ from app.agents.tools.agent_tool import RunResult
 from app.agents.tools.internet_search import internet_search_tool
 from app.bedrock import ConverseApiToolResult, ConverseApiToolUseContent
 from app.config import DEFAULT_EMBEDDING_CONFIG
-from app.repositories.models.conversation import ContentModel, MessageModel
+from app.repositories.models.conversation import (
+    AgentToolUseContentModel,
+    ContentModel,
+    MessageModel,
+)
 from app.repositories.models.custom_bot import (
     AgentModel,
     BotModel,
@@ -30,12 +34,12 @@ def on_thinking(agent_log: list[AgentMessageModel]):
     assert agent_log[-1].role == "assistant"
     to_send = dict()
     for c in agent_log[-1].content:
-        to_send[c.body["toolUseId"]] = {
-            "name": c.body["name"],
-            "input": c.body["input"],
+        assert type(c.body) == AgentToolUseContentModel
+        to_send[c.body.tool_use_id] = {
+            "name": c.body.name,
+            "input": c.body.input,
         }
     pprint(to_send)
-    # pprint(agent_log)
 
 
 def on_tool_result(tool_result: ConverseApiToolResult):
@@ -45,7 +49,7 @@ def on_tool_result(tool_result: ConverseApiToolResult):
     to_send = {
         "toolUseId": tool_result["toolUseId"],
         "status": tool_result["status"],  # type: ignore
-        "content": tool_result["content"],
+        "content": tool_result["content"][:20],
     }
     pprint(to_send["toolUseId"])
     pprint(to_send["status"])
@@ -126,7 +130,7 @@ class TestAgentRunner(unittest.TestCase):
                 ContentModel(
                     content_type="text",
                     media_type=None,
-                    body="今日の東京の天気?あと宮崎の天気も",
+                    body="今日の東京の天気?あと宮崎の天気も。並列処理して",
                     file_name=None,
                 )
             ],

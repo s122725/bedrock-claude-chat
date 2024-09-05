@@ -8,12 +8,12 @@ from decimal import Decimal as decimal
 import boto3
 from app.agents.agent import AgentMessageModel, AgentRunner
 from app.agents.agent import OnStopInput as AgentOnStopInput
-from app.agents.tools.agent_tool import RunResult
 from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
 from app.bedrock import ConverseApiToolResult, compose_args_for_converse_api
 from app.repositories.conversation import RecordNotFoundError, store_conversation
 from app.repositories.models.conversation import (
+    AgentToolUseContentModel,
     ChunkModel,
     ContentModel,
     ConversationModel,
@@ -119,9 +119,10 @@ def on_agent_thinking(agent_log: list[AgentMessageModel], gatewayapi, connection
     assert agent_log[-1].role == "assistant"
     to_send = dict()
     for c in agent_log[-1].content:
-        to_send[c.body["toolUseId"]] = {
-            "name": c.body["name"],
-            "input": c.body["input"],
+        assert type(c.body) == AgentToolUseContentModel
+        to_send[c.body.tool_use_id] = {
+            "name": c.body.name,
+            "input": c.body.input,
         }
 
     data_to_send = json.dumps(dict(status="AGENT_THINKING", log=to_send)).encode("utf-8")
@@ -169,7 +170,7 @@ def on_agent_stop(
         create_time=get_current_time(),
         feedback=None,
         used_chunks=None,
-        thinking_log=None,
+        thinking_log=arg.thinking_conversation,
     )
     conversation.message_map[assistant_msg_id] = message
     conversation.message_map[user_msg_id].children.append(assistant_msg_id)
@@ -211,7 +212,6 @@ def process_chat_input(
 
     if bot and bot.is_agent_enabled():
         logger.info("Bot has agent tools. Using agent for response.")
-
         tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
 
         # TODO: append knowledge tool to tools

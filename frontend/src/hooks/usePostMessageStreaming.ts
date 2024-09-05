@@ -2,7 +2,6 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { PostMessageRequest } from '../@types/conversation';
 import { create } from 'zustand';
 import i18next from 'i18next';
-// import { AgentThinkingEventKeys } from '../features/agent/xstates/agentThinkProgress';
 import { AgentEvent } from '../features/agent/xstates/agentThink';
 import { PostStreamingStatus } from '../constants';
 

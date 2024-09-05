@@ -2,6 +2,8 @@ import logging
 from copy import deepcopy
 from typing import Literal
 
+from app.agents.agent import AgentMessageModel, AgentRunner
+from app.agents.agent import OnStopInput as AgentOnStopInput
 from app.agents.utils import get_tool_by_name
 from app.bedrock import calculate_price, call_converse_api, compose_args_for_converse_api
 from app.prompt import build_rag_prompt
@@ -23,6 +25,11 @@ from app.repositories.models.custom_bot import (
     ConversationQuickStarterModel,
 )
 from app.routes.schemas.conversation import (
+    AgentContent,
+    AgentMessage,
+    AgentToolResult,
+    AgentToolResultContent,
+    AgentToolUseContent,
     ChatInput,
     ChatOutput,
     Chunk,
@@ -243,8 +250,36 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
     thinking_log = None
 
     if bot and bot.is_agent_enabled():
-        # TODO
-        ...
+        logger.info("Bot has agent tools. Using agent for response.")
+        tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
+
+        # TODO: append knowledge tool to tools
+        # ...
+
+        runner = AgentRunner(
+            bot=bot,
+            tools=tools,
+            model=chat_input.message.model,
+            on_thinking=None,
+            on_tool_result=None,
+            on_stop=None,
+        )
+        message_map = conversation.message_map
+        messages = trace_to_root(
+            node_id=conversation.message_map[user_msg_id].parent,
+            message_map=message_map,
+        )
+        messages.append(chat_input.message)  # type: ignore
+        result = runner.run(messages)
+        reply_txt = result.last_response["output"]["message"]["content"][0].get(
+            "text", ""
+        )
+        price = result.price
+        thinking_log = result.thinking_conversation
+
+        # Agent does not support continued generation
+        conversation.should_continue = False
+
         # logger.info("Bot has agent tools. Using agent for response.")
         # llm = BedrockLLM.from_model(model=chat_input.message.model)
 
@@ -338,7 +373,7 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
         )
 
         converse_response = call_converse_api(args)
-        reply_txt = converse_response["output"]["message"]["content"][0]["text"]
+        reply_txt = converse_response["output"]["message"]["content"][0].get("text", "")
         reply_txt = reply_txt.rstrip()
 
         # Used chunks for RAG generation
@@ -432,6 +467,11 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
                     for c in message.used_chunks
                 ]
                 if message.used_chunks
+                else None
+            ),
+            thinking_log=(
+                [AgentMessage.from_model(m) for m in message.thinking_log]
+                if message.thinking_log
                 else None
             ),
         ),
@@ -544,6 +584,11 @@ def fetch_conversation(user_id: str, conversation_id: str) -> Conversation:
                     for c in message.used_chunks
                 ]
                 if message.used_chunks
+                else None
+            ),
+            thinking_log=(
+                [AgentMessage.from_model(m) for m in message.thinking_log]
+                if message.thinking_log
                 else None
             ),
         )
