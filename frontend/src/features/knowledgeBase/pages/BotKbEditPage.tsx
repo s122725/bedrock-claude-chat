@@ -1,44 +1,53 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import InputText from '../components/InputText';
-import Button from '../components/Button';
-import useBot from '../hooks/useBot';
+import InputText from '../../../components/InputText';
+import Button from '../../../components/Button';
+import useBot from '../../../hooks/useBot';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PiCaretLeft, PiNote, PiPlus, PiTrash } from 'react-icons/pi';
-import Textarea from '../components/Textarea';
-import DialogInstructionsSamples from '../components/DialogInstructionsSamples';
-import ButtonIcon from '../components/ButtonIcon';
+import Textarea from '../../../components/Textarea';
+import DialogInstructionsSamples from '../../../components/DialogInstructionsSamples';
+import ButtonIcon from '../../../components/ButtonIcon';
 import { produce } from 'immer';
-import Alert from '../components/Alert';
-import KnowledgeFileUploader from '../components/KnowledgeFileUploader';
-import GenerationConfig from '../components/GenerationConfig';
-import {
-  BotFile,
-  ConversationQuickStarter,
-  EmdeddingParams,
-  SearchParams,
-} from '../@types/bot';
+import Alert from '../../../components/Alert';
+import KnowledgeFileUploader from '../../../components/KnowledgeFileUploader';
+import GenerationConfig from '../../../components/GenerationConfig';
+import Select from '../../../components/Select';
+import { BotFile, ConversationQuickStarter } from '../../../@types/bot';
 
 import { ulid } from 'ulid';
 import {
-  DEFAULT_EMBEDDING_CONFIG,
-  EDGE_EMBEDDING_PARAMS,
   EDGE_GENERATION_PARAMS,
   EDGE_MISTRAL_GENERATION_PARAMS,
   DEFAULT_GENERATION_CONFIG,
   DEFAULT_MISTRAL_GENERATION_CONFIG,
-  DEFAULT_SEARCH_CONFIG,
   EDGE_SEARCH_PARAMS,
   TooltipDirection,
+} from '../../../constants';
+import { Slider } from '../../../components/Slider';
+import ExpandableDrawerGroup from '../../../components/ExpandableDrawerGroup';
+import useErrorMessage from '../../../hooks/useErrorMessage';
+import Help from '../../../components/Help';
+import Toggle from '../../../components/Toggle';
+import { useAgent } from '../../../features/agent/hooks/useAgent';
+import { AgentTool } from '../../../features/agent/types';
+import { AvailableTools } from '../../../features/agent/components/AvailableTools';
+import {
+  DEFAULT_CHUNKING_MAX_TOKENS,
+  DEFAULT_CHUNKING_OVERLAP_PERCENTAGE,
+  EDGE_CHUNKING_MAX_TOKENS,
+  EDGE_CHUNKING_OVERLAP_PERCENTAGE,
+  OPENSEARCH_ANALYZER,
+  DEFAULT_SEARCH_CONFIG,
+  DEFAULT_OPENSEARCH_ANALYZER,
 } from '../constants';
-import { Slider } from '../components/Slider';
-import ExpandableDrawerGroup from '../components/ExpandableDrawerGroup';
-import useErrorMessage from '../hooks/useErrorMessage';
-import Help from '../components/Help';
-import Toggle from '../components/Toggle';
-import { useAgent } from '../features/agent/hooks/useAgent';
-import { AgentTool } from '../features/agent/types';
-import { AvailableTools } from '../features/agent/components/AvailableTools';
+import {
+  ChunkingStrategy,
+  EmbeddingsModel,
+  OpenSearchParams,
+  SearchParams,
+  SearchType,
+} from '../types';
 
 const edgeGenerationParams =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true'
@@ -50,8 +59,8 @@ const defaultGenerationConfig =
     ? DEFAULT_MISTRAL_GENERATION_CONFIG
     : DEFAULT_GENERATION_CONFIG;
 
-const BotEditPage: React.FC = () => {
-  const { t } = useTranslation();
+const BotKbEditPage: React.FC = () => {
+  const { i18n, t } = useTranslation();
   const navigate = useNavigate();
   const { botId: paramsBotId } = useParams();
   const { getMyBot, registerBot, updateBot } = useBot();
@@ -63,12 +72,8 @@ const BotEditPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [instruction, setInstruction] = useState('');
   const [urls, setUrls] = useState<string[]>(['']);
+  const [s3Urls, setS3Urls] = useState<string[]>(['']);
   const [files, setFiles] = useState<BotFile[]>([]);
-  const [embeddingParams, setEmbeddingParams] = useState<EmdeddingParams>({
-    chunkSize: DEFAULT_EMBEDDING_CONFIG.chunkSize,
-    chunkOverlap: DEFAULT_EMBEDDING_CONFIG.chunkOverlap,
-    enablePartitionPdf: DEFAULT_EMBEDDING_CONFIG.enablePartitionPdf,
-  });
   const [addedFilenames, setAddedFilenames] = useState<string[]>([]);
   const [unchangedFilenames, setUnchangedFilenames] = useState<string[]>([]);
   const [deletedFilenames, setDeletedFilenames] = useState<string[]>([]);
@@ -84,9 +89,6 @@ const BotEditPage: React.FC = () => {
   const [stopSequences, setStopSequences] = useState<string>(
     defaultGenerationConfig.stopSequences?.join(',') || ''
   );
-  const [searchParams, setSearchParams] = useState<SearchParams>(
-    DEFAULT_SEARCH_CONFIG
-  );
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [conversationQuickStarters, setConversationQuickStarters] = useState<
     ConversationQuickStarter[]
@@ -96,6 +98,117 @@ const BotEditPage: React.FC = () => {
       example: '',
     },
   ]);
+
+  const [knowledgeBaseId, setKnowledgeBaseId] = useState<string | null>(null); // Send null when creating a new bot
+  const [embeddingsModel, setEmbeddingsModel] =
+    useState<EmbeddingsModel>('titan_v1');
+
+  const embeddingsModelOptions: {
+    label: string;
+    value: EmbeddingsModel;
+  }[] = [
+    {
+      label: t('knowledgeBaseSettings.embeddingModel.titan_v1.label'),
+      value: 'titan_v1',
+    },
+    {
+      label: t(
+        'knowledgeBaseSettings.embeddingModel.cohere_multilingual_v3.label'
+      ),
+      value: 'cohere_multilingual_v3',
+    },
+  ];
+
+  const [chunkingStrategy, setChunkingStrategy] =
+    useState<ChunkingStrategy>('default');
+
+  const chunkingStrategyOptions: {
+    label: string;
+    value: ChunkingStrategy;
+    description: string;
+  }[] = [
+    {
+      label: t('knowledgeBaseSettings.chunkingStrategy.default.label'),
+      value: 'default',
+      description: t('knowledgeBaseSettings.chunkingStrategy.default.hint'),
+    },
+    {
+      label: t('knowledgeBaseSettings.chunkingStrategy.fixed_size.label'),
+      value: 'fixed_size',
+      description: t('knowledgeBaseSettings.chunkingStrategy.fixed_size.hint'),
+    },
+    {
+      label: t('knowledgeBaseSettings.chunkingStrategy.none.label'),
+      value: 'none',
+      description: t('knowledgeBaseSettings.chunkingStrategy.none.hint'),
+    },
+  ];
+
+  const [chunkingMaxTokens, setChunkingMaxTokens] = useState<number>(
+    DEFAULT_CHUNKING_MAX_TOKENS
+  );
+
+  const [chunkingOverlapPercentage, setChunkingOverlapPercentage] =
+    useState<number>(DEFAULT_CHUNKING_OVERLAP_PERCENTAGE);
+
+  const [analyzer, setAnalyzer] = useState<string>(
+    DEFAULT_OPENSEARCH_ANALYZER[i18n.language] ?? 'none'
+  );
+
+  const [openSearchParams, setOpenSearchParams] = useState<OpenSearchParams>(
+    DEFAULT_OPENSEARCH_ANALYZER[i18n.language]
+      ? OPENSEARCH_ANALYZER[DEFAULT_OPENSEARCH_ANALYZER[i18n.language]]
+      : OPENSEARCH_ANALYZER['none']
+  );
+
+  const analyzerOptions: {
+    label: string;
+    value: string;
+    description: string;
+  }[] = [
+    {
+      label: t('knowledgeBaseSettings.opensearchAnalyzer.icu.label'),
+      value: 'icu',
+      description: t('knowledgeBaseSettings.opensearchAnalyzer.icu.hint', {
+        tokenizer: OPENSEARCH_ANALYZER['icu'].analyzer!.tokenizer,
+        normalizer: OPENSEARCH_ANALYZER['icu'].analyzer!.characterFilters,
+      }),
+    },
+    {
+      label: t('knowledgeBaseSettings.opensearchAnalyzer.kuromoji.label'),
+      value: 'kuromoji',
+      description: t('knowledgeBaseSettings.opensearchAnalyzer.kuromoji.hint', {
+        tokenizer: OPENSEARCH_ANALYZER['kuromoji'].analyzer!.tokenizer,
+        normalizer: OPENSEARCH_ANALYZER['icu'].analyzer!.characterFilters,
+      }),
+    },
+    {
+      label: t('knowledgeBaseSettings.opensearchAnalyzer.none.label'),
+      value: 'none',
+      description: t('knowledgeBaseSettings.opensearchAnalyzer.none.hint'),
+    },
+  ];
+
+  const [searchParams, setSearchParams] = useState<SearchParams>(
+    DEFAULT_SEARCH_CONFIG
+  );
+
+  const searchTypeOptions: {
+    label: string;
+    value: SearchType;
+    description: string;
+  }[] = [
+    {
+      label: t('searchSettings.searchType.hybrid.label'),
+      value: 'hybrid',
+      description: t('searchSettings.searchType.hybrid.hint'),
+    },
+    {
+      label: t('searchSettings.searchType.semantic.label'),
+      value: 'semantic',
+      description: t('searchSettings.searchType.semantic.hint'),
+    },
+  ];
 
   const {
     errorMessages,
@@ -117,7 +230,7 @@ const BotEditPage: React.FC = () => {
       getMyBot(botId)
         .then((bot) => {
           // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
-          if (bot.bedrockKnowledgeBase) {
+          if (!bot.bedrockKnowledgeBase) {
             navigate('/');
             return;
           }
@@ -131,14 +244,15 @@ const BotEditPage: React.FC = () => {
               ? ['']
               : bot.knowledge.sourceUrls
           );
+          setS3Urls(
+            bot.knowledge.s3Urls.length === 0 ? [''] : bot.knowledge.s3Urls
+          );
           setFiles(
             bot.knowledge.filenames.map((filename) => ({
               filename,
               status: 'UPLOADED',
             }))
           );
-          setEmbeddingParams(bot.embeddingParams);
-          setSearchParams(bot.searchParams);
           setTopK(bot.generationParams.topK);
           setTopP(bot.generationParams.topP);
           setTemperature(bot.generationParams.temperature);
@@ -164,6 +278,18 @@ const BotEditPage: React.FC = () => {
                   },
                 ]
           );
+          setKnowledgeBaseId(bot.bedrockKnowledgeBase.knowledgeBaseId);
+          setEmbeddingsModel(bot.bedrockKnowledgeBase!.embeddingsModel);
+          setChunkingStrategy(bot.bedrockKnowledgeBase!.chunkingStrategy);
+          setChunkingMaxTokens(
+            bot.bedrockKnowledgeBase!.maxTokens ?? DEFAULT_CHUNKING_MAX_TOKENS
+          );
+          setChunkingOverlapPercentage(
+            bot.bedrockKnowledgeBase!.overlapPercentage ??
+              DEFAULT_CHUNKING_OVERLAP_PERCENTAGE
+          );
+          setOpenSearchParams(bot.bedrockKnowledgeBase!.openSearch);
+          setSearchParams(bot.bedrockKnowledgeBase!.searchParams);
         })
         .finally(() => {
           setIsLoading(false);
@@ -178,25 +304,25 @@ const BotEditPage: React.FC = () => {
     return pattern.test(syncErrorMessage);
   }, []);
 
-  const onChangeUrl = useCallback(
-    (url: string, idx: number) => {
-      setUrls(
-        produce(urls, (draft) => {
-          draft[idx] = url;
+  const onChangeS3Url = useCallback(
+    (s3Url: string, idx: number) => {
+      setS3Urls(
+        produce(s3Urls, (draft) => {
+          draft[idx] = s3Url;
         })
       );
     },
-    [urls]
+    [s3Urls]
   );
 
-  const onClickAddUrl = useCallback(() => {
-    setUrls([...urls, '']);
-  }, [urls]);
+  const onClickAddS3Url = useCallback(() => {
+    setS3Urls([...s3Urls, '']);
+  }, [s3Urls]);
 
-  const onClickRemoveUrl = useCallback(
+  const onClickRemoveS3Url = useCallback(
     (idx: number) => {
-      setUrls(
-        produce(urls, (draft) => {
+      setS3Urls(
+        produce(s3Urls, (draft) => {
           draft.splice(idx, 1);
           if (draft.length === 0) {
             draft.push('');
@@ -205,7 +331,7 @@ const BotEditPage: React.FC = () => {
         })
       );
     },
-    [urls]
+    [s3Urls]
   );
 
   const removeUnchangedFilenames = useCallback(
@@ -338,6 +464,18 @@ const BotEditPage: React.FC = () => {
     [conversationQuickStarters]
   );
 
+  const onChangeEmbeddingsModel = useCallback(
+    (value: EmbeddingsModel) => {
+      setEmbeddingsModel(value);
+      // Update maxTokens based on the selected embeddings model
+      const maxEdge = EDGE_CHUNKING_MAX_TOKENS.MAX[value];
+      if (chunkingMaxTokens > maxEdge) {
+        setChunkingMaxTokens(maxEdge);
+      }
+    },
+    [chunkingMaxTokens]
+  );
+
   const onClickBack = useCallback(() => {
     history.back();
   }, []);
@@ -369,32 +507,61 @@ const BotEditPage: React.FC = () => {
 
   const isValid = useCallback((): boolean => {
     clearErrorMessages();
-    if (embeddingParams.chunkSize > EDGE_EMBEDDING_PARAMS.chunkSize.MAX) {
-      setErrorMessages(
-        'chunkSize',
-        t('validation.maxRange.message', {
-          size: EDGE_EMBEDDING_PARAMS.chunkSize.MAX,
-        })
-      );
+
+    // S3 URLs validation - s3://example-bucket/path/to/data-source/
+    const isS3UrlsValid = s3Urls.every((url, idx) => {
+      if (url && !/^s3:\/\/[a-z0-9.-]+\/$/.test(url)) {
+        setErrorMessages(`s3Urls-${idx}`, 'S3 URL is invalid');
+        return false;
+      } else {
+        return true;
+      }
+    });
+    if (!isS3UrlsValid) {
       return false;
     }
 
-    if (embeddingParams.chunkOverlap > EDGE_EMBEDDING_PARAMS.chunkOverlap.MAX) {
-      setErrorMessages(
-        'chunkOverlap',
-        t('validation.maxRange.message', {
-          size: EDGE_EMBEDDING_PARAMS.chunkOverlap.MAX,
-        })
-      );
-      return false;
-    }
+    // Chunking Strategy params validation
+    if (chunkingStrategy === 'fixed_size') {
+      if (chunkingMaxTokens < EDGE_CHUNKING_MAX_TOKENS.MIN) {
+        setErrorMessages(
+          'chunkingMaxTokens',
+          t('validation.minRange.message', {
+            size: EDGE_CHUNKING_MAX_TOKENS.MIN,
+          })
+        );
+        return false;
+      } else if (
+        chunkingMaxTokens > EDGE_CHUNKING_MAX_TOKENS.MAX[embeddingsModel]
+      ) {
+        setErrorMessages(
+          'chunkingMaxTokens',
+          t('validation.maxRange.message', {
+            size: EDGE_CHUNKING_MAX_TOKENS.MAX[embeddingsModel],
+          })
+        );
+        return false;
+      }
 
-    if (embeddingParams.chunkSize < embeddingParams.chunkOverlap) {
-      setErrorMessages(
-        'chunkOverlap',
-        t('validation.chunkOverlapLessThanChunkSize.message')
-      );
-      return false;
+      if (chunkingOverlapPercentage < EDGE_CHUNKING_OVERLAP_PERCENTAGE.MIN) {
+        setErrorMessages(
+          'chunkingOverlapPercentage',
+          t('validation.minRange.message', {
+            size: EDGE_CHUNKING_OVERLAP_PERCENTAGE.MIN,
+          })
+        );
+        return false;
+      } else if (
+        chunkingOverlapPercentage > EDGE_CHUNKING_OVERLAP_PERCENTAGE.MAX
+      ) {
+        setErrorMessages(
+          'chunkingOverlapPercentage',
+          t('validation.maxRange.message', {
+            size: EDGE_CHUNKING_OVERLAP_PERCENTAGE.MAX,
+          })
+        );
+        return false;
+      }
     }
 
     if (stopSequences.length === 0) {
@@ -443,8 +610,7 @@ const BotEditPage: React.FC = () => {
     );
   }, [
     clearErrorMessages,
-    embeddingParams.chunkSize,
-    embeddingParams.chunkOverlap,
+    s3Urls,
     stopSequences.length,
     searchParams.maxResults,
     conversationQuickStarters,
@@ -454,6 +620,10 @@ const BotEditPage: React.FC = () => {
     topP,
     temperature,
     setErrorMessages,
+    embeddingsModel,
+    chunkingStrategy,
+    chunkingMaxTokens,
+    chunkingOverlapPercentage,
     t,
   ]);
 
@@ -470,11 +640,7 @@ const BotEditPage: React.FC = () => {
       title,
       description,
       instruction,
-      embeddingParams: {
-        chunkSize: embeddingParams.chunkSize,
-        chunkOverlap: embeddingParams.chunkOverlap,
-        enablePartitionPdf: embeddingParams.enablePartitionPdf,
-      },
+      embeddingParams: null,
       generationParams: {
         maxTokens,
         temperature,
@@ -482,18 +648,31 @@ const BotEditPage: React.FC = () => {
         topP,
         stopSequences: stopSequences.split(','),
       },
-      searchParams,
+      searchParams: {
+        // set same value as bedrockKnowledgeBase.searchParams
+        maxResults: searchParams.maxResults,
+      },
       knowledge: {
         sourceUrls: urls.filter((s) => s !== ''),
         // Sitemap cannot be used yet.
         sitemapUrls: [],
-        s3Urls: [],
+        s3Urls: s3Urls.filter((s) => s !== ''),
         filenames: files.map((f) => f.filename),
       },
       displayRetrievedChunks,
       conversationQuickStarters: conversationQuickStarters.filter(
         (qs) => qs.title !== '' && qs.example !== ''
       ),
+      bedrockKnowledgeBase: {
+        knowledgeBaseId,
+        embeddingsModel,
+        chunkingStrategy,
+        maxTokens: chunkingStrategy == 'fixed_size' ? chunkingMaxTokens : null,
+        overlapPercentage:
+          chunkingStrategy == 'fixed_size' ? chunkingOverlapPercentage : null,
+        openSearch: openSearchParams,
+        searchParams: searchParams,
+      },
     })
       .then(() => {
         navigate('/bot/explore');
@@ -509,9 +688,6 @@ const BotEditPage: React.FC = () => {
     title,
     description,
     instruction,
-    embeddingParams.chunkSize,
-    embeddingParams.chunkOverlap,
-    embeddingParams.enablePartitionPdf,
     maxTokens,
     temperature,
     topK,
@@ -519,10 +695,17 @@ const BotEditPage: React.FC = () => {
     stopSequences,
     searchParams,
     urls,
+    s3Urls,
     files,
     displayRetrievedChunks,
     conversationQuickStarters,
     navigate,
+    knowledgeBaseId,
+    embeddingsModel,
+    chunkingStrategy,
+    chunkingMaxTokens,
+    chunkingOverlapPercentage,
+    openSearchParams,
   ]);
 
   const onClickEdit = useCallback(() => {
@@ -538,11 +721,7 @@ const BotEditPage: React.FC = () => {
         title,
         description,
         instruction,
-        embeddingParams: {
-          chunkSize: embeddingParams?.chunkSize,
-          chunkOverlap: embeddingParams?.chunkOverlap,
-          enablePartitionPdf: embeddingParams?.enablePartitionPdf,
-        },
+        embeddingParams: null,
         generationParams: {
           maxTokens,
           temperature,
@@ -550,12 +729,15 @@ const BotEditPage: React.FC = () => {
           topP,
           stopSequences: stopSequences.split(','),
         },
-        searchParams,
+        searchParams: {
+          // set same value as bedrockKnowledgeBase.searchParams
+          maxResults: searchParams.maxResults,
+        },
         knowledge: {
           sourceUrls: urls.filter((s) => s !== ''),
           // Sitemap cannot be used yet.
           sitemapUrls: [],
-          s3Urls: [],
+          s3Urls: s3Urls.filter((s) => s !== ''),
           addedFilenames,
           deletedFilenames,
           unchangedFilenames,
@@ -564,6 +746,17 @@ const BotEditPage: React.FC = () => {
         conversationQuickStarters: conversationQuickStarters.filter(
           (qs) => qs.title !== '' && qs.example !== ''
         ),
+        bedrockKnowledgeBase: {
+          knowledgeBaseId,
+          embeddingsModel,
+          chunkingStrategy,
+          maxTokens:
+            chunkingStrategy == 'fixed_size' ? chunkingMaxTokens : null,
+          overlapPercentage:
+            chunkingStrategy == 'fixed_size' ? chunkingOverlapPercentage : null,
+          openSearch: openSearchParams,
+          searchParams: searchParams,
+        },
       })
         .then(() => {
           navigate('/bot/explore');
@@ -581,9 +774,6 @@ const BotEditPage: React.FC = () => {
     title,
     description,
     instruction,
-    embeddingParams?.chunkSize,
-    embeddingParams?.chunkOverlap,
-    embeddingParams?.enablePartitionPdf,
     maxTokens,
     temperature,
     topK,
@@ -591,12 +781,19 @@ const BotEditPage: React.FC = () => {
     stopSequences,
     searchParams,
     urls,
+    s3Urls,
     addedFilenames,
     deletedFilenames,
     unchangedFilenames,
     displayRetrievedChunks,
     conversationQuickStarters,
     navigate,
+    knowledgeBaseId,
+    embeddingsModel,
+    chunkingStrategy,
+    chunkingMaxTokens,
+    chunkingOverlapPercentage,
+    openSearchParams,
   ]);
 
   const [isOpenSamples, setIsOpenSamples] = useState(false);
@@ -686,44 +883,7 @@ const BotEditPage: React.FC = () => {
                   </Alert>
                 )}
 
-                <div className="mt-2">
-                  <div className="font-semibold">{t('bot.label.url')}</div>
-                  <div className="text-sm text-aws-font-color/50">
-                    {t('bot.help.knowledge.url')}
-                  </div>
-                  <div className="mt-2 flex w-full flex-col gap-1">
-                    {urls.map((url, idx) => (
-                      <div className="flex w-full gap-2" key={idx}>
-                        <InputText
-                          className="w-full"
-                          type="url"
-                          disabled={isLoading}
-                          value={url}
-                          onChange={(s) => {
-                            onChangeUrl(s, idx);
-                          }}
-                        />
-                        <ButtonIcon
-                          className="text-red"
-                          disabled={
-                            (urls.length === 1 && !urls[0]) || isLoading
-                          }
-                          onClick={() => {
-                            onClickRemoveUrl(idx);
-                          }}>
-                          <PiTrash />
-                        </ButtonIcon>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-2">
-                    <Button outlined icon={<PiPlus />} onClick={onClickAddUrl}>
-                      {t('button.add')}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="mt-2">
+                <div className="mt-3">
                   <div className="font-semibold">{t('bot.label.file')}</div>
                   <div className="text-sm text-aws-font-color/50">
                     {t('bot.help.knowledge.file')}
@@ -740,7 +900,52 @@ const BotEditPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-2">
+                <div className="mt-4">
+                  <div className="font-semibold">{t('bot.label.s3url')}</div>
+                  <div className="text-sm text-aws-font-color/50">
+                    {t('bot.help.knowledge.s3url')}
+                  </div>
+                  <div className="mt-2 flex w-full flex-col gap-1">
+                    {s3Urls.map((s3Url, idx) => (
+                      <div className="flex w-full gap-2" key={idx}>
+                        <InputText
+                          className="w-full"
+                          type="text"
+                          disabled={isLoading}
+                          value={s3Url}
+                          placeholder={
+                            's3://example-bucket/path/to/data-source/'
+                          }
+                          onChange={(s) => {
+                            onChangeS3Url(s, idx);
+                          }}
+                          errorMessage={errorMessages[`s3Urls-${idx}`]}
+                        />
+                        <ButtonIcon
+                          className="text-red"
+                          disabled={
+                            (s3Urls.length === 1 && !s3Url[0]) || isLoading
+                          }
+                          onClick={() => {
+                            onClickRemoveS3Url(idx);
+                          }}>
+                          <PiTrash />
+                        </ButtonIcon>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2">
+                    <Button
+                      outlined
+                      icon={<PiPlus />}
+                      disabled={s3Urls.length >= 4}
+                      onClick={onClickAddS3Url}>
+                      {t('button.add')}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
                   <div className="font-semibold">
                     {t('bot.label.citeRetrievedContexts')}
                   </div>
@@ -864,78 +1069,160 @@ const BotEditPage: React.FC = () => {
 
               <ExpandableDrawerGroup
                 isDefaultShow={false}
-                label={t('embeddingSettings.title')}
+                label={t('knowledgeBaseSettings.title')}
                 className="py-2">
                 <div className="text-sm text-aws-font-color/50">
-                  {t('embeddingSettings.description')}
+                  {t('knowledgeBaseSettings.description')}
                 </div>
-                <div className="mt-2">
-                  <Slider
-                    value={embeddingParams?.chunkSize}
-                    hint={t('embeddingSettings.chunkSize.hint')}
-                    label={
-                      <div className="flex items-center gap-1">
-                        {t('embeddingSettings.chunkSize.label')}
-                        <Help
-                          direction={TooltipDirection.RIGHT}
-                          message={t('embeddingSettings.help.chunkSize')}
-                        />
-                      </div>
-                    }
-                    range={{
-                      min: EDGE_EMBEDDING_PARAMS.chunkSize.MIN,
-                      max: EDGE_EMBEDDING_PARAMS.chunkSize.MAX,
-                      step: EDGE_EMBEDDING_PARAMS.chunkSize.STEP,
+
+                <div className="mt-3">
+                  <Select
+                    label={t('knowledgeBaseSettings.embeddingModel.label')}
+                    value={embeddingsModel}
+                    options={embeddingsModelOptions}
+                    onChange={(val) => {
+                      onChangeEmbeddingsModel(val as EmbeddingsModel);
                     }}
-                    onChange={(chunkSize) =>
-                      setEmbeddingParams((params) => ({
-                        ...params,
-                        chunkSize: chunkSize,
-                      }))
-                    }
-                    errorMessage={errorMessages['chunkSize']}
+                    disabled={!isNewBot}
                   />
                 </div>
-                <div className="mt-2">
-                  <Slider
-                    value={embeddingParams?.chunkOverlap}
-                    hint={t('embeddingSettings.chunkOverlap.hint')}
-                    label={
-                      <div className="flex items-center gap-1">
-                        {t('embeddingSettings.chunkOverlap.label')}
-                        <Help
-                          direction={TooltipDirection.RIGHT}
-                          message={t('embeddingSettings.help.chunkOverlap')}
-                        />
-                      </div>
-                    }
-                    range={{
-                      min: EDGE_EMBEDDING_PARAMS.chunkOverlap.MIN,
-                      max: EDGE_EMBEDDING_PARAMS.chunkOverlap.MAX,
-                      step: EDGE_EMBEDDING_PARAMS.chunkOverlap.STEP,
+
+                <div className="mt-3">
+                  <Select
+                    label={t('knowledgeBaseSettings.chunkingStrategy.label')}
+                    value={chunkingStrategy}
+                    options={chunkingStrategyOptions}
+                    onChange={(val) => {
+                      setChunkingStrategy(val as ChunkingStrategy);
                     }}
-                    onChange={(chunkOverlap) =>
-                      setEmbeddingParams((params) => ({
-                        ...params,
-                        chunkOverlap: chunkOverlap,
-                      }))
-                    }
-                    errorMessage={errorMessages['chunkOverlap']}
+                    disabled={!isNewBot}
                   />
                 </div>
-                <div className="mt-2">
-                  <Toggle
-                    value={embeddingParams?.enablePartitionPdf ?? false}
-                    label={t('embeddingSettings.enablePartitionPdf.label')}
-                    hint={t('embeddingSettings.enablePartitionPdf.hint')}
-                    onChange={(enablePartitionPdf) =>
-                      setEmbeddingParams((params) => ({
-                        ...params,
-                        enablePartitionPdf: enablePartitionPdf,
-                      }))
-                    }
-                  />
-                </div>
+                {chunkingStrategy === 'fixed_size' && (
+                  <>
+                    <div className="mx-4 mt-2">
+                      <Slider
+                        value={chunkingMaxTokens}
+                        hint={t('knowledgeBaseSettings.chunkingMaxTokens.hint')}
+                        label={
+                          <div className="flex items-center gap-1">
+                            {t('knowledgeBaseSettings.chunkingMaxTokens.label')}
+                            <Help
+                              direction={TooltipDirection.RIGHT}
+                              message={t('embeddingSettings.help.chunkSize')}
+                            />
+                          </div>
+                        }
+                        range={{
+                          min: EDGE_CHUNKING_MAX_TOKENS.MIN,
+                          max: EDGE_CHUNKING_MAX_TOKENS.MAX[embeddingsModel],
+                          step: EDGE_CHUNKING_MAX_TOKENS.STEP,
+                        }}
+                        onChange={setChunkingMaxTokens}
+                        disabled={!isNewBot}
+                        errorMessage={errorMessages['chunkingMaxTokens']}
+                      />
+                    </div>
+                    <div className="mx-4 mt-2">
+                      <Slider
+                        value={chunkingOverlapPercentage}
+                        hint={t(
+                          'knowledgeBaseSettings.chunkingOverlapPercentage.hint'
+                        )}
+                        label={
+                          <div className="flex items-center gap-1">
+                            {t(
+                              'knowledgeBaseSettings.chunkingOverlapPercentage.label'
+                            )}
+                            <Help
+                              direction={TooltipDirection.RIGHT}
+                              message={t('embeddingSettings.help.chunkOverlap')}
+                            />
+                          </div>
+                        }
+                        range={{
+                          min: EDGE_CHUNKING_OVERLAP_PERCENTAGE.MIN,
+                          max: EDGE_CHUNKING_OVERLAP_PERCENTAGE.MAX,
+                          step: EDGE_CHUNKING_OVERLAP_PERCENTAGE.STEP,
+                        }}
+                        onChange={(percentage) =>
+                          setChunkingOverlapPercentage(percentage)
+                        }
+                        disabled={!isNewBot}
+                        errorMessage={
+                          errorMessages['chunkingOverlapPercentage']
+                        }
+                      />
+                    </div>
+                  </>
+                )}
+
+                {isNewBot && (
+                  <div className="mt-3 grid gap-1">
+                    <Select
+                      label={t(
+                        'knowledgeBaseSettings.opensearchAnalyzer.label'
+                      )}
+                      value={analyzer}
+                      options={analyzerOptions}
+                      onChange={(val) => {
+                        setAnalyzer(val);
+                        setOpenSearchParams(OPENSEARCH_ANALYZER[val]);
+                      }}
+                      className="mt-2"
+                    />
+                    <div className="text-sm text-aws-font-color/50">
+                      {t('knowledgeBaseSettings.opensearchAnalyzer.hint')}
+                    </div>
+                  </div>
+                )}
+                {!isNewBot && (
+                  <div className="mt-3 grid gap-1">
+                    <div className="text-sm">
+                      {t('knowledgeBaseSettings.opensearchAnalyzer.label')}
+                    </div>
+                    <div className="text-sm text-aws-font-color/50">
+                      {t('knowledgeBaseSettings.opensearchAnalyzer.hint')}
+                    </div>
+                    <div
+                      className="grid grid-cols-[auto_1fr] gap-2 rounded 
+                      border border-aws-font-color/50 p-4 text-sm">
+                      <div>
+                        {t(
+                          'knowledgeBaseSettings.opensearchAnalyzer.tokenizer'
+                        )}
+                      </div>
+                      <div>
+                        {openSearchParams.analyzer?.tokenizer ??
+                          t(
+                            'knowledgeBaseSettings.opensearchAnalyzer.not_specified'
+                          )}
+                      </div>
+                      <div>
+                        {t(
+                          'knowledgeBaseSettings.opensearchAnalyzer.normalizer'
+                        )}
+                      </div>
+                      <div>
+                        {openSearchParams.analyzer?.characterFilters ??
+                          t(
+                            'knowledgeBaseSettings.opensearchAnalyzer.not_specified'
+                          )}
+                      </div>
+                      <div>
+                        {t(
+                          'knowledgeBaseSettings.opensearchAnalyzer.token_filter'
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        {openSearchParams.analyzer?.tokenFilters.join(', ') ??
+                          t(
+                            'knowledgeBaseSettings.opensearchAnalyzer.not_specified'
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </ExpandableDrawerGroup>
 
               <ExpandableDrawerGroup
@@ -945,7 +1232,7 @@ const BotEditPage: React.FC = () => {
                 <div className="text-sm text-aws-font-color/50">
                   {t('searchSettings.description')}
                 </div>
-                <div className="mt-2">
+                <div className="mt-3">
                   <Slider
                     value={searchParams.maxResults}
                     hint={t('searchSettings.maxResults.hint')}
@@ -962,6 +1249,22 @@ const BotEditPage: React.FC = () => {
                       }))
                     }
                     errorMessage={errorMessages['maxResults']}
+                  />
+                </div>
+                <div className="mt-3">
+                  <Select
+                    label={t('searchSettings.searchType.label')}
+                    value={searchParams.searchType}
+                    options={searchTypeOptions}
+                    onChange={(searchType) => {
+                      setSearchParams(
+                        (params) =>
+                          ({
+                            ...params,
+                            searchType,
+                          }) as SearchParams
+                      );
+                    }}
                   />
                 </div>
               </ExpandableDrawerGroup>
@@ -1008,4 +1311,4 @@ const BotEditPage: React.FC = () => {
   );
 };
 
-export default BotEditPage;
+export default BotKbEditPage;

@@ -11,6 +11,7 @@ type Props = BaseProps & {
   options: {
     value: string;
     label: string;
+    description?: string;
   }[];
   clearable?: boolean;
   disabled?: boolean;
@@ -76,10 +77,15 @@ const Select: React.FC<Props> = (props) => {
                   {({ selected }) => (
                     <>
                       <span
-                        className={`block truncate ${
+                        className={`flex flex-col truncate ${
                           selected ? 'font-medium' : 'font-normal'
                         }`}>
-                        {option.label}
+                        <span className="flex-1">{option.label}</span>
+                        {option.description && (
+                          <span className="flex-1 whitespace-pre-wrap text-aws-font-color/60">
+                            {option.description}
+                          </span>
+                        )}
                       </span>
                       {selected ? (
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3">

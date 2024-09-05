@@ -38,6 +38,9 @@ const RDS_SCHEDULES: CronScheduleProps = app.node.tryGetContext("rdbSchedules");
 const ENABLE_MISTRAL: boolean = app.node.tryGetContext("enableMistral");
 const SELF_SIGN_UP_ENABLED: boolean =
   app.node.tryGetContext("selfSignUpEnabled");
+const ENABLE_KB: boolean = app.node.tryGetContext(
+  "useBedrockKnowledgeBaseForRag"
+);
 
 // container size of embedding ecs tasks
 const EMBEDDING_CONTAINER_VCPU: number = app.node.tryGetContext(
@@ -81,6 +84,7 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   autoJoinUserGroups: AUTO_JOIN_USER_GROUPS,
   rdsSchedules: RDS_SCHEDULES,
   enableMistral: ENABLE_MISTRAL,
+  enableKB: ENABLE_KB,
   embeddingContainerVcpu: EMBEDDING_CONTAINER_VCPU,
   embeddingContainerMemory: EMBEDDING_CONTAINER_MEMORY,
   selfSignUpEnabled: SELF_SIGN_UP_ENABLED,
