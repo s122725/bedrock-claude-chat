@@ -11,6 +11,7 @@ logger.setLevel(logging.DEBUG)
 
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
 
+
 class S3FileLoader(BaseLoader):
     """Loads a document from a file in S3.
     Reference: `langchain_community.document_loaders.S3FileLoader` class

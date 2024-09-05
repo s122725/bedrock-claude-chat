@@ -10,6 +10,7 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class OnStopInput(BaseModel):
     full_token: str
     stop_reason: str
@@ -62,7 +63,7 @@ class ConverseApiStreamHandler:
                     messages=args["messages"],
                     inferenceConfig=args["inference_config"],
                     system=args["system"],
-                    guardrailConfig=args["guardrailConfig"]
+                    guardrailConfig=args["guardrailConfig"],
                 )
             else:
                 response = client.converse_stream(

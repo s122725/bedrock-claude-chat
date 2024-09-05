@@ -1,6 +1,7 @@
 from decimal import Decimal
 from pydantic import BaseModel
 
+
 class BedrockGuardrailsModel(BaseModel):
     is_guardrail_enabled: bool
     hate_threshold: Decimal

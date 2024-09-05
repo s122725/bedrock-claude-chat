@@ -10,7 +10,12 @@ from aws_lambda_powertools.utilities import parameters
 from botocore.client import Config
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
-from app.repositories.common import _get_table_client, _get_table_public_client, compose_bot_id, RecordNotFoundError
+from app.repositories.common import (
+    _get_table_client,
+    _get_table_public_client,
+    compose_bot_id,
+    RecordNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -225,6 +230,7 @@ def query_postgres(
         return columns, res
     return res
 
+
 def get_guardrail(user_id: str, bot_id: str | None) -> dict | None:
     logger.info("get_guardrail")
 
@@ -234,31 +240,68 @@ def get_guardrail(user_id: str, bot_id: str | None) -> dict | None:
     try:
         table = _get_table_client(user_id)
         response = table.get_item(
-            Key={
-                "PK": user_id,
-                "SK": compose_bot_id(user_id, bot_id)
-            },
+            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
             ConsistentRead=True,
         )
         logger.info(f"response: {response}")
         if response and "Item" in response and "GuardrailsParams" in response["Item"]:
-            is_guardrail_enabled = response["Item"]["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in response["Item"]["GuardrailsParams"] else False
-            guardrail_arn = response["Item"]["GuardrailsParams"]["guardrail_arn"] if "guardrail_arn" in response["Item"]["GuardrailsParams"] else None
-            guardrail_version = response["Item"]["GuardrailsParams"]["guardrail_version"] if "guardrail_version" in response["Item"]["GuardrailsParams"] else None
+            is_guardrail_enabled = (
+                response["Item"]["GuardrailsParams"]["is_guardrail_enabled"]
+                if "is_guardrail_enabled" in response["Item"]["GuardrailsParams"]
+                else False
+            )
+            guardrail_arn = (
+                response["Item"]["GuardrailsParams"]["guardrail_arn"]
+                if "guardrail_arn" in response["Item"]["GuardrailsParams"]
+                else None
+            )
+            guardrail_version = (
+                response["Item"]["GuardrailsParams"]["guardrail_version"]
+                if "guardrail_version" in response["Item"]["GuardrailsParams"]
+                else None
+            )
 
-            hate_threshold = response["Item"]["GuardrailsParams"]["hate_threshold"] if "hate_threshold" in response["Item"]["GuardrailsParams"] else 0
-            insults_threshold = response["Item"]["GuardrailsParams"]["insults_threshold"] if "insults_threshold" in response["Item"]["GuardrailsParams"] else 0
-            misconduct_threshold = response["Item"]["GuardrailsParams"]["misconduct_threshold"] if "misconduct_threshold" in response["Item"]["GuardrailsParams"] else 0
-            sexual_threshold = response["Item"]["GuardrailsParams"]["sexual_threshold"] if "sexual_threshold" in response["Item"]["GuardrailsParams"] else 0
-            violence_threshold = response["Item"]["GuardrailsParams"]["violence_threshold"] if "violence_threshold" in response["Item"]["GuardrailsParams"] else 0
+            hate_threshold = (
+                response["Item"]["GuardrailsParams"]["hate_threshold"]
+                if "hate_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
+            insults_threshold = (
+                response["Item"]["GuardrailsParams"]["insults_threshold"]
+                if "insults_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
+            misconduct_threshold = (
+                response["Item"]["GuardrailsParams"]["misconduct_threshold"]
+                if "misconduct_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
+            sexual_threshold = (
+                response["Item"]["GuardrailsParams"]["sexual_threshold"]
+                if "sexual_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
+            violence_threshold = (
+                response["Item"]["GuardrailsParams"]["violence_threshold"]
+                if "violence_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
 
-            grounding_threshold = response["Item"]["GuardrailsParams"]["grounding_threshold"] if "grounding_threshold" in response["Item"]["GuardrailsParams"] else 0
-            relevance_threshold = response["Item"]["GuardrailsParams"]["relevance_threshold"] if "relevance_threshold" in response["Item"]["GuardrailsParams"] else 0
+            grounding_threshold = (
+                response["Item"]["GuardrailsParams"]["grounding_threshold"]
+                if "grounding_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
+            relevance_threshold = (
+                response["Item"]["GuardrailsParams"]["relevance_threshold"]
+                if "relevance_threshold" in response["Item"]["GuardrailsParams"]
+                else 0
+            )
             logger.info(f"Got guardrail_arn for {bot_id} is {guardrail_arn}")
             logger.info(f"Got guardrail_version for {bot_id} is {guardrail_version}")
             return {
                 "is_guardrail_enabled": is_guardrail_enabled,
-                "guardrail_arn": guardrail_arn, 
+                "guardrail_arn": guardrail_arn,
                 "guardrail_version": guardrail_version,
                 "hate_threshold": hate_threshold,
                 "insults_threshold": insults_threshold,
@@ -280,20 +323,34 @@ def get_guardrail(user_id: str, bot_id: str | None) -> dict | None:
             KeyConditionExpression=Key("PublicBotId").eq(bot_id),
         )
         logger.info(f"response: {response}")
-        for item in response['Items']:
+        for item in response["Items"]:
             if "GuardrailsParams" in item:
-                is_guardrail_enabled = item["GuardrailsParams"]["is_guardrail_enabled"] if "is_guardrail_enabled" in item["GuardrailsParams"] else False
-                guardrail_arn = item["GuardrailsParams"]["guardrail_arn"] if "guardrail_arn" in item["GuardrailsParams"] else None
-                guardrail_version = item["GuardrailsParams"]["guardrail_version"] if "guardrail_version" in item["GuardrailsParams"] else None
+                is_guardrail_enabled = (
+                    item["GuardrailsParams"]["is_guardrail_enabled"]
+                    if "is_guardrail_enabled" in item["GuardrailsParams"]
+                    else False
+                )
+                guardrail_arn = (
+                    item["GuardrailsParams"]["guardrail_arn"]
+                    if "guardrail_arn" in item["GuardrailsParams"]
+                    else None
+                )
+                guardrail_version = (
+                    item["GuardrailsParams"]["guardrail_version"]
+                    if "guardrail_version" in item["GuardrailsParams"]
+                    else None
+                )
                 logger.info(f"Got guardrail_arn for {bot_id} is {guardrail_arn}")
-                logger.info(f"Got guardrail_version for {bot_id} is {guardrail_version}")
+                logger.info(
+                    f"Got guardrail_version for {bot_id} is {guardrail_version}"
+                )
                 return {
                     "is_guardrail_enabled": is_guardrail_enabled,
-                    "guardrail_arn": guardrail_arn, 
-                    "guardrail_version": guardrail_version
+                    "guardrail_arn": guardrail_arn,
+                    "guardrail_version": guardrail_version,
                 }
 
     except RecordNotFoundError:
         pass
-    
+
     return None

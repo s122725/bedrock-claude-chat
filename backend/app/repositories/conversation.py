@@ -34,6 +34,7 @@ LARGE_MESSAGE_BUCKET = os.environ.get("LARGE_MESSAGE_BUCKET")
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
 s3_client = boto3.client("s3", BEDROCK_REGION)
 
+
 def store_conversation(
     user_id: str, conversation: ConversationModel, threshold=THRESHOLD_LARGE_MESSAGE
 ):

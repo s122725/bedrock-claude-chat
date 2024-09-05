@@ -14,7 +14,11 @@ from app.agents.langchain import BedrockLLM
 from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
-from app.bedrock import compose_args_for_converse_api, ConverseApiRequest, compose_args_for_converse_api_with_guardrail
+from app.bedrock import (
+    compose_args_for_converse_api,
+    ConverseApiRequest,
+    compose_args_for_converse_api_with_guardrail,
+)
 from app.repositories.conversation import RecordNotFoundError, store_conversation
 from app.repositories.models.conversation import ChunkModel, ContentModel, MessageModel
 from app.routes.schemas.conversation import ChatInput
@@ -192,9 +196,9 @@ def process_chat_input(
     args: ConverseApiRequest
     if guardrail and guardrail["is_guardrail_enabled"] == True:
         grounding_source = {
-            'text': {
-                'text': "\n\n".join(x.content for x in search_results),
-                'qualifiers': ["grounding_source"]
+            "text": {
+                "text": "\n\n".join(x.content for x in search_results),
+                "qualifiers": ["grounding_source"],
             }
         }
 
@@ -209,7 +213,7 @@ def process_chat_input(
             ),
             generation_params=(bot.generation_params if bot else None),
             grounding_source=grounding_source,
-            guardrail=guardrail
+            guardrail=guardrail,
         )
         logger.info(f"args: {args}")
     else:

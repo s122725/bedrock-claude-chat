@@ -109,8 +109,13 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         or len(bot_input.knowledge.s3_urls) > 0
     )
 
-    has_guardrails = bot_input.bedrock_guardrails and bot_input.bedrock_guardrails.is_guardrail_enabled == True
-    sync_status: type_sync_status = "QUEUED" if has_knowledge or has_guardrails else "SUCCEEDED"
+    has_guardrails = (
+        bot_input.bedrock_guardrails
+        and bot_input.bedrock_guardrails.is_guardrail_enabled == True
+    )
+    sync_status: type_sync_status = (
+        "QUEUED" if has_knowledge or has_guardrails else "SUCCEEDED"
+    )
 
     source_urls = []
     sitemap_urls = []
@@ -226,9 +231,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 else None
             ),
             bedrock_guardrails=(
-                BedrockGuardrailsModel(
-                    **(bot_input.bedrock_guardrails.model_dump())
-                )
+                BedrockGuardrailsModel(**(bot_input.bedrock_guardrails.model_dump()))
                 if bot_input.bedrock_guardrails
                 else None
             ),
@@ -286,9 +289,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             else None
         ),
         bedrock_guardrails=(
-            BedrockGuardrailsOutput(
-                **(bot_input.bedrock_guardrails.model_dump())
-            )
+            BedrockGuardrailsOutput(**(bot_input.bedrock_guardrails.model_dump()))
             if bot_input.bedrock_guardrails
             else None
         ),
@@ -375,7 +376,12 @@ def modify_owned_bot(
     # 'sync_status = "QUEUED"' will execute embeding process and update dynamodb record.
     # 'sync_status= "SUCCEEDED"' will update only dynamodb record.
     bot = find_private_bot_by_id(user_id, bot_id)
-    sync_status = "QUEUED" if modify_input.is_embedding_required(bot) or modify_input.is_guardrails_required(bot) else "SUCCEEDED"
+    sync_status = (
+        "QUEUED"
+        if modify_input.is_embedding_required(bot)
+        or modify_input.is_guardrails_required(bot)
+        else "SUCCEEDED"
+    )
 
     update_bot(
         user_id,
@@ -419,9 +425,7 @@ def modify_owned_bot(
             else None
         ),
         bedrock_guardrails=(
-            BedrockGuardrailsModel(
-                **modify_input.bedrock_guardrails.model_dump()
-            )
+            BedrockGuardrailsModel(**modify_input.bedrock_guardrails.model_dump())
             if modify_input.bedrock_guardrails
             else None
         ),
@@ -470,9 +474,7 @@ def modify_owned_bot(
             else None
         ),
         bedrock_guardrails=(
-            BedrockGuardrailsOutput(
-                **modify_input.bedrock_guardrails.model_dump()
-            )
+            BedrockGuardrailsOutput(**modify_input.bedrock_guardrails.model_dump())
             if modify_input.bedrock_guardrails
             else None
         ),

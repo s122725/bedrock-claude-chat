@@ -45,7 +45,9 @@ def handler(event, context):
                 "KnowledgeBaseId": knowledge_base_id,
                 "DataSourceId": data_source_id,
                 "GuardrailArn": guardrail_arn if guardrail_arn != None else "",
-                "GuardrailVersion": guardrail_version if guardrail_version != None else "",
+                "GuardrailVersion": (
+                    guardrail_version if guardrail_version != None else ""
+                ),
                 "PK": pk,
                 "SK": sk,
             }

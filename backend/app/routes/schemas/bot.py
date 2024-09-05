@@ -130,28 +130,27 @@ class BotModifyInput(BaseSchema):
     bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
     bedrock_guardrails: BedrockGuardrailsInput | None = None
 
-
     def has_update_files(self) -> bool:
         return self.knowledge is not None and (
             len(self.knowledge.added_filenames) > 0
             or len(self.knowledge.deleted_filenames) > 0
         )
-    
+
     def is_guardrails_required(self, current_bot_model: BotModel) -> bool:
         # Check if self.bedrock_guardrails is None
         if not self.bedrock_guardrails:
             return False
 
         # Check if guardrails are enabled or any of the settings have changed
-        if (
-            self.bedrock_guardrails.is_guardrail_enabled == True
-            or (
-                current_bot_model.bedrock_guardrails
-                and (
-                    self.bedrock_guardrails.is_guardrail_enabled != current_bot_model.bedrock_guardrails.is_guardrail_enabled
-                    or self.bedrock_guardrails.grounding_threshold != current_bot_model.bedrock_guardrails.grounding_threshold
-                    or self.bedrock_guardrails.relevance_threshold != current_bot_model.bedrock_guardrails.relevance_threshold
-                )
+        if self.bedrock_guardrails.is_guardrail_enabled == True or (
+            current_bot_model.bedrock_guardrails
+            and (
+                self.bedrock_guardrails.is_guardrail_enabled
+                != current_bot_model.bedrock_guardrails.is_guardrail_enabled
+                or self.bedrock_guardrails.grounding_threshold
+                != current_bot_model.bedrock_guardrails.grounding_threshold
+                or self.bedrock_guardrails.relevance_threshold
+                != current_bot_model.bedrock_guardrails.relevance_threshold
             )
         ):
             return True

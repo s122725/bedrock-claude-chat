@@ -51,13 +51,18 @@ DEFAULT_GENERATION_CONFIG = (
 logger = logging.getLogger(__name__)
 sts_client = boto3.client("sts")
 
+
 class BotNotFoundException(Exception):
     """Exception raised when a bot is not found."""
+
     pass
+
 
 class BotUpdateError(Exception):
     """Exception raised when there's an error updating a bot."""
+
     pass
+
 
 def store_bot(user_id: str, custom_bot: BotModel):
     table = _get_table_client(user_id)
@@ -317,10 +322,7 @@ def update_guardrails_params(
 
     try:
         response = table.update_item(
-            Key={
-                "PK": user_id, 
-                "SK": compose_bot_id(user_id, bot_id)
-            },
+            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
             UpdateExpression="SET GuardrailsParams.guardrail_arn = :guardrail_arn, GuardrailsParams.guardrail_version = :guardrail_version",
             ExpressionAttributeValues={
                 ":guardrail_arn": guardrail_arn,
@@ -334,9 +336,12 @@ def update_guardrails_params(
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             raise BotNotFoundException(f"Bot with id {bot_id} not found")
         else:
-            raise BotUpdateError(f"Error updating guardrails_arn for bot: {bot_id}: {e}")
+            raise BotUpdateError(
+                f"Error updating guardrails_arn for bot: {bot_id}: {e}"
+            )
 
     return response
+
 
 def find_private_bots_by_user_id(
     user_id: str, limit: int | None = None
@@ -508,56 +513,65 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             if "BedrockKnowledgeBase" in item
             else None
         ),
-
-        bedrock_guardrails = BedrockGuardrailsModel(
-            is_guardrail_enabled = (
+        bedrock_guardrails=BedrockGuardrailsModel(
+            is_guardrail_enabled=(
                 item["GuardrailsParams"]["is_guardrail_enabled"]
-                if "GuardrailsParams" in item and "is_guardrail_enabled" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "is_guardrail_enabled" in item["GuardrailsParams"]
                 else False
             ),
-            hate_threshold = (
+            hate_threshold=(
                 item["GuardrailsParams"]["hate_threshold"]
-                if "GuardrailsParams" in item and "hate_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "hate_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            insults_threshold = (
+            insults_threshold=(
                 item["GuardrailsParams"]["insults_threshold"]
-                if "GuardrailsParams" in item and "insults_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "insults_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            sexual_threshold = (
+            sexual_threshold=(
                 item["GuardrailsParams"]["sexual_threshold"]
-                if "GuardrailsParams" in item and "sexual_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "sexual_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            violence_threshold = (
+            violence_threshold=(
                 item["GuardrailsParams"]["violence_threshold"]
-                if "GuardrailsParams" in item and "violence_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "violence_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            misconduct_threshold = (
+            misconduct_threshold=(
                 item["GuardrailsParams"]["misconduct_threshold"]
-                if "GuardrailsParams" in item and "misconduct_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "misconduct_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            grounding_threshold = (
+            grounding_threshold=(
                 item["GuardrailsParams"]["grounding_threshold"]
-                if "GuardrailsParams" in item and "grounding_threshold" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "grounding_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            relevance_threshold = (
+            relevance_threshold=(
                 item["GuardrailsParams"]["relevance_threshold"]
-                if "GuardrailsParams" in item and "relevance_threshold" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "relevance_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            guardrail_arn = (
+            guardrail_arn=(
                 item["GuardrailsParams"]["guardrail_arn"]
-                if "GuardrailsParams" in item and "guardrail_arn" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "guardrail_arn" in item["GuardrailsParams"]
                 else ""
             ),
-            guardrail_version = (
+            guardrail_version=(
                 item["GuardrailsParams"]["guardrail_version"]
-                if "GuardrailsParams" in item and "guardrail_version" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "guardrail_version" in item["GuardrailsParams"]
                 else ""
             ),
         ),
@@ -654,55 +668,65 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             if "BedrockKnowledgeBase" in item
             else None
         ),
-        bedrock_guardrails = BedrockGuardrailsModel(
-            is_guardrail_enabled = (
+        bedrock_guardrails=BedrockGuardrailsModel(
+            is_guardrail_enabled=(
                 item["GuardrailsParams"]["is_guardrail_enabled"]
-                if "GuardrailsParams" in item and "is_guardrail_enabled" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "is_guardrail_enabled" in item["GuardrailsParams"]
                 else False
             ),
-            hate_threshold = (
+            hate_threshold=(
                 item["GuardrailsParams"]["hate_threshold"]
-                if "GuardrailsParams" in item and "hate_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "hate_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            insults_threshold = (
+            insults_threshold=(
                 item["GuardrailsParams"]["insults_threshold"]
-                if "GuardrailsParams" in item and "insults_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "insults_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            sexual_threshold = (
+            sexual_threshold=(
                 item["GuardrailsParams"]["sexual_threshold"]
-                if "GuardrailsParams" in item and "sexual_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "sexual_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            violence_threshold = (
+            violence_threshold=(
                 item["GuardrailsParams"]["violence_threshold"]
-                if "GuardrailsParams" in item and "violence_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "violence_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            misconduct_threshold = (
+            misconduct_threshold=(
                 item["GuardrailsParams"]["misconduct_threshold"]
-                if "GuardrailsParams" in item and "misconduct_threshold" in item["GuardrailsParams"]
+                if "GuardrailsParams" in item
+                and "misconduct_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            grounding_threshold = (
+            grounding_threshold=(
                 item["GuardrailsParams"]["grounding_threshold"]
-                if "GuardrailsParams" in item and "grounding_threshold" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "grounding_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            relevance_threshold = (
+            relevance_threshold=(
                 item["GuardrailsParams"]["relevance_threshold"]
-                if "GuardrailsParams" in item and "relevance_threshold" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "relevance_threshold" in item["GuardrailsParams"]
                 else 0
             ),
-            guardrail_arn = (
+            guardrail_arn=(
                 item["GuardrailsParams"]["guardrail_arn"]
-                if "GuardrailsParams" in item and "guardrail_arn" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "guardrail_arn" in item["GuardrailsParams"]
                 else ""
             ),
-            guardrail_version = (
+            guardrail_version=(
                 item["GuardrailsParams"]["guardrail_version"]
-                if "GuardrailsParams" in item and "guardrail_version" in item["GuardrailsParams"] 
+                if "GuardrailsParams" in item
+                and "guardrail_version" in item["GuardrailsParams"]
                 else ""
             ),
         ),

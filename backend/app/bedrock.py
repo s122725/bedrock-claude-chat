@@ -195,6 +195,7 @@ def compose_args_for_converse_api(
         args["system"].append({"text": instruction})
     return args
 
+
 def compose_args_for_converse_api_with_guardrail(
     messages: list[MessageModel],
     model: type_model_name,
@@ -202,7 +203,7 @@ def compose_args_for_converse_api_with_guardrail(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
     grounding_source: dict | None = None,
-    guardrail: dict | None = None
+    guardrail: dict | None = None,
 ) -> ConverseApiRequest:
     """Compose arguments for Converse API.
     Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
@@ -213,28 +214,35 @@ def compose_args_for_converse_api_with_guardrail(
             content_blocks = []
             for c in message.content:
                 if c.content_type == "text":
-                    if message.role == 'user':
-                        if guardrail and guardrail['grounding_threshold'] > 0:
-                            content_blocks.append({
-                                "guardContent": grounding_source
-                            })
-                        content_blocks.append({
-                            "guardContent": {
-                                "text": {
-                                    "text": c.body,
-                                    "qualifiers": ["query"]
-                                },
+                    if message.role == "user":
+                        if guardrail and guardrail["grounding_threshold"] > 0:
+                            content_blocks.append({"guardContent": grounding_source})
+                        content_blocks.append(
+                            {
+                                "guardContent": {
+                                    "text": {"text": c.body, "qualifiers": ["query"]},
+                                }
                             }
-                        })
-                    elif message.role == 'assistant':
-                        content_blocks.append({
-                            "text": {"content": c.body} if isinstance(c.body, str) else None
-                        })
-    
+                        )
+                    elif message.role == "assistant":
+                        content_blocks.append(
+                            {
+                                "text": (
+                                    {"content": c.body}
+                                    if isinstance(c.body, str)
+                                    else None
+                                )
+                            }
+                        )
+
                 elif c.content_type == "image":
                     # e.g. "image/png" -> "png"
-                    format = c.media_type.split("/")[1] if c.media_type is not None else "unknown"
-                
+                    format = (
+                        c.media_type.split("/")[1]
+                        if c.media_type is not None
+                        else "unknown"
+                    )
+
                     content_blocks.append(
                         {
                             "image": {
@@ -244,7 +252,7 @@ def compose_args_for_converse_api_with_guardrail(
                             }
                         }
                     )
-                
+
                 elif c.content_type == "textAttachment":
                     content_blocks.append(
                         {
@@ -293,19 +301,20 @@ def compose_args_for_converse_api_with_guardrail(
         "system": [],
         "guardrailConfig": None,  # Initialize with None
     }
-    
+
     if instruction:
         args["system"].append({"text": instruction})
-    
+
     if guardrail and "guardrail_arn" in guardrail and "guardrail_version" in guardrail:
         args["guardrailConfig"] = {  # Update the value
             "guardrailIdentifier": guardrail["guardrail_arn"],
             "guardrailVersion": guardrail["guardrail_version"],
             "trace": "enabled",
-            "streamProcessingMode": "async"
+            "streamProcessingMode": "async",
         }
-    
+
     return args
+
 
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     client = get_bedrock_runtime_client()
