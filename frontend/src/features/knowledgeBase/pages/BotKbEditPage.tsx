@@ -711,16 +711,13 @@ const BotKbEditPage: React.FC = () => {
       },
       bedrockGuardrails: {
         isGuardrailEnabled: 
-          true ? (
-            // guardrailのパラメータのうち一つが設定されていればtrueにする
-            hateThreshold > 0 ||
-            insultsThreshold > 0 ||
-            sexualThreshold > 0 ||
-            violenceThreshold > 0 ||
-            misconductThreshold > 0 ||
-            groundingThreshold > 0 ||
-            relevanceThreshold > 0
-          ) : false,
+          hateThreshold > 0 ||
+          insultsThreshold > 0 ||
+          sexualThreshold > 0 ||
+          violenceThreshold > 0 ||
+          misconductThreshold > 0 ||
+          groundingThreshold > 0 ||
+          relevanceThreshold > 0,
         hateThreshold: hateThreshold,
         insultsThreshold: insultsThreshold,
         sexualThreshold: sexualThreshold,
@@ -738,7 +735,8 @@ const BotKbEditPage: React.FC = () => {
       .catch(() => {
         setIsLoading(false);
       });
-  }, [
+  },
+  [
     isValid,
     registerBot,
     tools,
@@ -764,6 +762,13 @@ const BotKbEditPage: React.FC = () => {
     chunkingMaxTokens,
     chunkingOverlapPercentage,
     openSearchParams,
+    hateThreshold,
+    insultsThreshold,
+    sexualThreshold,
+    violenceThreshold,
+    misconductThreshold,
+    groundingThreshold,
+    relevanceThreshold,    
   ]);
 
   const onClickEdit = useCallback(() => {
@@ -816,16 +821,14 @@ const BotKbEditPage: React.FC = () => {
           searchParams: searchParams,
         },
         bedrockGuardrails: {
-          isGuardrailEnabled: true ? (
-            // guardrailのパラメータのうち一つが設定されていればtrueにする
+          isGuardrailEnabled:
             hateThreshold > 0 ||
             insultsThreshold > 0 ||
             sexualThreshold > 0 ||
             violenceThreshold > 0 ||
             misconductThreshold > 0 ||
             groundingThreshold > 0 ||
-            relevanceThreshold > 0
-          ) : false,
+            relevanceThreshold > 0,
           hateThreshold: hateThreshold,
           insultsThreshold: insultsThreshold,
           sexualThreshold: sexualThreshold,
@@ -873,6 +876,15 @@ const BotKbEditPage: React.FC = () => {
     chunkingMaxTokens,
     chunkingOverlapPercentage,
     openSearchParams,
+    hateThreshold,
+    insultsThreshold,
+    sexualThreshold,
+    violenceThreshold,
+    misconductThreshold,
+    groundingThreshold,
+    relevanceThreshold,
+    guardrailArn,
+    guardrailVersion,
   ]);
 
   const [isOpenSamples, setIsOpenSamples] = useState(false);
