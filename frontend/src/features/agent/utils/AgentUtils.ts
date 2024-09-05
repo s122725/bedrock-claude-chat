@@ -26,8 +26,9 @@ export const convertThinkingLogToAgentToolProps = (
         if (tools[toolResultContent.toolUseId]) {
           tools[toolResultContent.toolUseId].status =
             toolResultContent.status as AgentToolState;
-          tools[toolResultContent.toolUseId].content =
-            toolResultContent.content[0]?.text || '';
+          tools[toolResultContent.toolUseId].content = {
+            text: toolResultContent.content.text,
+          };
         }
       }
     });

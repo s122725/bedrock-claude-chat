@@ -17,7 +17,7 @@ export type AgentEvent =
       type: 'tool-result';
       toolUseId: string;
       status: AgentToolState;
-      content: string;
+      content: { text: string };
     }
   | { type: 'goodbye' };
 
@@ -32,7 +32,7 @@ export const agentThinkingState = setup({
           name: string;
           input: any; // eslint-disable-line @typescript-eslint/no-explicit-any
           status: AgentToolState;
-          content?: string;
+          content?: { text: string };
         }
       >;
     },

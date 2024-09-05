@@ -45,7 +45,7 @@ class ConverseApiToolResultContent(TypedDict):
 
 class ConverseApiToolResult(TypedDict):
     toolUseId: str
-    content: list[ConverseApiToolResultContent]
+    content: ConverseApiToolResultContent
     status: NotRequired[str]
 
 

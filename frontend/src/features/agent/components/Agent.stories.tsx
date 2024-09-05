@@ -102,7 +102,7 @@ export const ToolCardSuccess = () => (
     name="Database Query"
     status="success"
     input={{ query: 'SELECT * FROM table' }}
-    content=""
+    content={{ text: 'some data' }}
   />
 );
 
@@ -126,13 +126,15 @@ export const ToolCardList = () => {
       name: 'database_query',
       status: 'success' as AgentToolState,
       input: { query: 'SELECT * FROM table' },
-      content: '{"result": "success", "data": "some data"}',
+      // Pass the content as stringified JSON
+      content: { text: '{"result": "success", "data": "some data"}' },
     },
     tool4: {
       name: 'API Call',
       status: 'error' as AgentToolState,
       input: { country: 'jp-jp', query: '東京 天気', time_limit: 'd' },
-      content: 'Error! Connection Timeout',
+      // Pass the content as simple string
+      content: { text: 'Error! Connection Timeout' },
     },
   };
 

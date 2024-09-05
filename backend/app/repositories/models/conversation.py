@@ -73,17 +73,16 @@ class AgentToolResultModelContentModel(BaseModel):
 
 class AgentToolResultModel(BaseModel):
     tool_use_id: str
-    content: list[AgentToolResultModelContentModel]
+    content: AgentToolResultModelContentModel
     status: str
 
     @classmethod
     def from_tool_result(cls, tool_result: "ConverseApiToolResult"):
         return AgentToolResultModel(
             tool_use_id=tool_result["toolUseId"],
-            content=[
-                AgentToolResultModelContentModel.from_tool_result_content(content)
-                for content in tool_result["content"]
-            ],
+            content=AgentToolResultModelContentModel.from_tool_result_content(
+                tool_result["content"]
+            ),
             status=tool_result["status"] if "status" in tool_result else "",
         )
 

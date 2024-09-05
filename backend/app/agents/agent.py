@@ -170,11 +170,10 @@ class AgentRunner:
                                     "status": c.body.status,
                                     "content": [
                                         (
-                                            {"json": content.json_}
-                                            if content.json_
-                                            else {"text": content.text}
+                                            {"json": c.body.content.json_}
+                                            if c.body.content.json_
+                                            else {"text": c.body.content.text}
                                         )
-                                        for content in c.body.content
                                     ],
                                 }
                             }
@@ -236,7 +235,7 @@ class AgentRunner:
                 result = tool.run(args)
                 tool_result: ConverseApiToolResult = {
                     "toolUseId": tool_use["toolUseId"],
-                    "content": [{"text": result.body}],
+                    "content": {"text": result.body},
                 }
                 if not result.succeeded:
                     tool_result["status"] = "error"

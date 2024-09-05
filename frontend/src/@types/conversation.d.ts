@@ -26,17 +26,17 @@ export type UsedChunk = {
 export type AgentToolUseContent = {
   toolUseId: string;
   name: string;
-  input: { [key: string]: any };
+  input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 export type AgentToolResultContent = {
-  json_: { [key: string]: any };
+  json_: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
   text: string;
 };
 
 export type AgentToolResult = {
   toolUseId: string;
-  content: AgentToolResultContent[];
+  content: AgentToolResultContent;
   status: 'success' | 'error';
 };
 

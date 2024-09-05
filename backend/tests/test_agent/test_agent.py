@@ -49,7 +49,7 @@ def on_tool_result(tool_result: ConverseApiToolResult):
     to_send = {
         "toolUseId": tool_result["toolUseId"],
         "status": tool_result["status"],  # type: ignore
-        "content": tool_result["content"][:20],
+        "content": tool_result["content"]["text"][:10],  # type: ignore
     }
     pprint(to_send["toolUseId"])
     pprint(to_send["status"])

@@ -9,13 +9,37 @@ import {
   AiOutlineUp,
 } from 'react-icons/ai';
 import { AgentToolState } from '../xstates/agentThink';
+import { JSONTree } from 'react-json-tree';
+
+// Theme of JSONTree
+// NOTE: need to set the theme as base16 style
+const THEME = {
+  scheme: 'aws',
+  author: 'aws',
+  base00: '#f1f3f3', // AWS Paper
+  base01: '#007faa',
+  base02: '#007faa',
+  base03: '#007faa',
+  base04: '#007faa',
+  base05: '#007faa',
+  base06: '#007faa',
+  base07: '#007faa',
+  base08: '#007faa',
+  base09: '#007faa',
+  base0A: '#007faa',
+  base0B: '#007faa',
+  base0C: '#007faa',
+  base0D: '#007faa',
+  base0E: '#007faa',
+  base0F: '#007faa',
+};
 
 type ToolCardProps = {
   toolUseId: string;
   name: string;
   status: AgentToolState;
   input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
-  content?: string;
+  content?: { text: string };
 };
 
 const ToolCard: React.FC<ToolCardProps> = ({
@@ -29,25 +53,18 @@ const ToolCard: React.FC<ToolCardProps> = ({
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const { t } = useTranslation();
 
-  let displayContent = '';
-  let parsedContent: { [key: string]: any } | null = null;
-
-  if (content !== undefined && content !== null) {
-    if (typeof content === 'string') {
-      try {
-        parsedContent = JSON.parse(content);
-      } catch {
-        displayContent = content;
-      }
-    } else {
-      displayContent = JSON.stringify(content, null, 2);
+  // Convert output content text to JSON object if possible.
+  let displayContent: any = null;
+  if (content?.text) {
+    try {
+      displayContent = JSON.parse(content.text);
+    } catch (e) {
+      console.log(`cannot parse: ${e}`);
+      displayContent = content;
     }
   }
-
-  console.log(`input: ${JSON.stringify(input)}`);
-  console.log(`content: ${content}`);
-  console.log(`displayContent: ${displayContent}`);
-  console.log(`parsedContent: ${JSON.stringify(parsedContent)}`);
+  console.log(`displayContent: ${JSON.stringify(displayContent)}`);
+  console.log(`typeof displayContent: ${typeof displayContent}`);
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
   const toggleInputExpand = () => setIsInputExpanded(!isInputExpanded);
@@ -107,42 +124,41 @@ const ToolCard: React.FC<ToolCardProps> = ({
           </div>
         )}
 
-        {(status === 'success' || status === 'error') &&
-          (displayContent || parsedContent) && (
-            <div>
-              <div
-                className="mt-2 flex cursor-pointer items-center text-sm text-aws-font-color"
-                onClick={toggleContentExpand}>
-                <p className="font-bold">
-                  {t('agent.progressCard.toolOutput')}
-                </p>
-                {isContentExpanded ? (
-                  <AiOutlineDown className="ml-2" />
-                ) : (
-                  <AiOutlineRight className="ml-2" />
-                )}
-              </div>
+        {(status === 'success' || status === 'error') && displayContent && (
+          <div>
+            <div
+              className="mt-2 flex cursor-pointer items-center text-sm text-aws-font-color"
+              onClick={toggleContentExpand}>
+              <p className="font-bold">{t('agent.progressCard.toolOutput')}</p>
+              {isContentExpanded ? (
+                <AiOutlineDown className="ml-2" />
+              ) : (
+                <AiOutlineRight className="ml-2" />
+              )}
+            </div>
 
-              {/* <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${isContentExpanded ? 'max-h-96' : 'max-h-0'}`}>
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${isContentExpanded ? 'max-h-96' : 'max-h-0'}`}>
+              {displayContent ? (
                 <div className="ml-4 mt-2 text-sm text-aws-font-color">
-                  {parsedContent ? (
-                    <ul className="list-disc">
-                      {Object.entries(parsedContent).map(([key, value]) => (
-                        <li key={key}>
-                          <span className="font-semibold">{key}:</span> {value}
-                        </li>
-                      ))}
-                    </ul>
+                  {typeof displayContent === 'object' ? (
+                    // Render as JSON tree if the content is an object. Otherwise, render as a string.
+                    <JSONTree
+                      data={displayContent}
+                      theme={THEME}
+                      invertTheme={false} // disable dark theme
+                      labelRenderer={([key]) => (
+                        <strong style={{ color: '#232F3E' }}>{key}</strong> // aws-squid-ink
+                      )}
+                    />
                   ) : (
-                    <pre className="whitespace-pre-wrap text-sm text-dark-gray">
-                      {displayContent}
-                    </pre>
+                    <p>{String(displayContent)}</p>
                   )}
                 </div>
-              </div> */}
+              ) : null}
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );

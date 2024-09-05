@@ -340,6 +340,7 @@ const useChat = () => {
         model: messageContent.model,
         feedback: messageContent.feedback,
         usedChunks: messageContent.usedChunks,
+        thinkingLog: messageContent.thinkingLog,
       }
     );
   };
@@ -404,6 +405,7 @@ const useChat = () => {
       role: 'user',
       feedback: null,
       usedChunks: null,
+      thinkingLog: null,
     };
     const input: PostMessageRequest = {
       conversationId: isNewChat ? newConversationId : conversationId,
@@ -522,6 +524,7 @@ const useChat = () => {
       role: 'user',
       feedback: null,
       usedChunks: null,
+      thinkingLog: null,
     };
     const input: PostMessageRequest = {
       conversationId: conversationId,
@@ -625,6 +628,7 @@ const useChat = () => {
           model: messages[index].model,
           feedback: messages[index].feedback,
           usedChunks: messages[index].usedChunks,
+          thinkingLog: messages[index].thinkingLog,
         }
       );
     } else {

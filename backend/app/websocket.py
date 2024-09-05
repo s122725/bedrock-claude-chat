@@ -39,11 +39,8 @@ logger.setLevel(logging.INFO)
 
 
 def on_stream(token: str, gatewayapi, connection_id: str) -> None:
-    print(f"api_gateway: {gatewayapi}")
-    print(f"Connection ID: {connection_id}")
     # Send completion
     data_to_send = json.dumps(dict(status="STREAMING", completion=token)).encode("utf-8")
-    print(f"Data to send: {data_to_send}")
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=data_to_send)
 
 

@@ -120,16 +120,14 @@ class AgentToolResultContent(BaseSchema):
 
 class AgentToolResult(BaseSchema):
     tool_use_id: str
-    content: list[AgentToolResultContent]
+    content: AgentToolResultContent
     status: str
 
     @classmethod
     def from_model(cls, model: "AgentToolResultModel"):
         return AgentToolResult(
             tool_use_id=model.tool_use_id,
-            content=[
-                AgentToolResultContent.from_model(content) for content in model.content
-            ],
+            content=AgentToolResultContent.from_model(model.content),
             status=model.status,
         )
 
@@ -141,7 +139,7 @@ class AgentContent(BaseSchema):
     @classmethod
     def from_model(cls, model: "AgentContentModel"):
         if model.content_type == "text":
-            return AgentContent(content_type="text", body=model.body)  # type: ignore[call-arg]
+            return AgentContent(content_type="text", body=model.body)  # type: ignore[arg-type]
         elif model.content_type == "toolUse":
             return AgentContent(
                 content_type="toolUse",
