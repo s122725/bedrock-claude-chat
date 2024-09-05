@@ -50,7 +50,7 @@ const translation = {
         },
         internet_search: {
           name: 'Internet Search',
-          desciription: 'Search the internet for information.',
+          description: 'Search the internet for information.',
         },
       },
     },

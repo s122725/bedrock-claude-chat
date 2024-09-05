@@ -53,7 +53,7 @@ const translation = {
         },
         internet_search: {
           name: 'インターネット検索',
-          desciription: 'インターネットで情報を検索します。',
+          description: 'インターネットで情報を検索します。',
         },
       },
     },
