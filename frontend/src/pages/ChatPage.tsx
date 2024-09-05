@@ -47,6 +47,7 @@ import {
   DisplayMessageContent,
   PutFeedbackRequest,
 } from '../@types/conversation';
+import { convertThinkingLogToAgentToolProps } from '../features/agent/utils/AgentUtils';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -79,6 +80,7 @@ const ChatPage: React.FC = () => {
 
   // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
   const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
+  console.log(`message: ${JSON.stringify(messages[1])}`);
 
   // Error Handling
   useEffect(() => {
@@ -466,16 +468,26 @@ const ChatPage: React.FC = () => {
                           isRunning={true}
                         />
                       ) : (
-                        <ChatMessageWithRelatedDocuments
-                          chatContent={message}
-                          onChangeMessageId={onChangeCurrentMessageId}
-                          onSubmit={onSubmitEditedContent}
-                          onSubmitFeedback={(messageId, feedback) => {
-                            if (conversationId) {
-                              giveFeedback(messageId, feedback);
-                            }
-                          }}
-                        />
+                        <>
+                          {message.thinkingLog && (
+                            <AgentToolList
+                              tools={convertThinkingLogToAgentToolProps(
+                                message.thinkingLog
+                              )}
+                              isRunning={false}
+                            />
+                          )}
+                          <ChatMessageWithRelatedDocuments
+                            chatContent={message}
+                            onChangeMessageId={onChangeCurrentMessageId}
+                            onSubmit={onSubmitEditedContent}
+                            onSubmitFeedback={(messageId, feedback) => {
+                              if (conversationId) {
+                                giveFeedback(messageId, feedback);
+                              }
+                            }}
+                          />
+                        </>
                       )}
 
                       <div className="w-full border-b border-aws-squid-ink/10"></div>

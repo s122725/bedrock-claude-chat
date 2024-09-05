@@ -44,6 +44,11 @@ const ToolCard: React.FC<ToolCardProps> = ({
     }
   }
 
+  console.log(`input: ${JSON.stringify(input)}`);
+  console.log(`content: ${content}`);
+  console.log(`displayContent: ${displayContent}`);
+  console.log(`parsedContent: ${JSON.stringify(parsedContent)}`);
+
   const toggleExpand = () => setIsExpanded(!isExpanded);
   const toggleInputExpand = () => setIsInputExpanded(!isInputExpanded);
   const toggleContentExpand = () => setIsContentExpanded(!isContentExpanded);
@@ -118,7 +123,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
                 )}
               </div>
 
-              <div
+              {/* <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${isContentExpanded ? 'max-h-96' : 'max-h-0'}`}>
                 <div className="ml-4 mt-2 text-sm text-aws-font-color">
                   {parsedContent ? (
@@ -135,7 +140,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
                     </pre>
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
       </div>

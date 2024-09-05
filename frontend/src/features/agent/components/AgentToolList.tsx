@@ -3,16 +3,18 @@ import ToolCard from './ToolCard';
 import { AgentToolState } from '../xstates/agentThink';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
+export type AgentToolsProps = {
+  // Note: key is toolUseId
+  [key: string]: {
+    name: string;
+    status: AgentToolState;
+    input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    content?: string;
+  };
+};
+
 type AgentToolListProps = {
-  tools: Record<
-    string,
-    {
-      name: string;
-      status: AgentToolState;
-      input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
-      content?: string;
-    }
-  >;
+  tools: AgentToolsProps;
   isRunning: boolean;
 };
 
