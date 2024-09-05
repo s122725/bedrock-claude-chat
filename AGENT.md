@@ -59,7 +59,6 @@ To develop your own custom tools for the Agent, follow these guidelines:
 
   - Edit i18n files. Open [en/index.ts](../frontend/src/i18n/en/index.ts) and add your own `name` and `description` on `agent.tools`.
   - Edit `xx/index.ts` as well. Where `xx` represents the country code you wish.
-  - Edit [formatDescription.ts](../frontend/src/features/agent/functions/formatDescription.ts) so that frontend app can refer to it correctly.
 
 - Run `cdk deploy` to deploy your changes. This will make your custom tool available in the custom bot screen.
 
