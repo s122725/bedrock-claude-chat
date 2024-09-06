@@ -1,15 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import React, { useState } from 'react';
-import {
-  AiOutlineLoading3Quarters,
-  AiOutlineCheckCircle,
-  AiOutlineCloseCircle,
-  AiOutlineDown,
-  AiOutlineRight,
-  AiOutlineUp,
-} from 'react-icons/ai';
 import { AgentToolState } from '../xstates/agentThink';
 import { JSONTree } from 'react-json-tree';
+import {
+  PiCaretDown,
+  PiCaretUp,
+  PiCheckCircle,
+  PiCircleNotch,
+  PiXCircle,
+} from 'react-icons/pi';
+import { twMerge } from 'tailwind-merge';
 
 // Theme of JSONTree
 // NOTE: need to set the theme as base16 style
@@ -54,6 +54,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
   const { t } = useTranslation();
 
   // Convert output content text to JSON object if possible.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let displayContent: any = null;
   if (content?.text) {
     try {
@@ -77,47 +78,53 @@ const ToolCard: React.FC<ToolCardProps> = ({
   const toggleContentExpand = () => setIsContentExpanded(!isContentExpanded);
 
   return (
-    <div className="relative rounded-lg bg-aws-paper p-4 shadow">
-      <div className="flex items-center justify-between">
+    <div className="relative border border-b-0 border-light-gray bg-aws-paper text-aws-font-color/80 last:border-b">
+      <div
+        className="flex cursor-pointer items-center justify-between p-2 hover:bg-light-gray"
+        onClick={toggleExpand}>
         <div className="flex items-center text-base">
           {status === 'running' && (
-            <AiOutlineLoading3Quarters className="mr-2 animate-spin text-lg text-aws-lab" />
+            <PiCircleNotch className="mr-2 animate-spin text-aws-aqua" />
           )}
           {status === 'success' && (
-            <AiOutlineCheckCircle className="mr-2 text-lg text-aws-lab" />
+            <PiCheckCircle className="mr-2 text-aws-aqua" />
           )}
-          {status === 'error' && (
-            <AiOutlineCloseCircle className="mr-2 text-lg text-red" />
-          )}
-          <h3 className="text-lg font-semibold text-aws-font-color">{name}</h3>
+          {status === 'error' && <PiXCircle className="mr-2  text-red" />}
+          <h3 className="">{name}</h3>
         </div>
-        <div className="cursor-pointer" onClick={toggleExpand}>
+        <div>
           {isExpanded ? (
-            <AiOutlineUp className="text-lg" />
+            <PiCaretUp className="text-lg" />
           ) : (
-            <AiOutlineDown className="text-lg" />
+            <PiCaretDown className="text-lg" />
           )}
         </div>
       </div>
 
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-full' : 'max-h-0'}`}>
+        className={twMerge(
+          `origin-top overflow-hidden transition-transform duration-200 ease-in-out`,
+          isExpanded ? 'max-h-full scale-y-100 px-2 pb-2' : 'max-h-0 scale-y-0'
+        )}>
         {input && (
           <div>
             <div
-              className="mt-2 flex cursor-pointer items-center text-sm text-aws-font-color"
+              className="mt-2 flex cursor-pointer items-center text-sm"
               onClick={toggleInputExpand}>
               <p className="font-bold">{t('agent.progressCard.toolInput')}</p>
               {isInputExpanded ? (
-                <AiOutlineDown className="ml-2" />
+                <PiCaretDown className="ml-2" />
               ) : (
-                <AiOutlineRight className="ml-2" />
+                <PiCaretUp className="ml-2" />
               )}
             </div>
 
             <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${isInputExpanded ? 'max-h-96' : 'max-h-0'}`}>
-              <div className="ml-4 mt-2 text-sm text-aws-font-color">
+              className={twMerge(
+                `overflow-hidden transition-all duration-300 ease-in-out`,
+                isInputExpanded ? 'max-h-96 ' : 'max-h-0'
+              )}>
+              <div className="ml-4 mt-2 text-sm">
                 <ul className="list-disc">
                   {Object.entries(input).map(([key, value]) => (
                     <li key={key}>
@@ -133,20 +140,23 @@ const ToolCard: React.FC<ToolCardProps> = ({
         {(status === 'success' || status === 'error') && displayContent && (
           <div>
             <div
-              className="mt-2 flex cursor-pointer items-center text-sm text-aws-font-color"
+              className="mt-2 flex cursor-pointer items-center text-sm"
               onClick={toggleContentExpand}>
               <p className="font-bold">{t('agent.progressCard.toolOutput')}</p>
               {isContentExpanded ? (
-                <AiOutlineDown className="ml-2" />
+                <PiCaretDown className="ml-2" />
               ) : (
-                <AiOutlineRight className="ml-2" />
+                <PiCaretUp className="ml-2" />
               )}
             </div>
 
             <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${isContentExpanded ? 'max-h-full' : 'max-h-0'}`}>
+              className={twMerge(
+                `overflow-hidden transition-all duration-300 ease-in-out`,
+                isContentExpanded ? 'max-h-96' : 'max-h-0'
+              )}>
               {displayContent ? (
-                <div className="ml-4 mt-2 text-sm text-aws-font-color">
+                <div className="ml-4 mt-2 text-sm">
                   {typeof displayContent === 'object' ? (
                     // Render as JSON tree if the content is an object. Otherwise, render as a string.
                     <JSONTree
