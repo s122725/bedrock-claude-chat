@@ -26,7 +26,7 @@ import AgentToolList from '../features/agent/components/AgentToolList';
 import { convertThinkingLogToAgentToolProps } from '../features/agent/utils/AgentUtils';
 
 type Props = BaseProps & {
-  isThinking: boolean;
+  isAgentThinking: boolean;
   chatContent?: DisplayMessageContent;
   relatedDocuments?: RelatedDocument[];
   onChangeMessageId?: (messageId: string) => void;

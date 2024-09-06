@@ -348,7 +348,7 @@ const ChatPage: React.FC = () => {
 
     return (
       <ChatMessage
-        isThinking={[AgentState.THINKING, AgentState.LEAVING].some(
+        isAgentThinking={[AgentState.THINKING, AgentState.LEAVING].some(
           (v) => v == agentThinking.value
         )}
         chatContent={message}
