@@ -13,10 +13,7 @@ const usePostMessageStreaming = create<{
     input: PostMessageRequest;
     hasKnowledge?: boolean;
     dispatch: (completion: string) => void;
-    thinkingDispatch: (
-      // event: Exclude<AgentThinkingEventKeys, 'wakeup'>
-      event: AgentEvent
-    ) => void;
+    thinkingDispatch: (event: AgentEvent) => void;
   }) => Promise<string>;
 }>(() => {
   return {

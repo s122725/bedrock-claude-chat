@@ -1,3 +1,5 @@
+import json
+
 from app.agents.tools.agent_tool import AgentTool
 from app.repositories.models.custom_bot import BotModel
 from app.routes.schemas.conversation import type_model_name
@@ -30,7 +32,10 @@ def calculate_bmi(
     else:
         category = "Obese"
 
-    return f"Your BMI is {bmi_rounded}, which falls within the {category} range."
+    # You can select the return format you prefer.
+    # If return with json format, it will be rendered as a json object in the frontend.
+    return json.dumps({"bmi": bmi_rounded, "category": category})
+    # return f"Your BMI is {bmi_rounded}, which falls within the {category} range."
 
 
 bmi_tool = AgentTool(

@@ -35,7 +35,8 @@ To enable the Agent functionality for your customized chatbot, follow these step
 
 4. By default "Internet Search" tool is provided. This tool allows the Agent to fetch information from the internet to answer user questions.
 
-![](./imgs/agent.gif)
+![](./imgs/agent1.png)
+![](./imgs/agent2.png)
 
 This tool depends [DuckDuckGo](https://duckduckgo.com/) which has rate limit. It's suitable for PoC or demo purpose, but if you'd like to use for production environment, we recommend to use another search API.
 

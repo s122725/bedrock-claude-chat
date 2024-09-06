@@ -197,8 +197,9 @@ def create_knowledge_tool(bot: BotModel, model: type_model_name) -> AgentTool:
             bot.knowledge.__str_in_claude_format__()
         )
     )
+    logger.info(f"Creating knowledge base tool with description: {description}")
     return AgentTool(
-        name=f"knowledge_for_{bot.title}",
+        name=f"knowledge_base_tool",
         description=description,
         args_schema=KnowledgeToolInput,
         function=search_knowledge,

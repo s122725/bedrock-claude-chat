@@ -32,7 +32,7 @@ class AgentTool(Generic[T]):
         self.args_schema = args_schema
         self.function = function
         self.bot = bot
-        self.model = model
+        self.model: type_model_name | None = model
 
     def _generate_input_schema(self) -> dict[str, Any]:
         """Converts the Pydantic model to a JSON schema."""
