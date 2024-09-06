@@ -1,6 +1,8 @@
 from typing import Any, Callable, Generic, TypeVar, get_args, get_origin
 
 from app.bedrock import ConverseApiToolSpec
+from app.repositories.models.custom_bot import BotModel
+from app.routes.schemas.conversation import type_model_name
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -21,12 +23,16 @@ class AgentTool(Generic[T]):
         name: str,
         description: str,
         args_schema: type[T],
-        function: Callable[[T], str],
+        function: Callable[[T, BotModel | None, type_model_name | None], str],
+        bot: BotModel | None = None,
+        model: type_model_name | None = None,
     ):
         self.name = name
         self.description = description
         self.args_schema = args_schema
         self.function = function
+        self.bot = bot
+        self.model = model
 
     def _generate_input_schema(self) -> dict[str, Any]:
         """Converts the Pydantic model to a JSON schema."""
@@ -41,7 +47,7 @@ class AgentTool(Generic[T]):
 
     def run(self, arg: T) -> RunResult:
         try:
-            res = self.function(arg)
+            res = self.function(arg, self.bot, self.model)
             return RunResult(succeeded=True, body=res)
         except Exception as e:
             return RunResult(succeeded=False, body=str(e))

@@ -16,6 +16,7 @@ class TestInternetSearchTool(unittest.TestCase):
             InternetSearchInput(query=query, time_limit=time_limit, country=country)
         )
         self.assertIsInstance(response.body, str)
+        self.assertTrue(response.succeeded)
         print(response)
 
 

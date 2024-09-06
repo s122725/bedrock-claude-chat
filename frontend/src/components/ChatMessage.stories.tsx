@@ -70,6 +70,7 @@ export const Conversation = () => {
             message.role === 'assistant' ? 'bg-aws-squid-ink/5' : ''
           }`}>
           <ChatMessage
+            isAgentThinking={false}
             chatContent={message}
             relatedDocuments={message.usedChunks?.map((chunk) => ({
               chunkBody: chunk.content,

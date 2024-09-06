@@ -1,6 +1,8 @@
 import json
 
 from app.agents.tools.agent_tool import AgentTool
+from app.repositories.models.custom_bot import BotModel
+from app.routes.schemas.conversation import type_model_name
 from duckduckgo_search import DDGS
 from pydantic import BaseModel, Field, root_validator
 
@@ -33,7 +35,9 @@ class InternetSearchInput(BaseModel):
         return values
 
 
-def internet_search(tool_input: InternetSearchInput) -> str:
+def internet_search(
+    tool_input: InternetSearchInput, bot: BotModel | None, model: type_model_name | None
+) -> str:
     query = tool_input.query
     time_limit = tool_input.time_limit
     country = tool_input.country

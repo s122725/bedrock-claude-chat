@@ -8,6 +8,7 @@ from decimal import Decimal as decimal
 import boto3
 from app.agents.agent import AgentMessageModel, AgentRunner
 from app.agents.agent import OnStopInput as AgentOnStopInput
+from app.agents.tools.knowledge import create_knowledge_tool
 from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
 from app.bedrock import ConverseApiToolResult, compose_args_for_converse_api
@@ -211,8 +212,10 @@ def process_chat_input(
         logger.info("Bot has agent tools. Using agent for response.")
         tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
 
-        # TODO: append knowledge tool to tools
-        # ...
+        if bot.has_knowledge():
+            # Add knowledge tool
+            knowledge_tool = create_knowledge_tool(bot, chat_input.message.model)
+            tools.append(knowledge_tool)
 
         runner = AgentRunner(
             bot=bot,

@@ -22,9 +22,8 @@ import { useTranslation } from 'react-i18next';
 import DialogFeedback from './DialogFeedback';
 import UploadedAttachedFile from './UploadedAttachedFile';
 import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachedFiles';
-import AgentToolList, {
-  AgentToolsProps,
-} from '../features/agent/components/AgentToolList';
+import AgentToolList from '../features/agent/components/AgentToolList';
+import { AgentToolsProps } from '../features/agent/xstates/agentThink';
 
 type Props = BaseProps & {
   isAgentThinking: boolean;
