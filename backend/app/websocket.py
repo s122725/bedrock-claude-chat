@@ -41,7 +41,9 @@ logger.setLevel(logging.INFO)
 
 def on_stream(token: str, gatewayapi, connection_id: str) -> None:
     # Send completion
-    data_to_send = json.dumps(dict(status="STREAMING", completion=token)).encode("utf-8")
+    data_to_send = json.dumps(dict(status="STREAMING", completion=token)).encode(
+        "utf-8"
+    )
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=data_to_send)
 
 
@@ -112,7 +114,9 @@ def on_stop(
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
 
-def on_agent_thinking(agent_log: list[AgentMessageModel], gatewayapi, connection_id: str):
+def on_agent_thinking(
+    agent_log: list[AgentMessageModel], gatewayapi, connection_id: str
+):
     assert len(agent_log) > 0
     assert agent_log[-1].role == "assistant"
     to_send = dict()
@@ -123,7 +127,9 @@ def on_agent_thinking(agent_log: list[AgentMessageModel], gatewayapi, connection
             "input": c.body.input,
         }
 
-    data_to_send = json.dumps(dict(status="AGENT_THINKING", log=to_send)).encode("utf-8")
+    data_to_send = json.dumps(dict(status="AGENT_THINKING", log=to_send)).encode(
+        "utf-8"
+    )
     gatewayapi.post_to_connection(ConnectionId=connection_id, Data=data_to_send)
 
 

@@ -66,7 +66,9 @@ class AgentToolResultModelContentModel(BaseModel):
         cls, tool_result_content: "ConverseApiToolResultContent"
     ):
         return AgentToolResultModelContentModel(
-            json_=tool_result_content["json"] if "json" in tool_result_content else None,
+            json_=(
+                tool_result_content["json"] if "json" in tool_result_content else None
+            ),
             text=tool_result_content["text"] if "text" in tool_result_content else None,
         )
 

@@ -164,7 +164,9 @@ def search_knowledge(
                 "system": [],
             }
         )
-        message_content = response.get("output", {}).get("message", {}).get("content", [])
+        message_content = (
+            response.get("output", {}).get("message", {}).get("content", [])
+        )
         for content_block in message_content:
             if "text" in content_block:
                 return json.dumps(

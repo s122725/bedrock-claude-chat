@@ -115,7 +115,9 @@ def add_current_user_to_request(request: Request, call_next: ASGIApp):
             token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token_str)
             request.state.current_user = get_current_user(token)
         else:
-            request.state.current_user = User(id="test_user", name="test_user", groups=[])
+            request.state.current_user = User(
+                id="test_user", name="test_user", groups=[]
+            )
 
     response = call_next(request)  # type: ignore
     return response
