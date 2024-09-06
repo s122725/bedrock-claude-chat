@@ -60,12 +60,9 @@ const ToolCard: React.FC<ToolCardProps> = ({
     try {
       displayContent = JSON.parse(content.text);
     } catch (e) {
-      console.log(`cannot parse: ${e}`);
       displayContent = content;
     }
   }
-  console.log(`displayContent: ${JSON.stringify(displayContent)}`);
-  console.log(`typeof displayContent: ${typeof displayContent}`);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);

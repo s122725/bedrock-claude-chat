@@ -22,8 +22,11 @@ import { useTranslation } from 'react-i18next';
 import DialogFeedback from './DialogFeedback';
 import UploadedAttachedFile from './UploadedAttachedFile';
 import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachedFiles';
+import AgentToolList from '../features/agent/components/AgentToolList';
+import { convertThinkingLogToAgentToolProps } from '../features/agent/utils/AgentUtils';
 
 type Props = BaseProps & {
+  isThinking: boolean;
   chatContent?: DisplayMessageContent;
   relatedDocuments?: RelatedDocument[];
   onChangeMessageId?: (messageId: string) => void;
@@ -134,6 +137,36 @@ const ChatMessage: React.FC<Props> = (props) => {
         )}
 
         <div className="ml-5 grow ">
+          {chatContent?.role === 'assistant' && (
+            <div className="flex flex-col">
+              {props.isThinking ? (
+                <AgentToolList
+                  tools={agentThinking.context.tools}
+                  isRunning={true}
+                />
+              ) : (
+                <>
+                  {chatContent.thinkingLog && (
+                    <div className="mb-3 mt-0">
+                      <AgentToolList
+                        tools={convertThinkingLogToAgentToolProps(
+                          chatContent.thinkingLog
+                        )}
+                        isRunning={false}
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <ChatMessageMarkdown
+                      relatedDocuments={props.relatedDocuments}
+                      messageId={chatContent.id}>
+                      {chatContent.content[0].body}
+                    </ChatMessageMarkdown>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           {chatContent?.role === 'user' && !isEdit && (
             <div>
               {chatContent.content.some(
@@ -164,8 +197,8 @@ const ChatMessage: React.FC<Props> = (props) => {
                 <div key="files" className="my-2 flex">
                   {chatContent.content.map((content, idx) => {
                     if (content.contentType === 'attachment') {
-                      const isTextFile = TEXT_FILE_EXTENSIONS.some(
-                        (ext) => content.fileName?.toLowerCase().endsWith(ext)
+                      const isTextFile = TEXT_FILE_EXTENSIONS.some((ext) =>
+                        content.fileName?.toLowerCase().endsWith(ext)
                       );
                       return (
                         <UploadedAttachedFile

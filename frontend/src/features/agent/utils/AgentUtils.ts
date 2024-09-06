@@ -10,7 +10,6 @@ import { AgentToolsProps } from '../components/AgentToolList';
 export const convertThinkingLogToAgentToolProps = (
   thinkingLog: AgentMessage[]
 ): AgentToolsProps => {
-  console.log(`thinkingLog: ${JSON.stringify(thinkingLog)}`);
   const tools: AgentToolsProps = {};
   thinkingLog.forEach((message) => {
     message.content.forEach((content: AgentContent) => {

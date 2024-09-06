@@ -40,14 +40,12 @@ import useModel from '../hooks/useModel';
 import { TextInputChatContent } from '../features/agent/components/TextInputChatContent';
 import { AgentState } from '../features/agent/xstates/agentThink';
 import { SyncStatus } from '../constants';
-import AgentToolList from '../features/agent/components/AgentToolList';
 import { BottomHelper } from '../features/helper/components/BottomHelper';
 import { useIsWindows } from '../hooks/useIsWindows';
 import {
   DisplayMessageContent,
   PutFeedbackRequest,
 } from '../@types/conversation';
-import { convertThinkingLogToAgentToolProps } from '../features/agent/utils/AgentUtils';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -80,7 +78,6 @@ const ChatPage: React.FC = () => {
 
   // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
   const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
-  console.log(`message: ${JSON.stringify(messages[1])}`);
 
   // Error Handling
   useEffect(() => {
@@ -351,6 +348,9 @@ const ChatPage: React.FC = () => {
 
     return (
       <ChatMessage
+        isThinking={[AgentState.THINKING, AgentState.LEAVING].some(
+          (v) => v == agentThinking.value
+        )}
         chatContent={message}
         relatedDocuments={relatedDocuments}
         onChangeMessageId={props.onChangeMessageId}
@@ -459,37 +459,16 @@ const ChatPage: React.FC = () => {
                       className={`${
                         message.role === 'assistant' ? 'bg-aws-squid-ink/5' : ''
                       }`}>
-                      {messages.length === idx + 1 &&
-                      [AgentState.THINKING, AgentState.LEAVING].some(
-                        (v) => v == agentThinking.value
-                      ) ? (
-                        <AgentToolList
-                          tools={agentThinking.context.tools}
-                          isRunning={true}
-                        />
-                      ) : (
-                        <>
-                          {message.thinkingLog && (
-                            <AgentToolList
-                              tools={convertThinkingLogToAgentToolProps(
-                                message.thinkingLog
-                              )}
-                              isRunning={false}
-                            />
-                          )}
-                          <ChatMessageWithRelatedDocuments
-                            chatContent={message}
-                            onChangeMessageId={onChangeCurrentMessageId}
-                            onSubmit={onSubmitEditedContent}
-                            onSubmitFeedback={(messageId, feedback) => {
-                              if (conversationId) {
-                                giveFeedback(messageId, feedback);
-                              }
-                            }}
-                          />
-                        </>
-                      )}
-
+                      <ChatMessageWithRelatedDocuments
+                        chatContent={message}
+                        onChangeMessageId={onChangeCurrentMessageId}
+                        onSubmit={onSubmitEditedContent}
+                        onSubmitFeedback={(messageId, feedback) => {
+                          if (conversationId) {
+                            giveFeedback(messageId, feedback);
+                          }
+                        }}
+                      />
                       <div className="w-full border-b border-aws-squid-ink/10"></div>
                     </div>
                   ))}
