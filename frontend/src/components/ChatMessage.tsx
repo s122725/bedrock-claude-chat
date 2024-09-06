@@ -153,15 +153,6 @@ const ChatMessage: React.FC<Props> = (props) => {
                       />
                     </div>
                   )}
-                  {!chatContent.thinkingLog && (
-                    <div className="flex-1">
-                      <ChatMessageMarkdown
-                        relatedDocuments={props.relatedDocuments}
-                        messageId={chatContent.id}>
-                        {chatContent.content[0].body}
-                      </ChatMessageMarkdown>
-                    </div>
-                  )}
                 </>
               )}
             </div>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { AgentToolState } from '../xstates/agentThink';
 import { JSONTree } from 'react-json-tree';
 import {
@@ -10,6 +10,7 @@ import {
   PiXCircle,
 } from 'react-icons/pi';
 import { twMerge } from 'tailwind-merge';
+import useToolCardExpand from '../hooks/useToolCardExpand';
 
 // Theme of JSONTree
 // NOTE: need to set the theme as base16 style
@@ -43,15 +44,39 @@ type ToolCardProps = {
 };
 
 const ToolCard: React.FC<ToolCardProps> = ({
+  toolUseId,
   name,
   status,
   input,
   content,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isInputExpanded, setIsInputExpanded] = useState(false);
-  const [isContentExpanded, setIsContentExpanded] = useState(false);
   const { t } = useTranslation();
+
+  // To avoid re-rendering of all ToolCard components when scrolling, we use a custom hook to manage the expanded state.
+  const {
+    expandedTools,
+    inputExpandedTools,
+    contentExpandedTools,
+    toggleExpand,
+    toggleInputExpand,
+    toggleContentExpand,
+  } = useToolCardExpand();
+
+  const isExpanded = expandedTools[toolUseId] ?? false;
+  const isInputExpanded = inputExpandedTools[toolUseId] ?? false;
+  const isContentExpanded = contentExpandedTools[toolUseId] ?? false;
+
+  const handleToggleExpand = useCallback(() => {
+    toggleExpand(toolUseId);
+  }, [toggleExpand, toolUseId]);
+
+  const handleToggleInputExpand = useCallback(() => {
+    toggleInputExpand(toolUseId);
+  }, [toggleInputExpand, toolUseId]);
+
+  const handleToggleContentExpand = useCallback(() => {
+    toggleContentExpand(toolUseId);
+  }, [toggleContentExpand, toolUseId]);
 
   // Convert output content text to JSON object if possible.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,21 +89,11 @@ const ToolCard: React.FC<ToolCardProps> = ({
     }
   }
 
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-    if (!isExpanded) {
-      setIsInputExpanded(true);
-      setIsContentExpanded(true);
-    }
-  };
-  const toggleInputExpand = () => setIsInputExpanded(!isInputExpanded);
-  const toggleContentExpand = () => setIsContentExpanded(!isContentExpanded);
-
   return (
     <div className="relative border border-b-0 border-light-gray bg-aws-paper text-aws-font-color/80 last:border-b">
       <div
         className="flex cursor-pointer items-center justify-between p-2 hover:bg-light-gray"
-        onClick={toggleExpand}>
+        onClick={handleToggleExpand}>
         <div className="flex items-center text-base">
           {status === 'running' && (
             <PiCircleNotch className="mr-2 animate-spin text-aws-aqua" />
@@ -107,7 +122,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
           <div>
             <div
               className="mt-2 flex cursor-pointer items-center text-sm"
-              onClick={toggleInputExpand}>
+              onClick={handleToggleInputExpand}>
               <p className="font-bold">{t('agent.progressCard.toolInput')}</p>
               {isInputExpanded ? (
                 <PiCaretDown className="ml-2" />
@@ -138,7 +153,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
           <div>
             <div
               className="mt-2 flex cursor-pointer items-center text-sm"
-              onClick={toggleContentExpand}>
+              onClick={handleToggleContentExpand}>
               <p className="font-bold">{t('agent.progressCard.toolOutput')}</p>
               {isContentExpanded ? (
                 <PiCaretDown className="ml-2" />
