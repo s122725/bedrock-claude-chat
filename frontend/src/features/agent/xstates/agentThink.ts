@@ -26,8 +26,8 @@ export type AgentEvent =
       type: 'go-on';
       toolUseId: string;
       name: string;
-      input: { [key: string]: any };
-    } // eslint-disable-line @typescript-eslint/no-explicit-any
+      input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
   | {
       type: 'tool-result';
       toolUseId: string;
