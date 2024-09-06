@@ -46,6 +46,7 @@ import {
   DisplayMessageContent,
   PutFeedbackRequest,
 } from '../@types/conversation';
+import { convertThinkingLogToAgentToolProps } from '../features/agent/utils/AgentUtils';
 
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
@@ -346,11 +347,19 @@ const ChatPage: React.FC = () => {
       }
     })();
 
+    const isAgentThinking = [AgentState.THINKING, AgentState.LEAVING].some(
+      (v) => v == agentThinking.value
+    );
+    const tools = isAgentThinking
+      ? agentThinking.context.tools
+      : message.thinkingLog
+        ? convertThinkingLogToAgentToolProps(message.thinkingLog)
+        : undefined;
+
     return (
       <ChatMessage
-        isAgentThinking={[AgentState.THINKING, AgentState.LEAVING].some(
-          (v) => v == agentThinking.value
-        )}
+        isAgentThinking={isAgentThinking}
+        tools={tools}
         chatContent={message}
         relatedDocuments={relatedDocuments}
         onChangeMessageId={props.onChangeMessageId}

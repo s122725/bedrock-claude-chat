@@ -4,8 +4,7 @@ import {
   AgentToolUseContent,
   AgentToolResult,
 } from '../../../@types/conversation';
-import { AgentToolState } from '../xstates/agentThink';
-import { AgentToolsProps } from '../components/AgentToolList';
+import { AgentToolState, AgentToolsProps } from '../xstates/agentThink';
 
 export const convertThinkingLogToAgentToolProps = (
   thinkingLog: AgentMessage[]

@@ -22,11 +22,13 @@ import { useTranslation } from 'react-i18next';
 import DialogFeedback from './DialogFeedback';
 import UploadedAttachedFile from './UploadedAttachedFile';
 import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachedFiles';
-import AgentToolList from '../features/agent/components/AgentToolList';
-import { convertThinkingLogToAgentToolProps } from '../features/agent/utils/AgentUtils';
+import AgentToolList, {
+  AgentToolsProps,
+} from '../features/agent/components/AgentToolList';
 
 type Props = BaseProps & {
   isAgentThinking: boolean;
+  tools?: AgentToolsProps;
   chatContent?: DisplayMessageContent;
   relatedDocuments?: RelatedDocument[];
   onChangeMessageId?: (messageId: string) => void;
@@ -139,30 +141,27 @@ const ChatMessage: React.FC<Props> = (props) => {
         <div className="ml-5 grow ">
           {chatContent?.role === 'assistant' && (
             <div className="flex flex-col">
-              {props.isThinking ? (
-                <AgentToolList
-                  tools={agentThinking.context.tools}
-                  isRunning={true}
-                />
+              {props.isAgentThinking ? (
+                <AgentToolList tools={props.tools ?? {}} isRunning={true} />
               ) : (
                 <>
                   {chatContent.thinkingLog && (
                     <div className="mb-3 mt-0">
                       <AgentToolList
-                        tools={convertThinkingLogToAgentToolProps(
-                          chatContent.thinkingLog
-                        )}
+                        tools={props.tools ?? {}}
                         isRunning={false}
                       />
                     </div>
                   )}
-                  <div className="flex-1">
-                    <ChatMessageMarkdown
-                      relatedDocuments={props.relatedDocuments}
-                      messageId={chatContent.id}>
-                      {chatContent.content[0].body}
-                    </ChatMessageMarkdown>
-                  </div>
+                  {!chatContent.thinkingLog && (
+                    <div className="flex-1">
+                      <ChatMessageMarkdown
+                        relatedDocuments={props.relatedDocuments}
+                        messageId={chatContent.id}>
+                        {chatContent.content[0].body}
+                      </ChatMessageMarkdown>
+                    </div>
+                  )}
                 </>
               )}
             </div>

@@ -119,7 +119,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
             <div
               className={twMerge(
                 `overflow-hidden transition-all duration-300 ease-in-out`,
-                isInputExpanded ? 'max-h-96 ' : 'max-h-0'
+                isInputExpanded ? 'max-h-full ' : 'max-h-0'
               )}>
               <div className="ml-4 mt-2 text-sm">
                 <ul className="list-disc">
@@ -150,7 +150,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
             <div
               className={twMerge(
                 `overflow-hidden transition-all duration-300 ease-in-out`,
-                isContentExpanded ? 'max-h-96' : 'max-h-0'
+                isContentExpanded ? 'max-h-full' : 'max-h-0'
               )}>
               {displayContent ? (
                 <div className="ml-4 mt-2 text-sm">

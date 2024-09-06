@@ -1,18 +1,8 @@
 import React from 'react';
 import ToolCard from './ToolCard';
-import { AgentToolState } from '../xstates/agentThink';
+import { AgentToolsProps } from '../xstates/agentThink';
 import { useTranslation } from 'react-i18next';
 import { PiCircleNotchBold } from 'react-icons/pi';
-
-export type AgentToolsProps = {
-  // Note: key is toolUseId
-  [key: string]: {
-    name: string;
-    status: AgentToolState;
-    input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
-    content?: { text: string };
-  };
-};
 
 type AgentToolListProps = {
   tools: AgentToolsProps;

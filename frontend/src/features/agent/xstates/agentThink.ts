@@ -1,5 +1,15 @@
 import { setup, assign } from 'xstate';
 
+export type AgentToolsProps = {
+  // Note: key is toolUseId
+  [key: string]: {
+    name: string;
+    status: AgentToolState;
+    input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    content?: { text: string };
+  };
+};
+
 export const AgentState = {
   SLEEPING: 'sleeping',
   THINKING: 'thinking',
@@ -26,15 +36,7 @@ export type AgentEventKeys = AgentEvent['type'];
 export const agentThinkingState = setup({
   types: {
     context: {} as {
-      tools: Record<
-        string,
-        {
-          name: string;
-          input: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-          status: AgentToolState;
-          content?: { text: string };
-        }
-      >;
+      tools: AgentToolsProps;
     },
     events: {} as AgentEvent,
   },
