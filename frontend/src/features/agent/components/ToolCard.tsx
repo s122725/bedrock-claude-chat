@@ -17,21 +17,21 @@ const THEME = {
   scheme: 'aws',
   author: 'aws',
   base00: '#f1f3f3', // AWS Paper
-  base01: '#007faa',
-  base02: '#007faa',
-  base03: '#007faa',
-  base04: '#007faa',
-  base05: '#007faa',
-  base06: '#007faa',
-  base07: '#007faa',
-  base08: '#007faa',
-  base09: '#007faa',
-  base0A: '#007faa',
-  base0B: '#007faa',
-  base0C: '#007faa',
-  base0D: '#007faa',
-  base0E: '#007faa',
-  base0F: '#007faa',
+  base01: '#000000',
+  base02: '#000000',
+  base03: '#000000',
+  base04: '#000000',
+  base05: '#000000',
+  base06: '#000000',
+  base07: '#000000',
+  base08: '#000000',
+  base09: '#000000',
+  base0A: '#000000',
+  base0B: '#000000',
+  base0C: '#000000',
+  base0D: '#000000',
+  base0E: '#000000',
+  base0F: '#000000',
 };
 
 type ToolCardProps = {
@@ -66,7 +66,13 @@ const ToolCard: React.FC<ToolCardProps> = ({
   console.log(`displayContent: ${JSON.stringify(displayContent)}`);
   console.log(`typeof displayContent: ${typeof displayContent}`);
 
-  const toggleExpand = () => setIsExpanded(!isExpanded);
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+    if (!isExpanded) {
+      setIsInputExpanded(true);
+      setIsContentExpanded(true);
+    }
+  };
   const toggleInputExpand = () => setIsInputExpanded(!isInputExpanded);
   const toggleContentExpand = () => setIsContentExpanded(!isContentExpanded);
 
@@ -138,7 +144,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
             </div>
 
             <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${isContentExpanded ? 'max-h-96' : 'max-h-0'}`}>
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${isContentExpanded ? 'max-h-full' : 'max-h-0'}`}>
               {displayContent ? (
                 <div className="ml-4 mt-2 text-sm text-aws-font-color">
                   {typeof displayContent === 'object' ? (
@@ -147,9 +153,6 @@ const ToolCard: React.FC<ToolCardProps> = ({
                       data={displayContent}
                       theme={THEME}
                       invertTheme={false} // disable dark theme
-                      labelRenderer={([key]) => (
-                        <strong style={{ color: '#232F3E' }}>{key}</strong> // aws-squid-ink
-                      )}
                     />
                   ) : (
                     <p>{String(displayContent)}</p>
