@@ -22,7 +22,12 @@ export type AgentState = (typeof AgentState)[keyof typeof AgentState];
 
 export type AgentEvent =
   | { type: 'wakeup' }
-  | { type: 'go-on'; toolUseId: string; name: string; input: any }
+  | {
+      type: 'go-on';
+      toolUseId: string;
+      name: string;
+      input: { [key: string]: any };
+    } // eslint-disable-line @typescript-eslint/no-explicit-any
   | {
       type: 'tool-result';
       toolUseId: string;

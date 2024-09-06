@@ -97,7 +97,7 @@ const usePostMessageStreaming = create<{
                   Object.entries(data.log).forEach(([toolUseId, toolInfo]) => {
                     const typedToolInfo = toolInfo as {
                       name: string;
-                      input: Record<string, any>;
+                      input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
                     };
                     thinkingDispatch({
                       type: 'go-on',
