@@ -30,50 +30,7 @@ class AgentTool(Generic[T]):
 
     def _generate_input_schema(self) -> dict[str, Any]:
         """Converts the Pydantic model to a JSON schema."""
-        properties = {}
-        required = []
-
-        for name, field in self.args_schema.model_fields.items():
-            field_type = get_origin(field.annotation)
-            description = field.description
-
-            if description is None:
-                raise InvalidToolError("description is required")
-
-            if field_type is list:
-                item_type = (
-                    "string"
-                    if get_args(field.annotation)[0] == str
-                    else get_args(field.annotation)[0].__name__.lower()
-                )
-                properties[name] = {
-                    "type": "array",
-                    "items": {"type": item_type},
-                    "description": description,
-                }
-            else:
-                if field.annotation == str:
-                    field_type = "string"
-                elif field.annotation == float:
-                    field_type = "number"
-                elif field.annotation == int:
-                    field_type = "integer"
-                else:
-                    raise InvalidToolError(f"Unsupported type: {field.annotation}")
-
-                properties[name] = {
-                    "type": field_type,
-                    "description": description,
-                }
-
-            if field.is_required():
-                required.append(name)
-
-        return {
-            "type": "object",
-            "properties": properties,
-            "required": required,
-        }
+        return self.args_schema.model_json_schema()
 
     def to_converse_spec(self) -> ConverseApiToolSpec:
         inputSchema = {"json": self._generate_input_schema()}

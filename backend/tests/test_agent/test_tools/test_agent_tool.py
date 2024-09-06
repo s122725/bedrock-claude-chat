@@ -43,10 +43,23 @@ class TestAgentTool(unittest.TestCase):
             "inputSchema": {
                 "json": {
                     "properties": {
-                        "arg1": {"type": "string", "description": "test string"},
-                        "arg2": {"type": "number", "description": "test float"},
-                        "arg3": {"type": "integer", "description": "test int"},
+                        "arg1": {
+                            "title": "Arg1",
+                            "type": "string",
+                            "description": "test string",
+                        },
+                        "arg2": {
+                            "title": "Arg2",
+                            "type": "number",
+                            "description": "test float",
+                        },
+                        "arg3": {
+                            "title": "Arg3",
+                            "type": "integer",
+                            "description": "test int",
+                        },
                         "arg4": {
+                            "title": "Arg4",
                             "type": "array",
                             "items": {"type": "string"},
                             "description": "test list",
@@ -54,10 +67,11 @@ class TestAgentTool(unittest.TestCase):
                     },
                     "required": ["arg1", "arg2", "arg3", "arg4"],
                     "type": "object",
+                    "title": "TestArg",
                 }
             },
         }
-        self.assertEqual(json.dumps(spec), json.dumps(expected_spec))
+        self.assertDictEqual(spec, expected_spec)
 
     def test_run(self):
         arg = TestArg(
