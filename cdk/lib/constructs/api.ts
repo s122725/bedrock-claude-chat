@@ -26,7 +26,7 @@ import { UsageAnalysis } from "./usage-analysis";
 import { excludeDockerImage } from "../constants/docker";
 
 export interface ApiProps {
-  readonly vpc: ec2.IVpc;
+  // readonly vpc: ec2.IVpc;
   readonly database: ITable;
   readonly dbSecrets: ISecret;
   readonly corsAllowOrigins?: string[];

@@ -52,38 +52,38 @@ export class BedrockChatStack extends cdk.Stack {
     });
     const cronSchedule = createCronSchedule(props.rdsSchedules);
 
-    const vpc = new ec2.Vpc(this, "VPC", {
-      natGateways: props.natgatewayCount,
-    });
-    vpc.publicSubnets.forEach((subnet) => {
-      (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
-    });
+    // const vpc = new ec2.Vpc(this, "VPC", {
+    //   natGateways: props.natgatewayCount,
+    // });
+    // vpc.publicSubnets.forEach((subnet) => {
+    //   (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
+    // });
 
-    const vectorStore = new VectorStore(this, "VectorStore", {
-      vpc: vpc,
-      rdsSchedule: cronSchedule,
-    });
+    // const vectorStore = new VectorStore(this, "VectorStore", {
+    //   vpc: vpc,
+    //   rdsSchedule: cronSchedule,
+    // });
     const idp = identityProvider(props.identityProviders);
 
-    const accessLogBucket = new Bucket(this, "AccessLogBucket", {
-      encryption: BucketEncryption.S3_MANAGED,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      objectOwnership: ObjectOwnership.OBJECT_WRITER,
-      autoDeleteObjects: true,
-    });
+    // const accessLogBucket = new Bucket(this, "AccessLogBucket", {
+    //   encryption: BucketEncryption.S3_MANAGED,
+    //   blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    //   enforceSSL: true,
+    //   removalPolicy: RemovalPolicy.DESTROY,
+    //   objectOwnership: ObjectOwnership.OBJECT_WRITER,
+    //   autoDeleteObjects: true,
+    // });
 
-    const documentBucket = new Bucket(this, "DocumentBucket", {
-      encryption: BucketEncryption.S3_MANAGED,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      objectOwnership: ObjectOwnership.OBJECT_WRITER,
-      autoDeleteObjects: true,
-      serverAccessLogsBucket: accessLogBucket,
-      serverAccessLogsPrefix: "DocumentBucket",
-    });
+    // const documentBucket = new Bucket(this, "DocumentBucket", {
+    //   encryption: BucketEncryption.S3_MANAGED,
+    //   blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    //   enforceSSL: true,
+    //   removalPolicy: RemovalPolicy.DESTROY,
+    //   objectOwnership: ObjectOwnership.OBJECT_WRITER,
+    //   autoDeleteObjects: true,
+    //   serverAccessLogsBucket: accessLogBucket,
+    //   serverAccessLogsPrefix: "DocumentBucket",
+    // });
 
     // Bucket for source code
     const sourceBucket = new Bucket(this, "SourceBucketForCodeBuild", {
@@ -93,7 +93,7 @@ export class BedrockChatStack extends cdk.Stack {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-      serverAccessLogsBucket: accessLogBucket,
+      // serverAccessLogsBucket: accessLogBucket,
       serverAccessLogsPrefix: "SourceBucketForCodeBuild",
     });
     new s3deploy.BucketDeployment(this, "SourceDeploy", {
@@ -125,14 +125,14 @@ export class BedrockChatStack extends cdk.Stack {
       destinationBucket: sourceBucket,
     });
     // CodeBuild used for api publication
-    const apiPublishCodebuild = new ApiPublishCodebuild(
-      this,
-      "ApiPublishCodebuild",
-      {
-        sourceBucket,
-        dbSecret: vectorStore.secret,
-      }
-    );
+    // const apiPublishCodebuild = new ApiPublishCodebuild(
+    //   this,
+    //   "ApiPublishCodebuild",
+    //   {
+    //     sourceBucket,
+    //     dbSecret: vectorStore.secret,
+    //   }
+    // );
     // CodeBuild used for KnowledgeBase
     const bedrockKnowledgeBaseCodebuild = new BedrockKnowledgeBaseCodebuild(
       this,
@@ -143,7 +143,7 @@ export class BedrockChatStack extends cdk.Stack {
     );
 
     const frontend = new Frontend(this, "Frontend", {
-      accessLogBucket,
+      // accessLogBucket,
       webAclId: props.webAclId,
       enableMistral: props.enableMistral,
       enableKB: props.enableKB,
@@ -158,6 +158,7 @@ export class BedrockChatStack extends cdk.Stack {
       autoJoinUserGroups: props.autoJoinUserGroups,
       selfSignUpEnabled: props.selfSignUpEnabled,
     });
+
     const largeMessageBucket = new Bucket(this, "LargeMessageBucket", {
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
@@ -165,7 +166,7 @@ export class BedrockChatStack extends cdk.Stack {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-      serverAccessLogsBucket: accessLogBucket,
+      // serverAccessLogsBucket: accessLogBucket,
       serverAccessLogsPrefix: "LargeMessageBucket",
     });
 
@@ -174,22 +175,22 @@ export class BedrockChatStack extends cdk.Stack {
       pointInTimeRecovery: true,
     });
 
-    const usageAnalysis = new UsageAnalysis(this, "UsageAnalysis", {
-      accessLogBucket,
-      sourceDatabase: database,
-    });
+    // const usageAnalysis = new UsageAnalysis(this, "UsageAnalysis", {
+    //   accessLogBucket,
+    //   sourceDatabase: database,
+    // });
 
     const backendApi = new Api(this, "BackendApi", {
-      vpc,
+      // vpc,
       database: database.table,
       auth,
       bedrockRegion: props.bedrockRegion,
       tableAccessRole: database.tableAccessRole,
-      dbSecrets: vectorStore.secret,
-      documentBucket,
-      apiPublishProject: apiPublishCodebuild.project,
+      // dbSecrets: vectorStore.secret,
+      // documentBucket,
+      // apiPublishProject: apiPublishCodebuild.project,
       bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
-      usageAnalysis,
+      // usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,
     });
@@ -198,8 +199,8 @@ export class BedrockChatStack extends cdk.Stack {
     // For streaming response
     const websocket = new WebSocket(this, "WebSocket", {
       accessLogBucket,
-      vpc,
-      dbSecrets: vectorStore.secret,
+      // vpc,
+      // dbSecrets: vectorStore.secret,
       database: database.table,
       tableAccessRole: database.tableAccessRole,
       websocketSessionTable: database.websocketSessionTable,
