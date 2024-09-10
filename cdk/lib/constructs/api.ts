@@ -28,16 +28,16 @@ import { excludeDockerImage } from "../constants/docker";
 export interface ApiProps {
   // readonly vpc: ec2.IVpc;
   readonly database: ITable;
-  readonly dbSecrets: ISecret;
+  // readonly dbSecrets: ISecret;
   readonly corsAllowOrigins?: string[];
   readonly auth: Auth;
   readonly bedrockRegion: string;
   readonly tableAccessRole: iam.IRole;
-  readonly documentBucket: IBucket;
+  // readonly documentBucket: IBucket;
   readonly largeMessageBucket: IBucket;
-  readonly apiPublishProject: codebuild.IProject;
+  // readonly apiPublishProject: codebuild.IProject;
   readonly bedrockKnowledgeBaseProject: codebuild.IProject;
-  readonly usageAnalysis?: UsageAnalysis;
+  // readonly usageAnalysis?: UsageAnalysis;
   readonly enableMistral: boolean;
 }
 
@@ -53,8 +53,8 @@ export class Api extends Construct {
       corsAllowOrigins: allowOrigins = ["*"],
     } = props;
 
-    const usageAnalysisOutputLocation =
-      `s3://${props.usageAnalysis?.resultOutputBucket.bucketName}` || "";
+    // const usageAnalysisOutputLocation =
+    //   `s3://${props.usageAnalysis?.resultOutputBucket.bucketName}` || "";
 
     const handlerRole = new iam.Role(this, "HandlerRole", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
@@ -82,7 +82,7 @@ export class Api extends Construct {
         effect: iam.Effect.ALLOW,
         actions: ["codebuild:StartBuild"],
         resources: [
-          props.apiPublishProject.projectArn,
+          // props.apiPublishProject.projectArn,
           props.bedrockKnowledgeBaseProject.projectArn,
         ],
       })
@@ -105,7 +105,7 @@ export class Api extends Construct {
         effect: iam.Effect.ALLOW,
         actions: ["codebuild:BatchGetBuilds"],
         resources: [
-          props.apiPublishProject.projectArn,
+          // props.apiPublishProject.projectArn,
           props.bedrockKnowledgeBaseProject.projectArn,
         ],
       })
@@ -122,47 +122,47 @@ export class Api extends Construct {
         resources: [`arn:aws:apigateway:${Stack.of(this).region}::/*`],
       })
     );
-    handlerRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "athena:GetWorkGroup",
-          "athena:StartQueryExecution",
-          "athena:StopQueryExecution",
-          "athena:GetQueryExecution",
-          "athena:GetQueryResults",
-          "athena:GetDataCatalog",
-        ],
-        resources: [props.usageAnalysis?.workgroupArn || ""],
-      })
-    );
-    handlerRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["glue:GetDatabase", "glue:GetDatabases"],
-        resources: [
-          props.usageAnalysis?.database.databaseArn || "",
-          props.usageAnalysis?.database.catalogArn || "",
-        ],
-      })
-    );
-    handlerRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "glue:GetDatabase",
-          "glue:GetTable",
-          "glue:GetTables",
-          "glue:GetPartition",
-          "glue:GetPartitions",
-        ],
-        resources: [
-          props.usageAnalysis?.database.databaseArn || "",
-          props.usageAnalysis?.database.catalogArn || "",
-          props.usageAnalysis?.ddbExportTable.tableArn || "",
-        ],
-      })
-    );
+    // handlerRole.addToPolicy(
+    //   new iam.PolicyStatement({
+    //     effect: iam.Effect.ALLOW,
+    //     actions: [
+    //       "athena:GetWorkGroup",
+    //       "athena:StartQueryExecution",
+    //       "athena:StopQueryExecution",
+    //       "athena:GetQueryExecution",
+    //       "athena:GetQueryResults",
+    //       "athena:GetDataCatalog",
+    //     ],
+    //     resources: [props.usageAnalysis?.workgroupArn || ""],
+    //   })
+    // );
+    // handlerRole.addToPolicy(
+    //   new iam.PolicyStatement({
+    //     effect: iam.Effect.ALLOW,
+    //     actions: ["glue:GetDatabase", "glue:GetDatabases"],
+    //     resources: [
+    //       props.usageAnalysis?.database.databaseArn || "",
+    //       props.usageAnalysis?.database.catalogArn || "",
+    //     ],
+    //   })
+    // );
+    // handlerRole.addToPolicy(
+    //   new iam.PolicyStatement({
+    //     effect: iam.Effect.ALLOW,
+    //     actions: [
+    //       "glue:GetDatabase",
+    //       "glue:GetTable",
+    //       "glue:GetTables",
+    //       "glue:GetPartition",
+    //       "glue:GetPartitions",
+    //     ],
+    //     resources: [
+    //       props.usageAnalysis?.database.databaseArn || "",
+    //       props.usageAnalysis?.database.catalogArn || "",
+    //       props.usageAnalysis?.ddbExportTable.tableArn || "",
+    //     ],
+    //   })
+    // );
     handlerRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -170,8 +170,8 @@ export class Api extends Construct {
         resources: [props.auth.userPool.userPoolArn],
       })
     );
-    props.usageAnalysis?.resultOutputBucket.grantReadWrite(handlerRole);
-    props.usageAnalysis?.ddbBucket.grantRead(handlerRole);
+    // props.usageAnalysis?.resultOutputBucket.grantReadWrite(handlerRole);
+    // props.usageAnalysis?.ddbBucket.grantRead(handlerRole);
     props.largeMessageBucket.grantReadWrite(handlerRole);
 
     const handler = new DockerImageFunction(this, "Handler", {
@@ -185,8 +185,8 @@ export class Api extends Construct {
           ]
         }
       ),
-      vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      // vpc: props.vpc,
+      // vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       memorySize: 1024,
       timeout: Duration.minutes(15),
       environment: {
@@ -198,23 +198,23 @@ export class Api extends Construct {
         REGION: Stack.of(this).region,
         BEDROCK_REGION: props.bedrockRegion,
         TABLE_ACCESS_ROLE_ARN: tableAccessRole.roleArn,
-        DB_SECRETS_ARN: props.dbSecrets.secretArn,
-        DOCUMENT_BUCKET: props.documentBucket.bucketName,
+        // DB_SECRETS_ARN: props.dbSecrets.secretArn,
+        // DOCUMENT_BUCKET: props.documentBucket.bucketName,
         LARGE_MESSAGE_BUCKET: props.largeMessageBucket.bucketName,
-        PUBLISH_API_CODEBUILD_PROJECT_NAME: props.apiPublishProject.projectName,
+        // PUBLISH_API_CODEBUILD_PROJECT_NAME: props.apiPublishProject.projectName,
         KNOWLEDGE_BASE_CODEBUILD_PROJECT_NAME:
           props.bedrockKnowledgeBaseProject.projectName,
-        USAGE_ANALYSIS_DATABASE:
-          props.usageAnalysis?.database.databaseName || "",
-        USAGE_ANALYSIS_TABLE:
-          props.usageAnalysis?.ddbExportTable.tableName || "",
-        USAGE_ANALYSIS_WORKGROUP: props.usageAnalysis?.workgroupName || "",
-        USAGE_ANALYSIS_OUTPUT_LOCATION: usageAnalysisOutputLocation,
+        // USAGE_ANALYSIS_DATABASE:
+        //   props.usageAnalysis?.database.databaseName || "",
+        // USAGE_ANALYSIS_TABLE:
+        //   props.usageAnalysis?.ddbExportTable.tableName || "",
+        // USAGE_ANALYSIS_WORKGROUP: props.usageAnalysis?.workgroupName || "",
+        // USAGE_ANALYSIS_OUTPUT_LOCATION: usageAnalysisOutputLocation,
         ENABLE_MISTRAL: props.enableMistral.toString(),
       },
       role: handlerRole,
     });
-    props.dbSecrets.grantRead(handler);
+    // props.dbSecrets.grantRead(handler);
 
     const api = new HttpApi(this, "Default", {
       corsPreflight: {
