@@ -10,6 +10,5 @@ RUN python -m pip install --upgrade pip && \
     poetry cache clear --all pypi
 
 COPY ./app ./app
-COPY ./embedding_statemachine ./embedding_statemachine
 
 CMD ["app.websocket.handler"]

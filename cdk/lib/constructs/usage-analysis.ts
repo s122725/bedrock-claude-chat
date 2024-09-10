@@ -14,7 +14,6 @@ import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface UsageAnalysisProps {
   sourceDatabase: Database;
-  accessLogBucket?: s3.Bucket;
 }
 
 export class UsageAnalysis extends Construct {
@@ -40,7 +39,6 @@ export class UsageAnalysis extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-      serverAccessLogsBucket: props.accessLogBucket,
       serverAccessLogsPrefix: "DdbBucket",
     });
 
@@ -52,7 +50,6 @@ export class UsageAnalysis extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-      serverAccessLogsBucket: props.accessLogBucket,
       serverAccessLogsPrefix: "QueryResultBucket",
     });
 

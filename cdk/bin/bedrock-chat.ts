@@ -4,7 +4,6 @@ import * as cdk from "aws-cdk-lib";
 import { BedrockChatStack } from "../lib/bedrock-chat-stack";
 import { FrontendWafStack } from "../lib/frontend-waf-stack";
 import { TIdentityProvider } from "../lib/utils/identity-provider";
-import { CronScheduleProps } from "../lib/utils/cron-schedule";
 
 const app = new cdk.App();
 
@@ -34,7 +33,6 @@ const USER_POOL_DOMAIN_PREFIX: string = app.node.tryGetContext(
 const AUTO_JOIN_USER_GROUPS: string[] =
   app.node.tryGetContext("autoJoinUserGroups");
 
-const RDS_SCHEDULES: CronScheduleProps = app.node.tryGetContext("rdbSchedules");
 const ENABLE_MISTRAL: boolean = app.node.tryGetContext("enableMistral");
 const SELF_SIGN_UP_ENABLED: boolean =
   app.node.tryGetContext("selfSignUpEnabled");
@@ -82,7 +80,6 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
     PUBLISHED_API_ALLOWED_IP_V6_ADDRESS_RANGES,
   allowedSignUpEmailDomains: ALLOWED_SIGN_UP_EMAIL_DOMAINS,
   autoJoinUserGroups: AUTO_JOIN_USER_GROUPS,
-  rdsSchedules: RDS_SCHEDULES,
   enableMistral: ENABLE_MISTRAL,
   enableKB: ENABLE_KB,
   embeddingContainerVcpu: EMBEDDING_CONTAINER_VCPU,
