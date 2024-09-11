@@ -3,7 +3,6 @@ import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
-  HttpMethods,
   ObjectOwnership,
 } from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
@@ -21,20 +20,13 @@ import { BedrockKnowledgeBaseCodebuild } from "./constructs/bedrock-knowledge-ba
 
 export interface BedrockChatStackProps extends StackProps {
   readonly bedrockRegion: string;
-  readonly webAclId: string;
   readonly identityProviders: TIdentityProvider[];
   readonly userPoolDomainPrefix: string;
-  readonly publishedApiAllowedIpV4AddressRanges: string[];
-  readonly publishedApiAllowedIpV6AddressRanges: string[];
   readonly allowedSignUpEmailDomains: string[];
   readonly autoJoinUserGroups: string[];
   readonly enableMistral: boolean;
   readonly enableKB: boolean;
-  readonly embeddingContainerVcpu: number;
-  readonly embeddingContainerMemory: number;
   readonly selfSignUpEnabled: boolean;
-  readonly enableIpV6: boolean;
-  readonly natgatewayCount: number;
 }
 
 export class BedrockChatStack extends cdk.Stack {
@@ -44,9 +36,7 @@ export class BedrockChatStack extends cdk.Stack {
       ...props,
     });
 
-    // FIXME : 필요한지 확인
     const idp = identityProvider(props.identityProviders);
-
 
     // Bucket for source code
     const sourceBucket = new Bucket(this, "SourceBucketForCodeBuild", {
@@ -97,10 +87,8 @@ export class BedrockChatStack extends cdk.Stack {
     );
 
     const frontend = new Frontend(this, "Frontend", {
-      webAclId: props.webAclId,
       enableMistral: props.enableMistral,
       enableKB: props.enableKB,
-      enableIpV6: props.enableIpV6,
     });
 
     const auth = new Auth(this, "Auth", {
@@ -112,7 +100,6 @@ export class BedrockChatStack extends cdk.Stack {
       selfSignUpEnabled: props.selfSignUpEnabled,
     });
 
-    // FIXME : 필요한지 확인
     const largeMessageBucket = new Bucket(this, "LargeMessageBucket", {
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,

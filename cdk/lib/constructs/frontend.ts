@@ -15,10 +15,8 @@ import { Idp } from "../utils/identity-provider";
 import { NagSuppressions } from "cdk-nag";
 
 export interface FrontendProps {
-  readonly webAclId: string;
   readonly enableMistral: boolean;
   readonly enableKB: boolean;
-  readonly enableIpV6: boolean;
 }
 
 export class Frontend extends Construct {
@@ -68,8 +66,6 @@ export class Frontend extends Construct {
           responsePagePath: "/",
         },
       ],
-      webACLId: props.webAclId,
-      enableIpV6: props.enableIpV6,
     });
 
     NagSuppressions.addResourceSuppressions(distribution, [
