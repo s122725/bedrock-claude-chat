@@ -29,6 +29,7 @@ export interface ApiProps {
   readonly auth: Auth;
   readonly bedrockRegion: string;
   readonly tableAccessRole: iam.IRole;
+  readonly documentBucket: IBucket;
   readonly largeMessageBucket: IBucket;
   readonly bedrockKnowledgeBaseProject: codebuild.IProject;
   readonly usageAnalysis?: UsageAnalysis;
@@ -188,6 +189,7 @@ export class Api extends Construct {
         REGION: Stack.of(this).region,
         BEDROCK_REGION: props.bedrockRegion,
         TABLE_ACCESS_ROLE_ARN: tableAccessRole.roleArn,
+        DOCUMENT_BUCKET: props.documentBucket.bucketName,
         LARGE_MESSAGE_BUCKET: props.largeMessageBucket.bucketName,
         KNOWLEDGE_BASE_CODEBUILD_PROJECT_NAME:
           props.bedrockKnowledgeBaseProject.projectName,

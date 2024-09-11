@@ -6,9 +6,7 @@ import {
   DockerImageCode,
   DockerImageFunction,
   IFunction,
-  Runtime,
 } from "aws-cdk-lib/aws-lambda";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { CfnOutput, Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
@@ -16,8 +14,6 @@ import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Auth } from "./auth";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { CfnRouteResponse } from "aws-cdk-lib/aws-apigatewayv2";
-import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { excludeDockerImage } from "../constants/docker";
 
@@ -26,6 +22,7 @@ export interface WebSocketProps {
   readonly auth: Auth;
   readonly bedrockRegion: string;
   readonly tableAccessRole: iam.IRole;
+  readonly documentBucket: s3.IBucket;
   readonly websocketSessionTable: ITable;
   readonly largeMessageBucket: s3.IBucket;
   readonly enableMistral: boolean;
@@ -81,6 +78,7 @@ export class WebSocket extends Construct {
     largePayloadSupportBucket.grantRead(handlerRole);
     props.websocketSessionTable.grantReadWriteData(handlerRole);
     props.largeMessageBucket.grantReadWrite(handlerRole);
+    props.documentBucket.grantRead(handlerRole);
 
     const handler = new DockerImageFunction(this, "Handler", {
       code: DockerImageCode.fromImageAsset(

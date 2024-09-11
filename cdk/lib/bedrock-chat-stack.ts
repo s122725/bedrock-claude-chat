@@ -3,6 +3,7 @@ import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
+  HttpMethods,
   ObjectOwnership,
 } from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
@@ -37,6 +38,16 @@ export class BedrockChatStack extends cdk.Stack {
     });
 
     const idp = identityProvider(props.identityProviders);
+
+    const documentBucket = new Bucket(this, "DocumentBucket", {
+      encryption: BucketEncryption.S3_MANAGED,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
+      autoDeleteObjects: true,
+      serverAccessLogsPrefix: "DocumentBucket",
+    });
 
     // Bucket for source code
     const sourceBucket = new Bucket(this, "SourceBucketForCodeBuild", {
@@ -124,11 +135,13 @@ export class BedrockChatStack extends cdk.Stack {
       auth,
       bedrockRegion: props.bedrockRegion,
       tableAccessRole: database.tableAccessRole,
+      documentBucket,
       bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
       usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,
     });
+    documentBucket.grantReadWrite(backendApi.handler);
 
     // For streaming response
     const websocket = new WebSocket(this, "WebSocket", {
@@ -138,6 +151,7 @@ export class BedrockChatStack extends cdk.Stack {
       auth,
       bedrockRegion: props.bedrockRegion,
       largeMessageBucket,
+      documentBucket,
       enableMistral: props.enableMistral,
     });
     frontend.buildViteApp({
@@ -150,6 +164,16 @@ export class BedrockChatStack extends cdk.Stack {
       idp,
     });
 
+    documentBucket.addCorsRule({
+      allowedMethods: [HttpMethods.PUT],
+      allowedOrigins: [frontend.getOrigin(), "http://localhost:5173", "*"],
+      allowedHeaders: ["*"],
+      maxAge: 3000,
+    });
+
+    new CfnOutput(this, "DocumentBucketName", {
+      value: documentBucket.bucketName,
+    });
     new CfnOutput(this, "FrontendURL", {
       value: frontend.getOrigin(),
     });
