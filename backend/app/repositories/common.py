@@ -1,15 +1,16 @@
 import json
 import os
-
+import logging
 import boto3
 
 DDB_ENDPOINT_URL = os.environ.get("DDB_ENDPOINT_URL")
 TABLE_NAME = os.environ.get("TABLE_NAME", "")
 ACCOUNT = os.environ.get("ACCOUNT", "")
-REGION = os.environ.get("REGION", "ap-northeast-1")
+REGION = os.environ.get("REGION", "ap-northeast-2")
 TABLE_ACCESS_ROLE_ARN = os.environ.get("TABLE_ACCESS_ROLE_ARN", "")
 TRANSACTION_BATCH_SIZE = 25
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class RecordNotFoundError(Exception):
     pass
@@ -54,6 +55,8 @@ def _get_aws_resource(service_name, user_id=None):
     """Get AWS resource with optional row-level access control for DynamoDB.
     Ref: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_dynamodb_items.html
     """
+    logger.info(f"Storing conversation: {REGION}, {ACCOUNT}, {TABLE_NAME}")
+    
     if "AWS_EXECUTION_ENV" not in os.environ:
         if DDB_ENDPOINT_URL:
             return boto3.resource(
@@ -66,6 +69,7 @@ def _get_aws_resource(service_name, user_id=None):
         else:
             return boto3.resource(service_name, region_name=REGION)
 
+    
     policy_document = {
         "Statement": [
             {
@@ -109,12 +113,6 @@ def _get_aws_resource(service_name, user_id=None):
         aws_session_token=credentials["SessionToken"],
     )
     return session.resource(service_name, region_name=REGION)
-
-
-def _get_dynamodb_client(user_id=None):
-    """Get a DynamoDB client, optionally with row-level access control."""
-    return _get_aws_resource("dynamodb", user_id=user_id).meta.client
-
 
 def _get_table_client(user_id):
     """Get a DynamoDB table client with row-level access."""

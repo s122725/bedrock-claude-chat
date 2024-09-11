@@ -2,12 +2,6 @@ import logging
 from copy import deepcopy
 from typing import Literal
 
-from app.agents.agent import AgentExecutor, create_react_agent, format_log_to_str
-from app.agents.handlers.token_count import get_token_count_callback
-from app.agents.handlers.used_chunk import get_used_chunk_callback
-from app.agents.langchain import BedrockLLM
-from app.agents.tools.knowledge import AnswerWithKnowledgeTool
-from app.agents.utils import get_tool_by_name
 from app.bedrock import (
     calculate_price,
     call_converse_api,
@@ -149,7 +143,6 @@ def prepare_conversation(
                             is_pinned=False,
                             sync_status=bot.sync_status,
                             has_knowledge=bot.has_knowledge(),
-                            has_agent=bot.is_agent_enabled(),
                             conversation_quick_starters=(
                                 []
                                 if bot.conversation_quick_starters is None
@@ -253,126 +246,70 @@ def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
     price = 0.0
     thinking_log = None
 
-    if bot and bot.is_agent_enabled():
-        logger.info("Bot has agent tools. Using agent for response.")
-        llm = BedrockLLM.from_model(model=chat_input.message.model)
+    message_map = conversation.message_map
+    search_results = []
+    if bot and is_running_on_lambda():
+        # NOTE: `is_running_on_lambda`is a workaround for local testing due to no postgres mock.
+        # Fetch most related documents from vector store
+        # NOTE: Currently embedding not support multi-modal. For now, use the last content.
+        query: str = conversation.message_map[user_msg_id].content[-1].body  # type: ignore[assignment]
 
-        tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
+        search_results = search_related_docs(bot=bot, query=query)
+        logger.info(f"Search results from vector store: {search_results}")
 
-        if bot and bot.has_knowledge():
-            logger.info("Bot has knowledge. Adding answer with knowledge tool.")
-            answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
-                bot=bot,
-                llm=llm,
-            )
-            tools.append(answer_with_knowledge_tool)
-
-        logger.info(f"Tools: {tools}")
-        agent = create_react_agent(
-            model=chat_input.message.model,
-            tools=tools,
-            generation_config=bot.generation_params,
+        # Insert contexts to instruction
+        conversation_with_context = insert_knowledge(
+            conversation,
+            search_results,
+            display_citation=bot.display_retrieved_chunks,
         )
-        executor = AgentExecutor(
-            name="Agent Executor",
-            agent=agent,
-            tools=tools,
-            return_intermediate_steps=True,
-            callbacks=[],
-            verbose=False,
-            max_iterations=15,
-            max_execution_time=None,
-            early_stopping_method="force",
-            handle_parsing_errors=True,
-        )
+        message_map = conversation_with_context.message_map
 
-        with get_token_count_callback() as token_cb, get_used_chunk_callback() as chunk_cb:
-            agent_response = executor.invoke(
-                {
-                    "input": chat_input.message.content[0].body,  # type: ignore
-                },
-                config={
-                    "callbacks": [
-                        token_cb,
-                        chunk_cb,
-                    ],
-                },
-            )
-            price = token_cb.total_cost
-            if bot.display_retrieved_chunks and chunk_cb.used_chunks:
-                used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(
-                agent_response.get("intermediate_steps", [])
-            )
-            logger.info(f"Thinking log: {thinking_log}")
+    messages = trace_to_root(
+        node_id=conversation.message_map[user_msg_id].parent,
+        message_map=message_map,
+    )
 
-        reply_txt = agent_response["output"]
-        conversation.should_continue = False
-    else:
-        message_map = conversation.message_map
-        search_results = []
-        if bot and is_running_on_lambda():
-            # NOTE: `is_running_on_lambda`is a workaround for local testing due to no postgres mock.
-            # Fetch most related documents from vector store
-            # NOTE: Currently embedding not support multi-modal. For now, use the last content.
-            query: str = conversation.message_map[user_msg_id].content[-1].body  # type: ignore[assignment]
+    if not chat_input.continue_generate:
+        messages.append(MessageModel.from_message_input(chat_input.message))
 
-            search_results = search_related_docs(bot=bot, query=query)
-            logger.info(f"Search results from vector store: {search_results}")
+    # Create payload to invoke Bedrock
+    args = compose_args_for_converse_api(
+        messages=messages,
+        model=chat_input.message.model,
+        instruction=(
+            message_map["instruction"].content[0].body
+            if "instruction" in message_map
+            else None  # type: ignore[union-attr]
+        ),
+        generation_params=(bot.generation_params if bot else None),
+    )
 
-            # Insert contexts to instruction
-            conversation_with_context = insert_knowledge(
-                conversation,
-                search_results,
-                display_citation=bot.display_retrieved_chunks,
-            )
-            message_map = conversation_with_context.message_map
+    converse_response = call_converse_api(args)
+    reply_txt = converse_response["output"]["message"]["content"][0]["text"]
+    reply_txt = reply_txt.rstrip()
 
-        messages = trace_to_root(
-            node_id=conversation.message_map[user_msg_id].parent,
-            message_map=message_map,
-        )
-
-        if not chat_input.continue_generate:
-            messages.append(MessageModel.from_message_input(chat_input.message))
-
-        # Create payload to invoke Bedrock
-        args = compose_args_for_converse_api(
-            messages=messages,
-            model=chat_input.message.model,
-            instruction=(
-                message_map["instruction"].content[0].body
-                if "instruction" in message_map
-                else None  # type: ignore[union-attr]
-            ),
-            generation_params=(bot.generation_params if bot else None),
-        )
-
-        converse_response = call_converse_api(args)
-        reply_txt = converse_response["output"]["message"]["content"][0]["text"]
-        reply_txt = reply_txt.rstrip()
-
-        # Used chunks for RAG generation
-        if bot and bot.display_retrieved_chunks and is_running_on_lambda():
-            if len(search_results) > 0:
-                used_chunks = []
-                for r in filter_used_results(reply_txt, search_results):
-                    content_type, source_link = get_source_link(r.source)
-                    used_chunks.append(
-                        ChunkModel(
-                            content=r.content,
-                            content_type=content_type,
-                            source=source_link,
-                            rank=r.rank,
-                        )
+    # Used chunks for RAG generation
+    if bot and bot.display_retrieved_chunks and is_running_on_lambda():
+        if len(search_results) > 0:
+            used_chunks = []
+            for r in filter_used_results(reply_txt, search_results):
+                content_type, source_link = get_source_link(r.source)
+                used_chunks.append(
+                    ChunkModel(
+                        content=r.content,
+                        content_type=content_type,
+                        source=source_link,
+                        rank=r.rank,
                     )
+                )
 
-        input_tokens = converse_response["usage"]["inputTokens"]
-        output_tokens = converse_response["usage"]["outputTokens"]
+    input_tokens = converse_response["usage"]["inputTokens"]
+    output_tokens = converse_response["usage"]["outputTokens"]
 
-        price = calculate_price(chat_input.message.model, input_tokens, output_tokens)
-        # Published API does not support continued generation
-        conversation.should_continue = False
+    price = calculate_price(chat_input.message.model, input_tokens, output_tokens)
+    # Published API does not support continued generation
+    conversation.should_continue = False
 
     # Issue id for new assistant message
     assistant_msg_id = str(ULID())

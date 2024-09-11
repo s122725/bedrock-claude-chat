@@ -20,7 +20,6 @@ from app.repositories.common import (
     decompose_bot_id,
 )
 from app.repositories.models.custom_bot import (
-    AgentModel,
     BotAliasModel,
     BotMeta,
     BotMetaWithStackInfo,
@@ -66,14 +65,10 @@ def store_bot(user_id: str, custom_bot: BotModel):
         "EmbeddingParams": custom_bot.embedding_params.model_dump(),
         "GenerationParams": custom_bot.generation_params.model_dump(),
         "SearchParams": custom_bot.search_params.model_dump(),
-        "AgentData": custom_bot.agent.model_dump(),
         "Knowledge": custom_bot.knowledge.model_dump(),
         "SyncStatus": custom_bot.sync_status,
         "SyncStatusReason": custom_bot.sync_status_reason,
         "LastExecId": custom_bot.sync_last_exec_id,
-        "ApiPublishmentStackName": custom_bot.published_api_stack_name,
-        "ApiPublishedDatetime": custom_bot.published_api_datetime,
-        "ApiPublishCodeBuildId": custom_bot.published_api_codebuild_id,
         "DisplayRetrievedChunks": custom_bot.display_retrieved_chunks,
         "ConversationQuickStarters": [
             starter.model_dump() for starter in custom_bot.conversation_quick_starters
@@ -95,7 +90,6 @@ def update_bot(
     embedding_params: EmbeddingParamsModel,
     generation_params: GenerationParamsModel,
     search_params: SearchParamsModel,
-    agent: AgentModel,
     knowledge: KnowledgeModel,
     sync_status: type_sync_status,
     sync_status_reason: str,
@@ -114,7 +108,6 @@ def update_bot(
         "Description = :description, "
         "Instruction = :instruction, "
         "EmbeddingParams = :embedding_params, "
-        "AgentData = :agent_data, "
         "Knowledge = :knowledge, "
         "SyncStatus = :sync_status, "
         "SyncStatusReason = :sync_status_reason, "
@@ -129,7 +122,6 @@ def update_bot(
         ":description": description,
         ":instruction": instruction,
         ":knowledge": knowledge.model_dump(),
-        ":agent_data": agent.model_dump(),
         ":embedding_params": embedding_params.model_dump(),
         ":sync_status": sync_status,
         ":sync_status_reason": sync_status_reason,
@@ -178,7 +170,6 @@ def store_alias(user_id: str, alias: BotAliasModel):
         "IsPinned": alias.is_pinned,
         "SyncStatus": alias.sync_status,
         "HasKnowledge": alias.has_knowledge,
-        "HasAgent": alias.has_agent,
         "ConversationQuickStarters": [
             starter.model_dump() for starter in alias.conversation_quick_starters
         ],
@@ -321,7 +312,6 @@ def find_private_bots_by_user_id(
             available=True,
             is_pinned=item["IsPinned"],
             description=item["Description"],
-            is_public="PublicBotId" in item,
             sync_status=item["SyncStatus"],
             has_bedrock_knowledge_base=(
                 True if item.get("BedrockKnowledgeBase", None) else False
@@ -346,7 +336,6 @@ def find_private_bots_by_user_id(
                     available=True,
                     is_pinned=item["IsPinned"],
                     description=item["Description"],
-                    is_public="PublicBotId" in item,
                     sync_status=item["SyncStatus"],
                     has_bedrock_knowledge_base=(
                         True if item.get("BedrockKnowledgeBase", None) else False
@@ -430,30 +419,12 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
                 else DEFAULT_SEARCH_CONFIG["max_results"]
             )
         ),
-        agent=(
-            AgentModel(**item["AgentData"])
-            if "AgentData" in item
-            else AgentModel(tools=[])
-        ),
         knowledge=KnowledgeModel(
             **{**item["Knowledge"], "s3_urls": item["Knowledge"].get("s3_urls", [])}
         ),
         sync_status=item["SyncStatus"],
         sync_status_reason=item["SyncStatusReason"],
         sync_last_exec_id=item["LastExecId"],
-        published_api_stack_name=(
-            None
-            if "ApiPublishmentStackName" not in item
-            else item["ApiPublishmentStackName"]
-        ),
-        published_api_datetime=(
-            None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
-        ),
-        published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
-        ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
         bedrock_knowledge_base=(
@@ -523,30 +494,12 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
                 else DEFAULT_SEARCH_CONFIG["max_results"]
             )
         ),
-        agent=(
-            AgentModel(**item["AgentData"])
-            if "AgentData" in item
-            else AgentModel(tools=[])
-        ),
         knowledge=KnowledgeModel(
             **{**item["Knowledge"], "s3_urls": item["Knowledge"].get("s3_urls", [])}
         ),
         sync_status=item["SyncStatus"],
         sync_status_reason=item["SyncStatusReason"],
         sync_last_exec_id=item["LastExecId"],
-        published_api_stack_name=(
-            None
-            if "ApiPublishmentStackName" not in item
-            else item["ApiPublishmentStackName"]
-        ),
-        published_api_datetime=(
-            None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
-        ),
-        published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
-        ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
         bedrock_knowledge_base=(
@@ -581,7 +534,6 @@ def find_alias_by_id(user_id: str, alias_id: str) -> BotAliasModel:
         is_pinned=item["IsPinned"],
         sync_status=item["SyncStatus"],
         has_knowledge=item["HasKnowledge"],
-        has_agent=item.get("HasAgent", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
     )
 
@@ -625,53 +577,6 @@ def update_bot_visibility(user_id: str, bot_id: str, visible: bool):
             raise e
 
     return response
-
-
-def update_bot_publication(
-    user_id: str, bot_id: str, published_api_id: str, build_id: str
-):
-    table = _get_table_client(user_id)
-    current_time = get_current_time()  # epoch time (int) を取得
-    logger.info(f"Updating bot publication: {bot_id}")
-    try:
-        response = table.update_item(
-            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
-            UpdateExpression="SET ApiPublishmentStackName = :val, ApiPublishedDatetime = :time, ApiPublishCodeBuildId = :build_id",
-            # NOTE: Stack naming rule: ApiPublishmentStack{published_api_id}.
-            # See bedrock-chat-stack.ts > `ApiPublishmentStack`
-            ExpressionAttributeValues={
-                ":val": f"ApiPublishmentStack{published_api_id}",
-                ":time": current_time,
-                ":build_id": build_id,
-            },
-            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
-        )
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
-        else:
-            raise e
-
-    return response
-
-
-def delete_bot_publication(user_id: str, bot_id: str):
-    table = _get_table_client(user_id)
-    logger.info(f"Deleting bot publication: {bot_id}")
-    try:
-        response = table.update_item(
-            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
-            UpdateExpression="REMOVE ApiPublishmentStackName, ApiPublishedDatetime, ApiPublishCodeBuildId",
-            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
-        )
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
-        else:
-            raise e
-
-    return response
-
 
 def delete_bot_by_id(user_id: str, bot_id: str):
     table = _get_table_client(user_id)
@@ -741,10 +646,7 @@ async def find_public_bots_by_ids(bot_ids: list[str]) -> list[BotMetaWithStackIn
                     available=True,
                     is_pinned=item["IsPinned"],
                     description=item["Description"],
-                    is_public="PublicBotId" in item,
                     sync_status=item["SyncStatus"],
-                    published_api_stack_name=item.get("ApiPublishmentStackName", None),
-                    published_api_datetime=item.get("ApiPublishedDatetime", None),
                     has_bedrock_knowledge_base=(
                         True if item.get("BedrockKnowledgeBase", None) else False
                     ),
@@ -752,53 +654,3 @@ async def find_public_bots_by_ids(bot_ids: list[str]) -> list[BotMetaWithStackIn
             )
 
     return bots
-
-
-def find_all_published_bots(
-    limit: int = 1000, next_token: str | None = None
-) -> tuple[list[BotMetaWithStackInfo], str | None]:
-    """Find all published bots. This method is intended for administrator use."""
-    table = _get_table_public_client()
-
-    query_params = {
-        "IndexName": "PublicBotIdIndex",
-        "FilterExpression": Attr("ApiPublishmentStackName").exists()
-        & Attr("ApiPublishmentStackName").ne(None),
-        "Limit": limit,
-    }
-    if next_token:
-        query_params["ExclusiveStartKey"] = json.loads(
-            base64.b64decode(next_token).decode("utf-8")
-        )
-
-    response = table.scan(**query_params)
-
-    bots = [
-        BotMetaWithStackInfo(
-            id=decompose_bot_id(item["SK"]),
-            owner_user_id=item["PK"],
-            title=item["Title"],
-            create_time=float(item["CreateTime"]),
-            last_used_time=float(item["LastBotUsed"]),
-            owned=True,
-            available=True,
-            is_pinned=item["IsPinned"],
-            description=item["Description"],
-            is_public="PublicBotId" in item,
-            sync_status=item["SyncStatus"],
-            published_api_stack_name=item["ApiPublishmentStackName"],
-            published_api_datetime=item.get("ApiPublishedDatetime", None),
-            has_bedrock_knowledge_base=(
-                True if item.get("BedrockKnowledgeBase", None) else False
-            ),
-        )
-        for item in response["Items"]
-    ]
-
-    next_token = None
-    if "LastEvaluatedKey" in response:
-        next_token = base64.b64encode(
-            json.dumps(response["LastEvaluatedKey"]).encode("utf-8")
-        ).decode("utf-8")
-
-    return bots, next_token

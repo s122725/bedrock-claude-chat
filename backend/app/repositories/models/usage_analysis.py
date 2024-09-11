@@ -7,8 +7,6 @@ class UsagePerBot(BaseModel):
     id: str  # bot_id
     title: str
     description: str
-    published_api_stack_name: str | None
-    published_api_datetime: int | None
     owner_user_id: str
     total_price: float
 

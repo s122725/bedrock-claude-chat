@@ -42,22 +42,7 @@ class SearchParams(BaseSchema):
     max_results: int
 
 
-class AgentTool(BaseSchema):
-    name: str
-    description: str
-
-
-class Agent(BaseSchema):
-    tools: list[AgentTool]
-
-
-class AgentInput(BaseSchema):
-    tools: list[str] = Field(..., description="List of tool names")
-
-
 class Knowledge(BaseSchema):
-    source_urls: list[str]
-    sitemap_urls: list[str]
     filenames: list[str]
     s3_urls: list[str]
 
@@ -83,8 +68,6 @@ class Knowledge(BaseSchema):
 
 
 class KnowledgeDiffInput(BaseSchema):
-    source_urls: list[str]
-    sitemap_urls: list[str]
     s3_urls: list[str]
     added_filenames: list[str]
     deleted_filenames: list[str]
@@ -104,7 +87,6 @@ class BotInput(BaseSchema):
     embedding_params: EmbeddingParams | None
     generation_params: GenerationParams | None
     search_params: SearchParams | None
-    agent: Optional[AgentInput] = None
     knowledge: Knowledge | None
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter] | None
@@ -118,7 +100,6 @@ class BotModifyInput(BaseSchema):
     embedding_params: EmbeddingParams | None
     generation_params: GenerationParams | None
     search_params: SearchParams | None
-    agent: Optional[AgentInput] = None
     knowledge: KnowledgeDiffInput | None
     display_retrieved_chunks: bool
     conversation_quick_starters: list[ConversationQuickStarter] | None
@@ -136,11 +117,7 @@ class BotModifyInput(BaseSchema):
 
         if self.knowledge is not None and current_bot_model.has_knowledge():
             if (
-                set(self.knowledge.source_urls)
-                == set(current_bot_model.knowledge.source_urls)
-                and set(self.knowledge.sitemap_urls)
-                == set(current_bot_model.knowledge.sitemap_urls)
-                and set(self.knowledge.s3_urls)
+                set(self.knowledge.s3_urls)
                 == set(current_bot_model.knowledge.s3_urls)
             ):
                 pass
@@ -174,7 +151,6 @@ class BotModifyOutput(BaseSchema):
     embedding_params: EmbeddingParams
     generation_params: GenerationParams
     search_params: SearchParams
-    agent: Agent
     knowledge: Knowledge
     conversation_quick_starters: list[ConversationQuickStarter]
     bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None
@@ -187,14 +163,12 @@ class BotOutput(BaseSchema):
     instruction: str
     create_time: float
     last_used_time: float
-    is_public: bool
     is_pinned: bool
     # Whether the bot is owned by the user
     owned: bool
     embedding_params: EmbeddingParams
     generation_params: GenerationParams
     search_params: SearchParams
-    agent: Agent
     knowledge: Knowledge
     sync_status: type_sync_status
     sync_status_reason: str
@@ -211,7 +185,6 @@ class BotMetaOutput(BaseSchema):
     create_time: float
     last_used_time: float
     is_pinned: bool
-    is_public: bool
     owned: bool
     # Whether the bot is available or not.
     # This can be `False` if the bot is not owned by the user and original bot is removed.
@@ -227,8 +200,6 @@ class BotSummaryOutput(BaseSchema):
     create_time: float
     last_used_time: float
     is_pinned: bool
-    is_public: bool
-    has_agent: bool
     owned: bool
     sync_status: type_sync_status
     has_knowledge: bool

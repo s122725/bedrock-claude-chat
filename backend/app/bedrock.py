@@ -61,24 +61,6 @@ class ConverseApiResponse(TypedDict):
     stopReason: str
     usage: ConverseApiResponseUsage
 
-
-def compose_args(
-    messages: list[MessageModel],
-    model: type_model_name,
-    instruction: str | None = None,
-    stream: bool = False,
-    generation_params: GenerationParamsModel | None = None,
-) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
-    return dict(
-        compose_args_for_converse_api(
-            messages, model, instruction, stream, generation_params
-        )
-    )
-
-
 def _get_converse_supported_format(ext: str) -> str:
     supported_formats = {
         "pdf": "pdf",

@@ -7,8 +7,6 @@ from app.repositories.custom_bot import (
     update_bot_visibility,
 )
 from app.routes.schemas.bot import (
-    Agent,
-    AgentTool,
     BedrockKnowledgeBaseOutput,
     BotInput,
     BotMetaOutput,
@@ -27,7 +25,6 @@ from app.routes.schemas.bot import (
 from app.usecases.bot import (
     create_new_bot,
     fetch_all_bots_by_user_id,
-    fetch_available_agent_tools,
     fetch_bot_summary,
     issue_presigned_url,
     modify_owned_bot,
@@ -112,7 +109,6 @@ def get_all_bots(
             owned=bot.owned,
             available=bot.available,
             description=bot.description,
-            is_public=bot.is_public,
             sync_status=bot.sync_status,
             has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base,
         )
@@ -134,7 +130,6 @@ def get_private_bot(request: Request, bot_id: str):
         description=bot.description,
         create_time=bot.create_time,
         last_used_time=bot.last_used_time,
-        is_public=True if bot.public_bot_id else False,
         is_pinned=bot.is_pinned,
         owned=True,
         embedding_params=EmbeddingParams(
@@ -142,15 +137,7 @@ def get_private_bot(request: Request, bot_id: str):
             chunk_overlap=bot.embedding_params.chunk_overlap,
             enable_partition_pdf=bot.embedding_params.enable_partition_pdf,
         ),
-        agent=Agent(
-            tools=[
-                AgentTool(name=tool.name, description=tool.description)
-                for tool in bot.agent.tools
-            ]
-        ),
         knowledge=Knowledge(
-            source_urls=bot.knowledge.source_urls,
-            sitemap_urls=bot.knowledge.sitemap_urls,
             filenames=bot.knowledge.filenames,
             s3_urls=bot.knowledge.s3_urls,
         ),
@@ -216,10 +203,3 @@ def delete_bot_uploaded_file(request: Request, bot_id: str, filename: str):
     """Delete uploaded file for bot"""
     current_user: User = request.state.current_user
     remove_uploaded_file(current_user.id, bot_id, filename)
-
-
-@router.get("/bot/{bot_id}/agent/available-tools", response_model=list[AgentTool])
-def get_bot_available_tools(request: Request, bot_id: str):
-    """Get available tools for bot"""
-    tools = fetch_available_agent_tools()
-    return [AgentTool(name=tool.name, description=tool.description) for tool in tools]
