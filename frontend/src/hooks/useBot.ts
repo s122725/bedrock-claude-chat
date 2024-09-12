@@ -7,7 +7,7 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
 
   const { data: myBots, mutate: mutateMyBots } = api.bots(
     {
-      kind: 'private',
+      kind: 'mixed', // FIXME: 모든 챗봇을 mixed 으로 사용
     },
     shouldAutoRefreshMyBots
       ? (data) => {
@@ -23,19 +23,19 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
   );
 
   const { data: starredBots, mutate: mutateStarredBots } = api.bots({
-    kind: 'mixed',
+    kind: 'mixed', // FIXME: 모든 챗봇을 mixed 으로 사용
     pinned: true,
   });
 
   const { data: recentlyUsedBots, mutate: mutateRecentlyUsedBots } = api.bots({
-    kind: 'mixed',
+    kind: 'mixed', // FIXME: 모든 챗봇을 mixed 으로 사용
     limit: 30,
   });
 
   return {
     myBots,
     starredBots: starredBots?.filter((bot) => bot.available),
-    recentlyUsedUnsterredBots: recentlyUsedBots?.filter(
+    recentlyUsedUnstarredBots: recentlyUsedBots?.filter(
       (bot) => !bot.isPinned && bot.available
     ),
     recentlyUsedSharedBots: recentlyUsedBots?.filter((bot) => !bot.owned),
@@ -53,10 +53,8 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
             createTime: new Date(),
             lastUsedTime: new Date(),
             isPinned: false,
-            isPublic: false,
             owned: true,
             syncStatus: 'QUEUED',
-            hasBedrockKnowledgeBase: !!params.bedrockKnowledgeBase,
           });
         }),
         {
@@ -84,27 +82,6 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
       return api.updateBot(botId, params).finally(() => {
         mutateMyBots();
       });
-    },
-    updateBotSharing: (botId: string, isShareing: boolean) => {
-      mutateMyBots(
-        produce(myBots, (draft) => {
-          const idx = draft?.findIndex((bot) => bot.id === botId) ?? -1;
-          if (draft) {
-            draft[idx].isPublic = isShareing;
-          }
-        }),
-        {
-          revalidate: false,
-        }
-      );
-
-      return api
-        .updateBotVisibility(botId, {
-          toPublic: isShareing,
-        })
-        .finally(() => {
-          mutateMyBots();
-        });
     },
     updateMyBotStarred: (botId: string, isStarred: boolean) => {
       const idxMybots = myBots?.findIndex((bot) => bot.id === botId) ?? -1;

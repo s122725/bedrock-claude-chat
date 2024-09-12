@@ -18,8 +18,6 @@ import { ulid } from 'ulid';
 import { convertMessageMapToArray } from '../utils/MessageUtils';
 import useModel from './useModel';
 import useFeedbackApi from './useFeedbackApi';
-import { useMachine } from '@xstate/react';
-import { agentThinkingState } from '../features/agent/xstates/agentThinkProgress';
 
 type ChatStateType = {
   [id: string]: MessageMap;
@@ -27,8 +25,6 @@ type ChatStateType = {
 
 type BotInputType = {
   botId: string;
-  hasKnowledge: boolean;
-  hasAgent: boolean;
 };
 
 export type AttachmentType = {
@@ -47,8 +43,6 @@ const NEW_MESSAGE_ID = {
   USER: 'new-message',
   ASSISTANT: 'new-message-assistant',
 };
-const USE_STREAMING: boolean =
-  import.meta.env.VITE_APP_USE_STREAMING === 'true';
 
 const useChatState = create<{
   conversationId: string;
@@ -84,7 +78,7 @@ const useChatState = create<{
   setIsGeneratedTitle: (b: boolean) => void;
   getPostedModel: () => Model;
   shouldUpdateMessages: (currentConversation: Conversation) => boolean;
-  shouldCotinue: boolean;
+  shouldContinue: boolean;
   setShouldContinue: (b: boolean) => void;
   getShouldContinue: () => boolean;
 }>((set, get) => {
@@ -127,7 +121,7 @@ const useChatState = create<{
     ) => {
       set(() => ({
         chats: produce(get().chats, (draft) => {
-          // 追加対象が子ノードの場合は親ノードに参照情報を追加
+          // 추가 대상이 자녀 노드인 경우 부모 노드에 참조 정보 추가
           if (draft[id] && parentMessageId && parentMessageId !== 'system') {
             draft[id][parentMessageId] = {
               ...draft[id][parentMessageId],
@@ -165,14 +159,14 @@ const useChatState = create<{
         chats: produce(state.chats, (draft) => {
           const childrenIds = [...draft[id][messageId].children];
 
-          // childrenに設定されているノードも全て削除
+          // children 으로 설정되어 있는 노드도 모두 삭제
           while (childrenIds.length > 0) {
             const targetId = childrenIds.pop()!;
             childrenIds.push(...draft[id][targetId].children);
             delete draft[id][targetId];
           }
 
-          // 削除対象のノードを他ノードの参照から削除
+          // 삭제 대상 노드를 다른 노드 참조에서 삭제
           Object.keys(draft[id]).forEach((key) => {
             const idx = draft[id][key].children.findIndex(
               (c) => c === messageId
@@ -218,7 +212,7 @@ const useChatState = create<{
     getPostedModel: () => {
       return (
         get().chats[get().conversationId]?.system?.model ??
-        // 画面に即時反映するためNEW_MESSAGEを評価
+        // 화면에 즉시 반영하기 위해 NEW_MESSAGE 평가
         get().chats['']?.[NEW_MESSAGE_ID.ASSISTANT]?.model
       );
     },
@@ -231,20 +225,18 @@ const useChatState = create<{
       );
     },
     getShouldContinue: () => {
-      return get().shouldCotinue;
+      return get().shouldContinue;
     },
     setShouldContinue: (b) => {
       set(() => ({
-        shouldCotinue: b,
+        shouldContinue: b,
       }));
     },
-    shouldCotinue: false,
+    shouldContinue: false,
   };
 });
 
 const useChat = () => {
-  const [agentThinking, send] = useMachine(agentThinkingState);
-
   const {
     chats,
     conversationId,
@@ -314,7 +306,7 @@ const useChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
-  // 画面に即時反映させるために、Stateを更新する処理
+  // 화면에 즉시 반영하기 위해 State 업데이트 처리
   const pushNewMessage = (
     parentMessageId: string | null,
     messageContent: MessageContent
@@ -354,7 +346,7 @@ const useChat = () => {
     const isNewChat = conversationId ? false : true;
     const newConversationId = ulid();
 
-    // エラーリトライ時に同期が間に合わないため、Stateを直接参照
+    // error retry 시에 동기화가 늦기 때문에 State를 직접 참조
     const tmpMessages = convertMessageMapToArray(
       useChatState.getState().chats[conversationId] ?? {},
       currentMessageId
@@ -436,41 +428,18 @@ const useChat = () => {
 
     // post message
     const postPromise: Promise<string> = new Promise((resolve, reject) => {
-      if (USE_STREAMING) {
-        if (bot?.hasAgent) {
-          send({ type: 'wakeup' });
-        }
-        postStreaming({
-          input,
-          hasKnowledge: bot?.hasKnowledge,
-          dispatch: (c: string) => {
-            editMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT, c);
-          },
-          thinkingDispatch: (event) => {
-            send({ type: event });
-          },
+      postStreaming({
+        input,
+        dispatch: (c: string) => {
+          editMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT, c);
+        },
+      })
+        .then((message) => {
+          resolve(message);
         })
-          .then((message) => {
-            resolve(message);
-          })
-          .catch((e) => {
-            reject(e);
-          });
-      } else {
-        conversationApi
-          .postMessage(input)
-          .then((res) => {
-            editMessage(
-              conversationId,
-              NEW_MESSAGE_ID.ASSISTANT,
-              res.data.message.content[0].body
-            );
-            resolve(res.data.message.content[0].body);
-          })
-          .catch((e) => {
-            reject(e);
-          });
-      }
+        .catch((e) => {
+          reject(e);
+        });
     });
 
     postPromise
@@ -536,15 +505,12 @@ const useChat = () => {
     const currentContentBody = messages[messages.length - 1].content[0].body;
     const currentMessage = messages[messages.length - 1];
 
-    // WARNING: Non-streaming is not supported from the UI side as it is planned to be DEPRICATED.
+    // WARNING: Non-streaming is not supported from the UI side as it is planned to be DEPRECATED.
     postStreaming({
       input,
       dispatch: (c: string) => {
         editMessage(conversationId, currentMessage.id, currentContentBody + c);
       },
-      thinkingDispatch: (event) => {
-        send({ type: event });
-      },
     })
       .then(() => {
         mutate();
@@ -555,124 +521,6 @@ const useChat = () => {
       .finally(() => {
         setPostingMessage(false);
       });
-  };
-
-  /**
-   * 再生成
-   * @param props content: 内容を上書きしたい場合に設定  messageId: 再生成対象のmessageId  botId: ボットの場合は設定する
-   */
-  const regenerate = (props?: {
-    content?: string;
-    messageId?: string;
-    bot?: BotInputType;
-  }) => {
-    let index: number = -1;
-    // messageIdが指定されている場合は、指定されたメッセージをベースにする
-    if (props?.messageId) {
-      index = messages.findIndex((m) => m.id === props.messageId);
-    }
-
-    // 最新のメッセージがUSERの場合は、エラーとして処理する
-    const isRetryError = messages[messages.length - 1].role === 'user';
-    // messageIdが指定されていない場合は、最新のメッセージを再生成する
-    if (index === -1) {
-      index = isRetryError ? messages.length - 1 : messages.length - 2;
-    }
-
-    const parentMessage = produce(messages[index], (draft) => {
-      if (props?.content) {
-        const textIndex = draft.content.findIndex(
-          (content) => content.contentType === 'text'
-        );
-        draft.content[textIndex].body = props.content;
-      }
-    });
-
-    // Stateを書き換え後の内容に更新
-    if (props?.content) {
-      editMessage(conversationId, parentMessage.id, props.content);
-    }
-
-    const input: PostMessageRequest = {
-      conversationId: conversationId,
-      message: {
-        ...parentMessage,
-        parentMessageId: parentMessage.parent,
-      },
-      botId: props?.bot?.botId,
-    };
-
-    if (input.message.parentMessageId === null) {
-      input.message.parentMessageId = 'system';
-    }
-
-    setPostingMessage(true);
-
-    // 画面に即時反映するために、Stateを更新する
-    if (isRetryError) {
-      pushMessage(
-        conversationId ?? '',
-        parentMessage.id,
-        NEW_MESSAGE_ID.ASSISTANT,
-        {
-          role: 'assistant',
-          content: [
-            {
-              contentType: 'text',
-              body: '',
-            },
-          ],
-          model: messages[index].model,
-          feedback: messages[index].feedback,
-          usedChunks: messages[index].usedChunks,
-        }
-      );
-    } else {
-      pushNewMessage(parentMessage.parent, parentMessage);
-    }
-
-    setCurrentMessageId(NEW_MESSAGE_ID.ASSISTANT);
-
-    if (props?.bot?.hasAgent) {
-      send({ type: 'wakeup' });
-    }
-    postStreaming({
-      input,
-      dispatch: (c: string) => {
-        editMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT, c);
-      },
-      thinkingDispatch: (event) => {
-        send({ type: event });
-      },
-    })
-      .then(() => {
-        mutate();
-      })
-      .catch((e) => {
-        console.error(e);
-        setCurrentMessageId(NEW_MESSAGE_ID.USER);
-        removeMessage(conversationId, NEW_MESSAGE_ID.ASSISTANT);
-      })
-      .finally(() => {
-        setPostingMessage(false);
-      });
-
-    // get related document (for RAG)
-    const documents: RelatedDocument[] = [];
-    if (input.botId) {
-      conversationApi
-        .getRelatedDocuments({
-          botId: input.botId,
-          conversationId: input.conversationId!,
-          message: input.message,
-        })
-        .then((res) => {
-          if (res.data) {
-            documents.push(...res.data);
-            setRelatedDocuments(NEW_MESSAGE_ID.ASSISTANT, documents);
-          }
-        });
-    }
   };
 
   const hasError = useMemo(() => {
@@ -681,7 +529,6 @@ const useChat = () => {
   }, [messages]);
 
   return {
-    agentThinking,
     hasError,
     setConversationId,
     conversationId,
@@ -694,39 +541,9 @@ const useChat = () => {
     messages,
     setCurrentMessageId,
     postChat,
-    regenerate,
     getPostedModel,
     getShouldContinue,
     continueGenerate,
-    // エラーのリトライ
-    retryPostChat: (params: { content?: string; bot?: BotInputType }) => {
-      const length_ = messages.length;
-      if (length_ === 0) {
-        return;
-      }
-      const latestMessage = messages[length_ - 1];
-      if (latestMessage.sibling.length === 1) {
-        // 通常のメッセージ送信時
-        // エラー発生時の最新のメッセージはユーザ入力;
-        removeMessage(conversationId, latestMessage.id);
-        postChat({
-          content: params.content ?? latestMessage.content[0].body,
-          bot: params.bot
-            ? {
-                botId: params.bot.botId,
-                hasKnowledge: params.bot.hasKnowledge,
-                hasAgent: params.bot.hasAgent,
-              }
-            : undefined,
-        });
-      } else {
-        // 再生成時
-        regenerate({
-          content: params.content ?? latestMessage.content[0].body,
-          bot: params.bot,
-        });
-      }
-    },
     getRelatedDocuments: (messageId: string) => {
       return relatedDocuments[messageId] ?? [];
     },

@@ -2,7 +2,6 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { PostMessageRequest } from '../@types/conversation';
 import { create } from 'zustand';
 import i18next from 'i18next';
-import { AgentThinkingEventKeys } from '../features/agent/xstates/agentThinkProgress';
 import { PostStreamingStatus } from '../constants';
 
 const WS_ENDPOINT: string = import.meta.env.VITE_APP_WS_ENDPOINT;
@@ -13,18 +12,11 @@ const usePostMessageStreaming = create<{
     input: PostMessageRequest;
     hasKnowledge?: boolean;
     dispatch: (completion: string) => void;
-    thinkingDispatch: (
-      event: Exclude<AgentThinkingEventKeys, 'wakeup'>
-    ) => void;
   }) => Promise<string>;
 }>(() => {
   return {
-    post: async ({ input, dispatch, hasKnowledge, thinkingDispatch }) => {
-      if (hasKnowledge) {
-        dispatch(i18next.t('bot.label.retrievingKnowledge'));
-      } else {
-        dispatch(i18next.t('app.chatWaitingSymbol'));
-      }
+    post: async ({ input, dispatch }) => {
+      dispatch(i18next.t('bot.label.retrievingKnowledge'));
       const token = (await fetchAuthSession()).tokens?.idToken?.toString();
       const payloadString = JSON.stringify({
         ...input,
@@ -95,9 +87,6 @@ const usePostMessageStreaming = create<{
                 case PostStreamingStatus.FETCHING_KNOWLEDGE:
                   dispatch(i18next.t('bot.label.retrievingKnowledge'));
                   break;
-                case PostStreamingStatus.THINKING:
-                  thinkingDispatch('go-on');
-                  break;
                 case PostStreamingStatus.STREAMING:
                   if (data.completion || data.completion === '') {
                     if (
@@ -111,8 +100,6 @@ const usePostMessageStreaming = create<{
                   }
                   break;
                 case PostStreamingStatus.STREAMING_END:
-                  thinkingDispatch('goodbye');
-
                   if (completion.endsWith(i18next.t('app.chatWaitingSymbol'))) {
                     completion = completion.slice(0, -1);
                     dispatch(completion);

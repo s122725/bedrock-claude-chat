@@ -38,8 +38,11 @@ type Props = BaseProps & {
   isAdmin: boolean;
   conversations?: ConversationMeta[];
   starredBots?: BotListItem[];
-  recentlyUsedUnsterredBots?: BotListItem[];
-  updateConversationTitle: (conversationId: string, title: string) => Promise<void>;
+  recentlyUsedUnstarredBots?: BotListItem[];
+  updateConversationTitle: (
+    conversationId: string,
+    title: string
+  ) => Promise<void>;
   onSignOut: () => void;
   onDeleteConversation: (conversation: ConversationMeta) => void;
   onClearConversations: () => void;
@@ -100,7 +103,7 @@ const Item: React.FC<ItemProps> = (props) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
 
-          // dispatch 処理の中で Title の更新を行う（同期を取るため）
+          // dispatch 처리 중에서 동기화를 위해서 title 갱신
           setTempLabel((newLabel) => {
             props.updateTitle(props.conversationId, newLabel).then(() => {
               setEditing(false);
@@ -189,7 +192,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
   const { t } = useTranslation();
   const { getPageLabel } = usePageLabel();
   const { opened, switchOpen } = useDrawer();
-  const { conversations, starredBots, recentlyUsedUnsterredBots } = props;
+  const { conversations, starredBots, recentlyUsedUnstarredBots } = props;
 
   const [prevConversations, setPrevConversations] =
     useState<typeof conversations>();
@@ -203,7 +206,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
   }, [conversations]);
 
   useEffect(() => {
-    // 新規チャットの場合はTitleをLazy表示にする
+    // 새로운 채팅 시에는 title 을 lazy loading
     if (!conversations || !prevConversations) {
       return;
     }
@@ -219,14 +222,14 @@ const ChatListDrawer: React.FC<Props> = (props) => {
 
   const onClickNewChat = useCallback(() => {
     newChat();
-    closeSamllDrawer();
+    closeSmallDrawer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onClickNewBotChat = useCallback(
     () => {
       newChat();
-      closeSamllDrawer();
+      closeSmallDrawer();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -234,7 +237,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
 
   const smallDrawer = useRef<HTMLDivElement>(null);
 
-  const closeSamllDrawer = useCallback(() => {
+  const closeSmallDrawer = useCallback(() => {
     if (smallDrawer.current?.classList.contains('visible')) {
       switchOpen();
     }
@@ -242,13 +245,13 @@ const ChatListDrawer: React.FC<Props> = (props) => {
   }, []);
 
   useLayoutEffect(() => {
-    // リサイズイベントを拾って状態を更新する
+    // 리사이즈 이벤트 감지하여 상태 업데이트
     const onResize = () => {
       if (isMobile) {
         return;
       }
 
-      // 狭い画面のDrawerが表示されていて、画面サイズが大きくなったら状態を更新
+      // 작은 화면의 Drawer 가 표시되어 있었으니 화면 크기가 커지면 상태 업데이트
       if (!smallDrawer.current?.checkVisibility() && opened) {
         switchOpen();
       }
@@ -280,7 +283,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
               icon={<PiCompass />}
               to="/bot/explore"
               labelComponent={getPageLabel('/bot/explore')}
-              onClick={closeSamllDrawer}
+              onClick={closeSmallDrawer}
             />
             {props.isAdmin && (
               <ExpandableDrawerGroup
@@ -291,15 +294,16 @@ const ChatListDrawer: React.FC<Props> = (props) => {
                   icon={<PiShareNetwork />}
                   to="/admin/shared-bot-analytics"
                   labelComponent={getPageLabel('/admin/shared-bot-analytics')}
-                  onClick={closeSamllDrawer}
+                  onClick={closeSmallDrawer}
                 />
-                <DrawerItem
+                {/* <DrawerItem
                   isActive={false}
                   icon={<PiGlobe />}
                   to="/admin/api-management"
                   labelComponent={getPageLabel('/admin/api-management')}
-                  onClick={closeSamllDrawer}
-                />
+                  onClick={closeSmallDrawer}
+                /> */}
+                {/* FIXME: 메뉴 삭제 */}
               </ExpandableDrawerGroup>
             )}
 
@@ -321,7 +325,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
             <ExpandableDrawerGroup
               label={t('app.recentlyUsedBots')}
               className="border-t pt-1">
-              {recentlyUsedUnsterredBots
+              {recentlyUsedUnstarredBots
                 ?.slice(0, 3)
                 .map((bot) => (
                   <DrawerItem
@@ -351,7 +355,7 @@ const ChatListDrawer: React.FC<Props> = (props) => {
                   conversationId={conversation.id}
                   generatedTitle={idx === generateTitleIndex}
                   updateTitle={props.updateConversationTitle}
-                  onClick={closeSamllDrawer}
+                  onClick={closeSmallDrawer}
                   onDelete={() => props.onDeleteConversation(conversation)}
                 />
               ))}

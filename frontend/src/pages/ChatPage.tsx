@@ -13,33 +13,24 @@ import ChatMessage from '../components/ChatMessage';
 import useScroll from '../hooks/useScroll';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  PiArrowsCounterClockwise,
-  PiLink,
-  PiPenNib,
   PiPencilLine,
   PiStar,
   PiStarFill,
   PiWarningCircleFill,
 } from 'react-icons/pi';
-import Button from '../components/Button';
 import { useTranslation } from 'react-i18next';
-import SwitchBedrockModel from '../components/SwitchBedrockModel';
 import useSnackbar from '../hooks/useSnackbar';
 import useBot from '../hooks/useBot';
 import useConversation from '../hooks/useConversation';
 import ButtonPopover from '../components/PopoverMenu';
 import PopoverItem from '../components/PopoverItem';
 
-import { copyBotUrl } from '../utils/BotUtils';
 import { produce } from 'immer';
 import ButtonIcon from '../components/ButtonIcon';
 import StatusSyncBot from '../components/StatusSyncBot';
 import Alert from '../components/Alert';
 import useBotSummary from '../hooks/useBotSummary';
 import useModel from '../hooks/useModel';
-import { TextInputChatContent } from '../features/agent/components/TextInputChatContent';
-import { AgentProcessingIndicator } from '../features/agent/components/AgentProcessingIndicator';
-import { AgentState } from '../features/agent/xstates/agentThinkProgress';
 import { SyncStatus } from '../constants';
 
 import { BottomHelper } from '../features/helper/components/BottomHelper';
@@ -49,16 +40,12 @@ import {
   PutFeedbackRequest,
 } from '../@types/conversation';
 
-const MISTRAL_ENABLED: boolean =
-  import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
-
 const ChatPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { open: openSnackbar } = useSnackbar();
 
   const {
-    agentThinking,
     conversationError,
     postingMessage,
     newChat,
@@ -67,19 +54,13 @@ const ChatPage: React.FC = () => {
     conversationId,
     setConversationId,
     hasError,
-    retryPostChat,
     setCurrentMessageId,
-    regenerate,
-    continueGenerate,
     getPostedModel,
     loadingConversation,
     getShouldContinue,
     getRelatedDocuments,
     giveFeedback,
   } = useChat();
-
-  // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
-  const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
 
   // Error Handling
   useEffect(() => {
@@ -121,11 +102,8 @@ const ChatPage: React.FC = () => {
     setIsAvailabilityBot(false);
     if (bot) {
       setIsAvailabilityBot(true);
-      // Add "Unsupported" prefix for bots created under opposite VITE_APP_ENABLE_KB environment state
       setPageTitle(
-        !bot.owned || bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
-          ? bot.title
-          : `[${t('bot.label.unsupported')}] ${bot.title}`
+        !bot.owned ? bot.title : `[${t('bot.label.unsupported')}] ${bot.title}`
       );
     } else {
       setPageTitle(t('bot.label.normalChat'));
@@ -135,7 +113,7 @@ const ChatPage: React.FC = () => {
         setPageTitle(t('bot.label.notAvailableBot'));
       }
     }
-  }, [KB_ENABLED, bot, botError, t]);
+  }, [bot, botError, t]);
 
   const description = useMemo<string>(() => {
     if (!bot) {
@@ -160,11 +138,9 @@ const ChatPage: React.FC = () => {
     return botId
       ? {
           botId: botId,
-          hasKnowledge: bot?.hasKnowledge ?? false,
-          hasAgent: bot?.hasAgent ?? false,
         }
       : undefined;
-  }, [bot?.hasKnowledge, botId, bot?.hasAgent]);
+  }, [botId]);
 
   const onSend = useCallback(
     (
@@ -188,34 +164,6 @@ const ChatPage: React.FC = () => {
     },
     [setCurrentMessageId]
   );
-
-  const onSubmitEditedContent = useCallback(
-    (messageId: string, content: string) => {
-      if (hasError) {
-        retryPostChat({
-          content,
-          bot: inputBotParams,
-        });
-      } else {
-        regenerate({
-          messageId,
-          content,
-          bot: inputBotParams,
-        });
-      }
-    },
-    [hasError, inputBotParams, regenerate, retryPostChat]
-  );
-
-  const onRegenerate = useCallback(() => {
-    regenerate({
-      bot: inputBotParams,
-    });
-  }, [inputBotParams, regenerate]);
-
-  const onContinueGenerate = useCallback(() => {
-    continueGenerate({ bot: inputBotParams });
-  }, [inputBotParams, continueGenerate]);
 
   useLayoutEffect(() => {
     if (messages.length > 0) {
@@ -257,18 +205,6 @@ const ChatPage: React.FC = () => {
       mutateBot();
     }
   }, [bot, mutateBot, updateMyBotStarred, updateSharedBotStarred]);
-
-  const [copyLabel, setCopyLabel] = useState(t('bot.titleSubmenu.copyLink'));
-  const onClickCopyUrl = useCallback(
-    (botId: string) => {
-      copyBotUrl(botId);
-      setCopyLabel(t('bot.titleSubmenu.copiedLink'));
-      setTimeout(() => {
-        setCopyLabel(t('bot.titleSubmenu.copyLink'));
-      }, 3000);
-    },
-    [t]
-  );
 
   const onClickSyncError = useCallback(() => {
     navigate(`/bot/edit/${bot?.id}`);
@@ -326,7 +262,6 @@ const ChatPage: React.FC = () => {
   const ChatMessageWithRelatedDocuments: React.FC<{
     chatContent: DisplayMessageContent;
     onChangeMessageId?: (messageId: string) => void;
-    onSubmit?: (messageId: string, content: string) => void;
     onSubmitFeedback?: (
       messageId: string,
       feedback: PutFeedbackRequest
@@ -353,7 +288,6 @@ const ChatPage: React.FC = () => {
         chatContent={message}
         relatedDocuments={relatedDocuments}
         onChangeMessageId={props.onChangeMessageId}
-        onSubmit={props.onSubmit}
         onSubmitFeedback={props.onSubmitFeedback}
       />
     );
@@ -365,7 +299,7 @@ const ChatPage: React.FC = () => {
       onDragOver={onDragOver}
       onDrop={endDnd}
       onDragEnd={endDnd}>
-      <div className="flex-1 overflow-hidden">
+      <div className="h-full flex-1 overflow-hidden">
         <div className="sticky top-0 z-10 mb-1.5 flex h-14 w-full items-center justify-between border-b border-gray bg-aws-paper p-2">
           <div className="flex w-full justify-between">
             <div className="p-2">
@@ -394,32 +328,9 @@ const ChatPage: React.FC = () => {
                   </ButtonIcon>
                   <ButtonPopover className="mx-1" target="bottom-right">
                     {bot?.owned && (
-                      // Disable the edit action for bots created under opposite VITE_APP_ENABLE_KB environment state
-                      <PopoverItem
-                        onClick={() => {
-                          if (
-                            bot.ownedAndHasBedrockKnowledgeBase === KB_ENABLED
-                          ) {
-                            onClickBotEdit(bot.id);
-                          }
-                        }}
-                        className={`${
-                          bot.ownedAndHasBedrockKnowledgeBase !== KB_ENABLED &&
-                          'opacity-30 hover:filter-none'
-                        }`}>
+                      <PopoverItem onClick={() => onClickBotEdit(bot.id)}>
                         <PiPencilLine />
                         {t('bot.titleSubmenu.edit')}
-                      </PopoverItem>
-                    )}
-                    {bot?.isPublic && (
-                      <PopoverItem
-                        onClick={() => {
-                          if (bot) {
-                            onClickCopyUrl(bot.id);
-                          }
-                        }}>
-                        <PiLink />
-                        {copyLabel}
                       </PopoverItem>
                     )}
                   </ButtonPopover>
@@ -441,13 +352,8 @@ const ChatPage: React.FC = () => {
               className=" flex h-full flex-col overflow-auto pb-16">
               {messages?.length === 0 ? (
                 <div className="relative flex w-full justify-center">
-                  {!loadingConversation && (
-                    <SwitchBedrockModel className="mt-3 w-min" />
-                  )}
                   <div className="absolute mx-3 my-20 flex items-center justify-center text-4xl font-bold text-gray">
-                    {!MISTRAL_ENABLED
-                      ? t('app.name')
-                      : t('app.nameWithoutClaude')}
+                    {t('app.name')}
                   </div>
                 </div>
               ) : (
@@ -458,26 +364,15 @@ const ChatPage: React.FC = () => {
                       className={`${
                         message.role === 'assistant' ? 'bg-aws-squid-ink/5' : ''
                       }`}>
-                      {messages.length === idx + 1 &&
-                      [AgentState.THINKING, AgentState.LEAVING].some(
-                        (v) => v == agentThinking.value
-                      ) ? (
-                        <AgentProcessingIndicator
-                          processCount={agentThinking.context.count}
-                        />
-                      ) : (
-                        <ChatMessageWithRelatedDocuments
-                          chatContent={message}
-                          onChangeMessageId={onChangeCurrentMessageId}
-                          onSubmit={onSubmitEditedContent}
-                          onSubmitFeedback={(messageId, feedback) => {
-                            if (conversationId) {
-                              giveFeedback(messageId, feedback);
-                            }
-                          }}
-                        />
-                      )}
-
+                      <ChatMessageWithRelatedDocuments
+                        chatContent={message}
+                        onChangeMessageId={onChangeCurrentMessageId}
+                        onSubmitFeedback={(messageId, feedback) => {
+                          if (conversationId) {
+                            giveFeedback(messageId, feedback);
+                          }
+                        }}
+                      />
                       <div className="w-full border-b border-aws-squid-ink/10"></div>
                     </div>
                   ))}
@@ -489,18 +384,6 @@ const ChatPage: React.FC = () => {
                     <PiWarningCircleFill className="mr-1 text-2xl" />
                     {t('error.answerResponse')}
                   </div>
-
-                  <Button
-                    className="mt-2 shadow "
-                    icon={<PiArrowsCounterClockwise />}
-                    outlined
-                    onClick={() => {
-                      retryPostChat({
-                        bot: inputBotParams,
-                      });
-                    }}>
-                    {t('button.resend')}
-                  </Button>
                 </div>
               )}
             </div>
@@ -518,61 +401,21 @@ const ChatPage: React.FC = () => {
             </Alert>
           </div>
         )}
-        {messages.length === 0 && (
-          <div className="mb-3 flex w-11/12 flex-wrap-reverse justify-start gap-2 md:w-10/12 lg:w-4/6 xl:w-3/6">
-            {bot?.conversationQuickStarters?.map((qs, idx) => (
-              <div
-                key={idx}
-                className="w-[calc(33.333%-0.5rem)] cursor-pointer rounded-2xl border border-aws-squid-ink/20 bg-white p-2  text-sm text-dark-gray  hover:shadow-lg hover:shadow-gray"
-                onClick={() => {
-                  onSend(qs.example);
-                }}>
-                <div>
-                  <PiPenNib />
-                </div>
-                {qs.title}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {bot?.hasAgent ? (
-          <TextInputChatContent
-            disabledSend={postingMessage || hasError}
-            disabledRegenerate={postingMessage || hasError}
-            disabled={disabledInput}
-            placeholder={
-              disabledInput
-                ? t('bot.label.notAvailableBotInputMessage')
-                : undefined
-            }
-            canRegenerate={messages.length > 1}
-            isLoading={postingMessage}
-            onSend={onSend}
-            onRegenerate={onRegenerate}
-            ref={focusInputRef}
-          />
-        ) : (
-          <InputChatContent
-            dndMode={dndMode}
-            disabledSend={postingMessage || hasError}
-            disabledRegenerate={postingMessage || hasError}
-            disabledContinue={postingMessage || hasError}
-            disabled={disabledInput}
-            placeholder={
-              disabledInput
-                ? t('bot.label.notAvailableBotInputMessage')
-                : undefined
-            }
-            canRegenerate={messages.length > 1}
-            canContinue={getShouldContinue()}
-            isLoading={postingMessage}
-            onSend={onSend}
-            onRegenerate={onRegenerate}
-            continueGenerate={onContinueGenerate}
-            ref={focusInputRef}
-          />
-        )}
+        <InputChatContent
+          dndMode={dndMode}
+          disabledSend={postingMessage || hasError}
+          disabledContinue={postingMessage || hasError}
+          disabled={disabledInput}
+          placeholder={
+            disabledInput
+              ? t('bot.label.notAvailableBotInputMessage')
+              : undefined
+          }
+          canContinue={getShouldContinue()}
+          isLoading={postingMessage}
+          onSend={onSend}
+          ref={focusInputRef}
+        />
       </div>
       <BottomHelper />
     </div>

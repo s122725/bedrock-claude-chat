@@ -2,12 +2,8 @@ import App from './App.tsx';
 import ChatPage from './pages/ChatPage.tsx';
 import NotFound from './pages/NotFound.tsx';
 import BotExplorePage from './pages/BotExplorePage.tsx';
-import BotEditPage from './pages/BotEditPage.tsx';
 import BotKbEditPage from './features/knowledgeBase/pages/BotKbEditPage.tsx';
-import BotApiSettingsPage from './pages/BotApiSettingsPage.tsx';
 import AdminSharedBotAnalyticsPage from './pages/AdminSharedBotAnalyticsPage.tsx';
-import AdminApiManagementPage from './pages/AdminApiManagementPage.tsx';
-import AdminBotManagementPage from './pages/AdminBotManagementPage.tsx';
 import { useTranslation } from 'react-i18next';
 import {
   createBrowserRouter,
@@ -16,8 +12,6 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { useMemo } from 'react';
-
-const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
 
 const rootChildren = [
   {
@@ -30,15 +24,11 @@ const rootChildren = [
   },
   {
     path: '/bot/new',
-    element: KB_ENABLED ? <BotKbEditPage /> : <BotEditPage />,
+    element: <BotKbEditPage />,
   },
   {
     path: '/bot/edit/:botId',
-    element: KB_ENABLED ? <BotKbEditPage /> : <BotEditPage />,
-  },
-  {
-    path: '/bot/api-settings/:botId',
-    element: <BotApiSettingsPage />,
+    element: <BotKbEditPage />,
   },
   {
     path: '/bot/:botId',
@@ -47,14 +37,6 @@ const rootChildren = [
   {
     path: '/admin/shared-bot-analytics',
     element: <AdminSharedBotAnalyticsPage />,
-  },
-  {
-    path: '/admin/api-management',
-    element: <AdminApiManagementPage />,
-  },
-  {
-    path: '/admin/bot/:botId',
-    element: <AdminBotManagementPage />,
   },
   {
     path: '/:conversationId',
@@ -88,10 +70,6 @@ export const usePageLabel = () => {
     {
       path: '/admin/shared-bot-analytics',
       label: t('admin.sharedBotAnalytics.label.pageTitle'),
-    },
-    {
-      path: '/admin/api-management',
-      label: t('admin.apiManagement.label.pageTitle'),
     },
   ];
 

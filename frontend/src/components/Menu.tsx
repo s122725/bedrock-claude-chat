@@ -10,7 +10,7 @@ type Props = BaseProps & {
   onClearConversations: () => void;
 };
 
-// 認証時に表示するメニューコンポーネント
+// 인증 시 표시하는 메뉴 컴포넌트
 const Menu: React.FC<Props> = (props) => {
   const { t } = useTranslation();
 
@@ -20,10 +20,10 @@ const Menu: React.FC<Props> = (props) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // メニューの外側をクリックした際のハンドリング
+    // 메뉴 외부 클릭 시 핸들링
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleClickOutside = (event: any) => {
-      // メニューボタンとメニュー以外をクリックしていたらメニューを閉じる
+      // 메뉴 버튼과 메뉴 이외를 클릭하고 있으면 메뉴 close
       if (
         menuRef.current &&
         !menuRef.current.contains(event.target) &&
@@ -32,10 +32,9 @@ const Menu: React.FC<Props> = (props) => {
         setIsOpen(false);
       }
     };
-    // イベントリスナーを設定
+    // 이벤트 리스너 설정
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      // 後処理でイベントリスナーを削除
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [menuRef]);

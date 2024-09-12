@@ -1,22 +1,17 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '../components/Button';
 import {
-  PiGlobe,
-  PiLink,
-  PiLockKey,
   PiPlus,
   PiStar,
   PiStarFill,
   PiTrash,
   PiTrashBold,
-  PiUsers,
 } from 'react-icons/pi';
 import { useNavigate } from 'react-router-dom';
 import useBot from '../hooks/useBot';
 import { BotMeta } from '../@types/bot';
 import DialogConfirmDeleteBot from '../components/DialogConfirmDeleteBot';
-import DialogConfirmShareBot from '../components/DialogShareBot';
 import ButtonIcon from '../components/ButtonIcon';
 import PopoverMenu from '../components/PopoverMenu';
 import PopoverItem from '../components/PopoverItem';
@@ -30,15 +25,10 @@ import { TooltipDirection } from '../constants';
 const BotExplorePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isAllowCreatingBot, isAllowApiSettings } = useUser();
-
-  // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
-  const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
+  const { isAllowCreatingBot } = useUser();
 
   const [isOpenDeleteDialog, setIsOpenDeleteDialog] = useState(false);
-  const [isOpenShareDialog, setIsOpenShareDialog] = useState(false);
   const [targetDelete, setTargetDelete] = useState<BotMeta>();
-  const [targetShareIndex, setTargetShareIndex] = useState<number>();
 
   const { newChat } = useChat();
   const {
@@ -46,20 +36,9 @@ const BotExplorePage: React.FC = () => {
     recentlyUsedSharedBots,
     deleteMyBot,
     deleteRecentlyUsedBot,
-    updateBotSharing,
     updateMyBotStarred,
     updateSharedBotStarred,
   } = useBot(true);
-
-  const targetShareBot = useMemo(() => {
-    if (myBots) {
-      if ((targetShareIndex ?? -1) < 0) {
-        return undefined;
-      }
-      return myBots[targetShareIndex!];
-    }
-    return undefined;
-  }, [myBots, targetShareIndex]);
 
   const onClickNewBot = useCallback(() => {
     navigate('/bot/new');
@@ -86,24 +65,6 @@ const BotExplorePage: React.FC = () => {
     }
   }, [deleteMyBot, targetDelete]);
 
-  const onClickShare = useCallback((targetIndex: number) => {
-    setIsOpenShareDialog(true);
-    setTargetShareIndex(targetIndex);
-  }, []);
-
-  const onClickApiSettings = useCallback(
-    (botId: string) => {
-      navigate(`/bot/api-settings/${botId}`);
-    },
-    [navigate]
-  );
-
-  const onToggleShare = useCallback(() => {
-    if (targetShareBot) {
-      updateBotSharing(targetShareBot.id, !targetShareBot.isPublic);
-    }
-  }, [targetShareBot, updateBotSharing]);
-
   const onClickBot = useCallback(
     (botId: string) => {
       newChat();
@@ -120,14 +81,6 @@ const BotExplorePage: React.FC = () => {
         onDelete={onDeleteMyBot}
         onClose={() => {
           setIsOpenDeleteDialog(false);
-        }}
-      />
-      <DialogConfirmShareBot
-        isOpen={isOpenShareDialog}
-        target={targetShareBot}
-        onToggleShare={onToggleShare}
-        onClose={() => {
-          setIsOpenShareDialog(false);
         }}
       />
       <div className="flex h-full justify-center">
@@ -159,16 +112,12 @@ const BotExplorePage: React.FC = () => {
                   {t('bot.label.noBots')}
                 </div>
               )}
-              {myBots?.map((bot, idx) => (
+              {myBots?.map((bot) => (
                 <ListItemBot
                   key={bot.id}
-                  // Add "Unsupported" prefix for bots created under opposite VITE_APP_ENABLE_KB environment state
                   bot={{
                     ...bot,
-                    title:
-                      bot.hasBedrockKnowledgeBase === KB_ENABLED
-                        ? bot.title
-                        : `[${t('bot.label.unsupported')}] ${bot.title}`,
+                    title: bot.title,
                   }}
                   onClick={onClickBot}
                   className="last:border-b-0">
@@ -182,31 +131,6 @@ const BotExplorePage: React.FC = () => {
                         }}
                       />
                     )}
-
-                    <div className="mr-5 flex justify-end">
-                      {bot.isPublic ? (
-                        <div className="flex items-center">
-                          <PiUsers className="mr-1" />
-                          <ButtonIcon
-                            className="-mr-3"
-                            onClick={() => {
-                              if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                                onClickShare(idx);
-                              }
-                            }}
-                            // Disable the share button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                            disabled={
-                              bot.hasBedrockKnowledgeBase !== KB_ENABLED
-                            }>
-                            <PiLink />
-                          </ButtonIcon>
-                        </div>
-                      ) : (
-                        <div className="ml-7">
-                          <PiLockKey />
-                        </div>
-                      )}
-                    </div>
 
                     <div className="mr-5">
                       {bot.isPinned ? (
@@ -231,47 +155,11 @@ const BotExplorePage: React.FC = () => {
                     <Button
                       className="mr-2 h-8 text-sm font-semibold"
                       outlined
-                      onClick={() => {
-                        if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                          onClickEditBot(bot.id);
-                        }
-                      }}
-                      // Disable the edit button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                      disabled={bot.hasBedrockKnowledgeBase !== KB_ENABLED}>
+                      onClick={() => onClickEditBot(bot.id)}>
                       {t('bot.button.edit')}
                     </Button>
                     <div className="relative">
                       <PopoverMenu className="h-8" target="bottom-right">
-                        <PopoverItem
-                          // Disable the share action for bots created under opposite VITE_APP_ENABLE_KB environment state
-                          onClick={() => {
-                            if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                              onClickShare(idx);
-                            }
-                          }}
-                          className={`${
-                            bot.hasBedrockKnowledgeBase !== KB_ENABLED &&
-                            'opacity-30 hover:filter-none'
-                          }`}>
-                          <PiUsers />
-                          {t('bot.button.share')}
-                        </PopoverItem>
-                        {isAllowApiSettings && (
-                          <PopoverItem
-                            onClick={() => {
-                              // Disable the API settings action for bots created under opposite VITE_APP_ENABLE_KB environment state
-                              if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                                onClickApiSettings(bot.id);
-                              }
-                            }}
-                            className={`${
-                              bot.hasBedrockKnowledgeBase !== KB_ENABLED &&
-                              'opacity-30 hover:filter-none'
-                            }`}>
-                            <PiGlobe />
-                            {t('bot.button.apiSettings')}
-                          </PopoverItem>
-                        )}
                         <PopoverItem
                           className="font-bold text-red"
                           onClick={() => {

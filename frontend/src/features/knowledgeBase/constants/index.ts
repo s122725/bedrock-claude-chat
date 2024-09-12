@@ -36,8 +36,6 @@ export const DEFAULT_OPENSEARCH_ANALYZER: {
 } = {
   ja: 'kuromoji',
   ko: 'icu',
-  zhhans: 'icu',
-  zhhant: 'icu',
 } as const;
 
 export const DEFAULT_BEDROCK_KNOWLEDGEBASE: BedrockKnowledgeBase = {

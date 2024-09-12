@@ -13,7 +13,7 @@ const SnackbarProvider: React.FC<Props> = ({ children }) => {
 
   useEffect(() => {
     if (isOpen) {
-      // 5000 ms で自動非表示
+      // 5000 ms 로 자동 숨김
       setTimeout(() => {
         close();
       }, 5000);

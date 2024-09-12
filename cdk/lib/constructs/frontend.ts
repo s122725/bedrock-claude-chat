@@ -124,7 +124,6 @@ export class Frontend extends Construct {
         VITE_APP_ENABLE_MISTRAL: enableMistral.toString(),
         VITE_APP_ENABLE_KB: enableKB.toString(),
         VITE_APP_REGION: region,
-        VITE_APP_USE_STREAMING: "true",
       };
 
       if (!idp.isExist()) return defaultProps;
@@ -133,11 +132,6 @@ export class Frontend extends Construct {
         VITE_APP_REDIRECT_SIGNIN_URL: this.getOrigin(),
         VITE_APP_REDIRECT_SIGNOUT_URL: this.getOrigin(),
         VITE_APP_COGNITO_DOMAIN: cognitoDomain,
-        VITE_APP_SOCIAL_PROVIDERS: idp.getSocialProviders(),
-        VITE_APP_CUSTOM_PROVIDER_ENABLED: idp
-          .checkCustomProviderEnabled()
-          .toString(),
-        VITE_APP_CUSTOM_PROVIDER_NAME: idp.getCustomProviderName(),
       };
       return { ...defaultProps, ...oAuthProps };
     })();

@@ -9,7 +9,7 @@ const useScroll = () => {
       return;
     }
     const listener = () => {
-      // 最下部までスクロールしている場合は、自動スクロールする
+      // 페이지 아래로 스크롤 한 경우에만 top 버튼 사용 가능
       if (elem.scrollTop + elem.clientHeight === elem.scrollHeight) {
         setDisabled(false);
       } else {

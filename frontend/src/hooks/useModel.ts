@@ -2,17 +2,11 @@ import { create } from 'zustand';
 import { Model } from '../@types/conversation';
 import { useMemo } from 'react';
 
-const MISTRAL_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
 const availableModels: {
   modelId: Model;
   label: string;
   supportMediaType: string[];
-}[] = !MISTRAL_ENABLED ? [
-  {
-    modelId: 'claude-v3-haiku',
-    label: 'Claude 3 (Haiku)',
-    supportMediaType: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  },
+}[] = [
   {
     modelId: 'claude-v3-sonnet',
     label: 'Claude 3 (Sonnet)',
@@ -23,28 +17,7 @@ const availableModels: {
     label: 'Claude 3.5 (Sonnet)',
     supportMediaType: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   },
-  {
-    modelId: 'claude-v3-opus',
-    label: 'Claude 3 (Opus)',
-    supportMediaType: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  },
-] : [
-    {
-      modelId: 'mistral-7b-instruct',
-      label: 'Mistral 7B',
-      supportMediaType: [],
-    },
-    {
-      modelId: 'mixtral-8x7b-instruct',
-      label: 'Mixtral-8x7B',
-      supportMediaType: [],
-    },
-    {
-      modelId: 'mistral-large',
-      label: 'Mistral Large',
-      supportMediaType: [],
-    },
-  ]
+];
 
 const useModelState = create<{
   modelId: Model;

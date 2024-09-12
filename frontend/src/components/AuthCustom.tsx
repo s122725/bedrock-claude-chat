@@ -11,8 +11,6 @@ import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import { useTranslation } from 'react-i18next';
 import { PiCircleNotch } from 'react-icons/pi';
 
-const MISTRAL_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
-
 type Props = BaseProps & {
   children: ReactNode;
 };

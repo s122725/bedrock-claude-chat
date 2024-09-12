@@ -13,7 +13,7 @@ import Alert from '../../../components/Alert';
 import KnowledgeFileUploader from '../../../components/KnowledgeFileUploader';
 import GenerationConfig from '../../../components/GenerationConfig';
 import Select from '../../../components/Select';
-import { BotFile, ConversationQuickStarter } from '../../../@types/bot';
+import { BotFile } from '../../../@types/bot';
 
 import { ulid } from 'ulid';
 import {
@@ -29,9 +29,6 @@ import ExpandableDrawerGroup from '../../../components/ExpandableDrawerGroup';
 import useErrorMessage from '../../../hooks/useErrorMessage';
 import Help from '../../../components/Help';
 import Toggle from '../../../components/Toggle';
-import { useAgent } from '../../../features/agent/hooks/useAgent';
-import { AgentTool } from '../../../features/agent/types';
-import { AvailableTools } from '../../../features/agent/components/AvailableTools';
 import {
   DEFAULT_CHUNKING_MAX_TOKENS,
   DEFAULT_CHUNKING_OVERLAP_PERCENTAGE,
@@ -64,7 +61,6 @@ const BotKbEditPage: React.FC = () => {
   const navigate = useNavigate();
   const { botId: paramsBotId } = useParams();
   const { getMyBot, registerBot, updateBot } = useBot();
-  const { availableTools } = useAgent();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -89,15 +85,6 @@ const BotKbEditPage: React.FC = () => {
   const [stopSequences, setStopSequences] = useState<string>(
     defaultGenerationConfig.stopSequences?.join(',') || ''
   );
-  const [tools, setTools] = useState<AgentTool[]>([]);
-  const [conversationQuickStarters, setConversationQuickStarters] = useState<
-    ConversationQuickStarter[]
-  >([
-    {
-      title: '',
-      example: '',
-    },
-  ]);
 
   const [knowledgeBaseId, setKnowledgeBaseId] = useState<string | null>(null); // Send null when creating a new bot
   const [embeddingsModel, setEmbeddingsModel] =
@@ -235,7 +222,6 @@ const BotKbEditPage: React.FC = () => {
             return;
           }
 
-          setTools(bot.agent.tools);
           setTitle(bot.title);
           setDescription(bot.description);
           setInstruction(bot.instruction);
@@ -268,16 +254,6 @@ const BotKbEditPage: React.FC = () => {
               bot.syncStatusReason
             );
           }
-          setConversationQuickStarters(
-            bot.conversationQuickStarters.length > 0
-              ? bot.conversationQuickStarters
-              : [
-                  {
-                    title: '',
-                    example: '',
-                  },
-                ]
-          );
           setKnowledgeBaseId(bot.bedrockKnowledgeBase.knowledgeBaseId);
           setEmbeddingsModel(bot.bedrockKnowledgeBase!.embeddingsModel);
           setChunkingStrategy(bot.bedrockKnowledgeBase!.chunkingStrategy);
@@ -425,45 +401,6 @@ const BotKbEditPage: React.FC = () => {
     [deletedFilenames, removeAddedFilenames, removeUnchangedFilenames]
   );
 
-  const addQuickStarter = useCallback(() => {
-    setConversationQuickStarters(
-      produce(conversationQuickStarters, (draft) => {
-        draft.push({
-          title: '',
-          example: '',
-        });
-      })
-    );
-  }, [conversationQuickStarters]);
-
-  const updateQuickStarter = useCallback(
-    (quickStart: ConversationQuickStarter, index: number) => {
-      setConversationQuickStarters(
-        produce(conversationQuickStarters, (draft) => {
-          draft[index] = quickStart;
-        })
-      );
-    },
-    [conversationQuickStarters]
-  );
-
-  const removeQuickStarter = useCallback(
-    (index: number) => {
-      setConversationQuickStarters(
-        produce(conversationQuickStarters, (draft) => {
-          draft.splice(index, 1);
-          if (draft.length === 0) {
-            draft.push({
-              title: '',
-              example: '',
-            });
-          }
-        })
-      );
-    },
-    [conversationQuickStarters]
-  );
-
   const onChangeEmbeddingsModel = useCallback(
     (value: EmbeddingsModel) => {
       setEmbeddingsModel(value);
@@ -587,21 +524,6 @@ const BotKbEditPage: React.FC = () => {
       return false;
     }
 
-    const isQsValid = conversationQuickStarters.every((rs, idx) => {
-      if ((!rs.title && !!rs.example) || (!!rs.title && !rs.example)) {
-        setErrorMessages(
-          `conversationQuickStarter${idx}`,
-          t('validation.quickStarter.message')
-        );
-        return false;
-      } else {
-        return true;
-      }
-    });
-    if (!isQsValid) {
-      return false;
-    }
-
     return (
       isValidGenerationConfigParam(maxTokens, 'maxTokens') &&
       isValidGenerationConfigParam(topK, 'topK') &&
@@ -613,7 +535,6 @@ const BotKbEditPage: React.FC = () => {
     s3Urls,
     stopSequences.length,
     searchParams.maxResults,
-    conversationQuickStarters,
     isValidGenerationConfigParam,
     maxTokens,
     topK,
@@ -633,9 +554,6 @@ const BotKbEditPage: React.FC = () => {
     }
     setIsLoading(true);
     registerBot({
-      agent: {
-        tools: tools.map(({ name }) => name),
-      },
       id: botId,
       title,
       description,
@@ -660,9 +578,6 @@ const BotKbEditPage: React.FC = () => {
         filenames: files.map((f) => f.filename),
       },
       displayRetrievedChunks,
-      conversationQuickStarters: conversationQuickStarters.filter(
-        (qs) => qs.title !== '' && qs.example !== ''
-      ),
       bedrockKnowledgeBase: {
         knowledgeBaseId,
         embeddingsModel,
@@ -683,7 +598,6 @@ const BotKbEditPage: React.FC = () => {
   }, [
     isValid,
     registerBot,
-    tools,
     botId,
     title,
     description,
@@ -698,7 +612,6 @@ const BotKbEditPage: React.FC = () => {
     s3Urls,
     files,
     displayRetrievedChunks,
-    conversationQuickStarters,
     navigate,
     knowledgeBaseId,
     embeddingsModel,
@@ -715,9 +628,6 @@ const BotKbEditPage: React.FC = () => {
     if (!isNewBot) {
       setIsLoading(true);
       updateBot(botId, {
-        agent: {
-          tools: tools.map(({ name }) => name),
-        },
         title,
         description,
         instruction,
@@ -743,9 +653,6 @@ const BotKbEditPage: React.FC = () => {
           unchangedFilenames,
         },
         displayRetrievedChunks,
-        conversationQuickStarters: conversationQuickStarters.filter(
-          (qs) => qs.title !== '' && qs.example !== ''
-        ),
         bedrockKnowledgeBase: {
           knowledgeBaseId,
           embeddingsModel,
@@ -770,7 +677,6 @@ const BotKbEditPage: React.FC = () => {
     isNewBot,
     updateBot,
     botId,
-    tools,
     title,
     description,
     instruction,
@@ -786,7 +692,6 @@ const BotKbEditPage: React.FC = () => {
     deletedFilenames,
     unchangedFilenames,
     displayRetrievedChunks,
-    conversationQuickStarters,
     navigate,
     knowledgeBaseId,
     embeddingsModel,
@@ -850,14 +755,6 @@ const BotKbEditPage: React.FC = () => {
                   onChange={setInstruction}
                 />
               </div>
-
-              <div className="mt-3" />
-              <AvailableTools
-                availableTools={availableTools}
-                tools={tools}
-                setTools={setTools}
-              />
-
               <div className="mt-3">
                 <div className="flex items-center gap-1">
                   <div className="text-lg font-bold">
@@ -970,80 +867,6 @@ const BotKbEditPage: React.FC = () => {
 
                 <div className="text-sm text-aws-font-color/50">
                   {t('bot.help.quickStarter.overview')}
-                </div>
-
-                <div className="mt-2">
-                  <div className="mt-2 flex w-full flex-col gap-1">
-                    {conversationQuickStarters.map(
-                      (conversationQuickStarter, idx) => (
-                        <div
-                          className="flex w-full flex-col gap-2 rounded border border-aws-font-color/50 p-2"
-                          key={idx}>
-                          <InputText
-                            className="w-full"
-                            placeholder={t(
-                              'bot.label.quickStarter.exampleTitle'
-                            )}
-                            disabled={isLoading}
-                            value={conversationQuickStarter.title}
-                            onChange={(s) => {
-                              updateQuickStarter(
-                                {
-                                  ...conversationQuickStarter,
-                                  title: s,
-                                },
-                                idx
-                              );
-                            }}
-                            errorMessage={
-                              errorMessages[`conversationQuickStarter${idx}`]
-                            }
-                          />
-
-                          <Textarea
-                            className="w-full"
-                            label={t('bot.label.quickStarter.example')}
-                            disabled={isLoading}
-                            rows={3}
-                            value={conversationQuickStarter.example}
-                            onChange={(s) => {
-                              updateQuickStarter(
-                                {
-                                  ...conversationQuickStarter,
-                                  example: s,
-                                },
-                                idx
-                              );
-                            }}
-                          />
-                          <div className="flex justify-end">
-                            <Button
-                              className="bg-red"
-                              disabled={
-                                (conversationQuickStarters.length === 1 &&
-                                  !conversationQuickStarters[0].title &&
-                                  !conversationQuickStarters[0].example) ||
-                                isLoading
-                              }
-                              icon={<PiTrash />}
-                              onClick={() => {
-                                removeQuickStarter(idx);
-                              }}>
-                              {t('button.delete')}
-                            </Button>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <Button
-                      outlined
-                      icon={<PiPlus />}
-                      onClick={addQuickStarter}>
-                      {t('button.add')}
-                    </Button>
-                  </div>
                 </div>
               </div>
 
