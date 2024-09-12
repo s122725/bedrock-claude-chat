@@ -117,10 +117,6 @@ export class UsageAnalysis extends Construct {
         type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
       },
       {
-        name: "PublicBotId",
-        type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
-      },
-      {
         name: "IsPinned",
         type: glue.Schema.struct([{ name: "BOOL", type: glue.Schema.BOOLEAN }]),
       },
@@ -150,14 +146,6 @@ export class UsageAnalysis extends Construct {
       },
       {
         name: "SyncStatusReason",
-        type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
-      },
-      {
-        name: "PublishedApiStackName",
-        type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
-      },
-      {
-        name: "PublishedApiDatetime",
         type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
       },
     ]);

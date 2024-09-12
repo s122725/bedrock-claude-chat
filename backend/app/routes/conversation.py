@@ -8,7 +8,6 @@ from app.repositories.conversation import (
 from app.repositories.models.conversation import FeedbackModel
 from app.routes.schemas.conversation import (
     ChatInput,
-    ChatOutput,
     Conversation,
     ConversationMetaOutput,
     FeedbackInput,
@@ -18,7 +17,6 @@ from app.routes.schemas.conversation import (
     RelatedDocumentsOutput,
 )
 from app.usecases.chat import (
-    chat,
     fetch_conversation,
     fetch_related_documents,
     propose_conversation_title,
@@ -33,15 +31,6 @@ router = APIRouter(tags=["conversation"])
 def health():
     """For health check"""
     return {"status": "ok"}
-
-
-@router.post("/conversation", response_model=ChatOutput)
-def post_message(request: Request, chat_input: ChatInput):
-    """Send chat message"""
-    current_user: User = request.state.current_user
-
-    output = chat(user_id=current_user.id, chat_input=chat_input)
-    return output
 
 
 @router.post(

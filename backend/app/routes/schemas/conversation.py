@@ -115,13 +115,6 @@ class ChatInput(BaseSchema):
     continue_generate: bool = Field(False)
 
 
-class ChatOutput(BaseSchema):
-    conversation_id: str
-    message: MessageOutput
-    bot_id: str | None
-    create_time: float
-
-
 class RelatedDocumentsOutput(BaseSchema):
     chunk_body: str
     content_type: Literal["s3", "url"]

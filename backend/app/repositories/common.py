@@ -55,20 +55,6 @@ def _get_aws_resource(service_name, user_id=None):
     """Get AWS resource with optional row-level access control for DynamoDB.
     Ref: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_dynamodb_items.html
     """
-    logger.info(f"Storing conversation: {REGION}, {ACCOUNT}, {TABLE_NAME}")
-    
-    if "AWS_EXECUTION_ENV" not in os.environ:
-        if DDB_ENDPOINT_URL:
-            return boto3.resource(
-                service_name,
-                endpoint_url=DDB_ENDPOINT_URL,
-                aws_access_key_id="key",
-                aws_secret_access_key="key",
-                region_name=REGION,
-            )
-        else:
-            return boto3.resource(service_name, region_name=REGION)
-
     
     policy_document = {
         "Statement": [

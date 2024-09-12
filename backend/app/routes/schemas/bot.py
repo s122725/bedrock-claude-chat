@@ -210,10 +210,6 @@ class BotSummaryOutput(BaseSchema):
     )
 
 
-class BotSwitchVisibilityInput(BaseSchema):
-    to_public: bool
-
-
 class BotPinnedInput(BaseSchema):
     pinned: bool
 

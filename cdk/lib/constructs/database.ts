@@ -37,13 +37,6 @@ export class Database extends Construct {
       indexName: "SKIndex",
       partitionKey: { name: "SK", type: AttributeType.STRING },
     });
-    table.addGlobalSecondaryIndex({
-      // Used to fetch public bots
-      indexName: "PublicBotIdIndex",
-      partitionKey: { name: "PublicBotId", type: AttributeType.STRING },
-      // TODO: add `nonKeyAttributes` for efficiency
-      // For now we project all attributes to keep future compatibility
-    });
     table.addLocalSecondaryIndex({
       // Used to fetch all bots for a user. Sorted by bot used time
       indexName: "LastBotUsedIndex",

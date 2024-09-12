@@ -4,7 +4,6 @@ from app.dependencies import check_creating_bot_allowed
 from app.repositories.custom_bot import (
     find_private_bot_by_id,
     find_private_bots_by_user_id,
-    update_bot_visibility,
 )
 from app.routes.schemas.bot import (
     BedrockKnowledgeBaseOutput,
@@ -15,7 +14,6 @@ from app.routes.schemas.bot import (
     BotPinnedInput,
     BotPresignedUrlOutput,
     BotSummaryOutput,
-    BotSwitchVisibilityInput,
     ConversationQuickStarter,
     EmbeddingParams,
     GenerationParams,
@@ -61,15 +59,6 @@ def patch_bot_pin_status(request: Request, bot_id: str, pinned_input: BotPinnedI
     """Modify owned bot pin status."""
     current_user: User = request.state.current_user
     return modify_pin_status(current_user.id, bot_id, pinned=pinned_input.pinned)
-
-
-@router.patch("/bot/{bot_id}/visibility")
-def patch_bot_visibility(
-    request: Request, bot_id: str, visibility_input: BotSwitchVisibilityInput
-):
-    """Switch bot visibility"""
-    current_user: User = request.state.current_user
-    update_bot_visibility(current_user.id, bot_id, visibility_input.to_public)
 
 
 @router.get("/bot", response_model=list[BotMetaOutput])

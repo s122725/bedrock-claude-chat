@@ -15,7 +15,6 @@ from app.repositories.custom_bot import (
     delete_bot_by_id,
     find_alias_by_id,
     find_private_bot_by_id,
-    find_public_bot_by_id,
     store_alias,
     store_bot,
     update_alias_last_used_time,
@@ -429,90 +428,22 @@ def fetch_all_bots_by_user_id(
 
     bots = []
     for item in response["Items"]:
-        if "OriginalBotId" in item:
-            # Fetch original bots of alias bots
-            is_original_available = True
-            try:
-                bot = find_public_bot_by_id(item["OriginalBotId"])
-                logger.info(f"Found original bot: {bot.id}")
-                meta = BotMeta(
-                    id=bot.id,
-                    title=bot.title,
-                    create_time=float(bot.create_time),
-                    last_used_time=float(bot.last_used_time),
-                    is_pinned=item["IsPinned"],
-                    owned=False,
-                    available=True,
-                    description=bot.description,
-                    sync_status=bot.sync_status,
-                    has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base(),
-                )
-            except RecordNotFoundError:
-                # Original bot is removed
-                is_original_available = False
-                logger.info(f"Original bot {item['OriginalBotId']} has been removed")
-                meta = BotMeta(
-                    id=item["OriginalBotId"],
-                    title=item["Title"],
-                    create_time=float(item["CreateTime"]),
-                    last_used_time=float(item["LastBotUsed"]),
-                    is_pinned=item["IsPinned"],
-                    owned=False,
-                    # NOTE: Original bot is removed
-                    available=False,
-                    description="This item is no longer available",
-                    sync_status="ORIGINAL_NOT_FOUND",
-                    has_bedrock_knowledge_base=False,
-                )
-
-            if is_original_available and (
-                bot.title != item["Title"]
-                or bot.description != item["Description"]
-                or bot.sync_status != item["SyncStatus"]
-                or bot.has_knowledge() != item["HasKnowledge"]
-                or bot.conversation_quick_starters
-                != [
-                    ConversationQuickStarter(**starter)
-                    for starter in item.get("ConversationQuickStarters", [])
-                ]
-            ):
-                # Update alias to the latest original bot
-                store_alias(
-                    user_id,
-                    BotAliasModel(
-                        id=decompose_bot_alias_id(item["SK"]),
-                        # Update title and description
-                        title=bot.title,
-                        description=bot.description,
-                        original_bot_id=item["OriginalBotId"],
-                        create_time=float(item["CreateTime"]),
-                        last_used_time=float(item["LastBotUsed"]),
-                        is_pinned=item["IsPinned"],
-                        sync_status=bot.sync_status,
-                        has_knowledge=bot.has_knowledge(),
-                        conversation_quick_starters=bot.conversation_quick_starters,
-                    ),
-                )
-
-            bots.append(meta)
-        else:
-            # Private bots
-            bots.append(
-                BotMeta(
-                    id=decompose_bot_id(item["SK"]),
-                    title=item["Title"],
-                    create_time=float(item["CreateTime"]),
-                    last_used_time=float(item["LastBotUsed"]),
-                    is_pinned=item["IsPinned"],
-                    owned=True,
-                    available=True,
-                    description=item["Description"],
-                    sync_status=item["SyncStatus"],
-                    has_bedrock_knowledge_base=(
-                        True if item.get("BedrockKnowledgeBase", None) else False
-                    ),
-                )
+        bots.append(
+            BotMeta(
+                id=decompose_bot_id(item["SK"]),
+                title=item["Title"],
+                create_time=float(item["CreateTime"]),
+                last_used_time=float(item["LastBotUsed"]),
+                is_pinned=item["IsPinned"],
+                owned=True,
+                available=True,
+                description=item["Description"],
+                sync_status=item["SyncStatus"],
+                has_bedrock_knowledge_base=(
+                    True if item.get("BedrockKnowledgeBase", None) else False
+                ),
             )
+        )
 
     return bots
 
@@ -566,54 +497,6 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
                     for starter in alias.conversation_quick_starters
                 ]
             ),
-            owned_and_has_bedrock_knowledge_base=False,
-        )
-    except RecordNotFoundError:
-        pass
-
-    try:
-        # NOTE: At the first time using shared bot, alias is not created yet.
-        bot = find_public_bot_by_id(bot_id)
-        current_time = get_current_time()
-        # Store alias when opened shared bot page
-        store_alias(
-            user_id,
-            BotAliasModel(
-                id=bot.id,
-                title=bot.title,
-                description=bot.description,
-                original_bot_id=bot_id,
-                create_time=current_time,
-                last_used_time=current_time,
-                is_pinned=False,
-                sync_status=bot.sync_status,
-                has_knowledge=bot.has_knowledge(),
-                conversation_quick_starters=[
-                    ConversationQuickStarterModel(
-                        title=starter.title,
-                        example=starter.example,
-                    )
-                    for starter in bot.conversation_quick_starters
-                ],
-            ),
-        )
-        return BotSummaryOutput(
-            id=bot_id,
-            title=bot.title,
-            description=bot.description,
-            create_time=bot.create_time,
-            last_used_time=bot.last_used_time,
-            is_pinned=False,  # NOTE: Shared bot is not pinned by default.
-            owned=False,
-            sync_status=bot.sync_status,
-            has_knowledge=bot.has_knowledge(),
-            conversation_quick_starters=[
-                ConversationQuickStarter(
-                    title=starter.title,
-                    example=starter.example,
-                )
-                for starter in bot.conversation_quick_starters
-            ],
             owned_and_has_bedrock_knowledge_base=False,
         )
     except RecordNotFoundError:

@@ -36,10 +36,6 @@ def convert_dict_keys_to_camel_case(snake_dict):
     return camel_dict
 
 
-def is_running_on_lambda():
-    return "AWS_EXECUTION_ENV" in os.environ
-
-
 def get_bedrock_client(region=BEDROCK_REGION):
     client = boto3.client("bedrock-runtime", region)
     return client

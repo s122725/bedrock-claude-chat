@@ -13,7 +13,6 @@ from app.routes.admin import router as admin_router
 from app.routes.bot import router as bot_router
 from app.routes.conversation import router as conversation_router
 from app.user import User
-from app.utils import is_running_on_lambda
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -71,16 +70,13 @@ app.add_exception_handler(Exception, error_handler_factory(500))
 
 @app.middleware("http")
 def add_current_user_to_request(request: Request, call_next: ASGIApp):
-    if is_running_on_lambda():
-        authorization = request.headers.get("Authorization")
-        if authorization:
-            token_str = authorization.split(" ")[1]
-            token = HTTPAuthorizationCredentials(
-                scheme="Bearer", credentials=token_str
-            )
-            request.state.current_user = get_current_user(token)
-    else:
-        request.state.current_user = User(id="44488dfc-9091-703a-3698-26734effb926", name="test_user", groups=[])
+    authorization = request.headers.get("Authorization")
+    if authorization:
+        token_str = authorization.split(" ")[1]
+        token = HTTPAuthorizationCredentials(
+            scheme="Bearer", credentials=token_str
+        )
+        request.state.current_user = get_current_user(token)
 
     response = call_next(request)  # type: ignore
     return response
