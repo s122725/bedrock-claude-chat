@@ -36,6 +36,7 @@ const THEME = {
 };
 
 type ToolCardProps = {
+  className?: string;
   toolUseId: string;
   name: string;
   status: AgentToolState;
@@ -44,6 +45,7 @@ type ToolCardProps = {
 };
 
 const ToolCard: React.FC<ToolCardProps> = ({
+  className,
   toolUseId,
   name,
   status,
@@ -90,7 +92,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
   }
 
   return (
-    <div className="relative border border-b-0 border-light-gray bg-aws-paper text-aws-font-color/80 last:border-b">
+    <div className={twMerge('relative', className)}>
       <div
         className="flex cursor-pointer items-center justify-between p-2 hover:bg-light-gray"
         onClick={handleToggleExpand}>

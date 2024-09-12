@@ -12,9 +12,9 @@ type AgentToolListProps = {
 const AgentToolList: React.FC<AgentToolListProps> = ({ tools, isRunning }) => {
   const { t } = useTranslation();
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col rounded-lg bg-aws-paper p-4 shadow">
+    <div className="mx-auto flex w-full max-w-5xl flex-col rounded border border-gray bg-aws-paper text-aws-font-color/80">
       {isRunning && (
-        <div className="mb-2 flex items-center text-aws-font-color">
+        <div className="flex items-center border-b border-gray p-2 last:border-b-0">
           <PiCircleNotchBold className="mr-2 animate-spin" />
           {t('agent.progress.label')}
         </div>
@@ -22,6 +22,7 @@ const AgentToolList: React.FC<AgentToolListProps> = ({ tools, isRunning }) => {
 
       {Object.keys(tools).map((toolUseId) => (
         <ToolCard
+          className=" border-b border-gray last:border-b-0"
           key={toolUseId}
           toolUseId={toolUseId}
           name={tools[toolUseId].name}
