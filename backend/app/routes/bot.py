@@ -15,7 +15,6 @@ from app.routes.schemas.bot import (
     BotPresignedUrlOutput,
     BotSummaryOutput,
     ConversationQuickStarter,
-    EmbeddingParams,
     GenerationParams,
     Knowledge,
     SearchParams,
@@ -121,11 +120,6 @@ def get_private_bot(request: Request, bot_id: str):
         last_used_time=bot.last_used_time,
         is_pinned=bot.is_pinned,
         owned=True,
-        embedding_params=EmbeddingParams(
-            chunk_size=bot.embedding_params.chunk_size,
-            chunk_overlap=bot.embedding_params.chunk_overlap,
-            enable_partition_pdf=bot.embedding_params.enable_partition_pdf,
-        ),
         knowledge=Knowledge(
             filenames=bot.knowledge.filenames,
             s3_urls=bot.knowledge.s3_urls,

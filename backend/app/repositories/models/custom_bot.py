@@ -4,12 +4,6 @@ from app.routes.schemas.bot import type_sync_status
 from pydantic import BaseModel
 
 
-class EmbeddingParamsModel(BaseModel):
-    chunk_size: int
-    chunk_overlap: int
-    enable_partition_pdf: bool
-
-
 class KnowledgeModel(BaseModel):
     filenames: list[str]
     s3_urls: list[str]
@@ -38,11 +32,8 @@ class BotModel(BaseModel):
     instruction: str
     create_time: float
     last_used_time: float
-    # This can be used as the bot is public or not. Also used for GSI PK
-    public_bot_id: str | None
     owner_user_id: str
     is_pinned: bool
-    embedding_params: EmbeddingParamsModel
     generation_params: GenerationParamsModel
     search_params: SearchParamsModel
     knowledge: KnowledgeModel

@@ -23,13 +23,6 @@ type_sync_status = Literal[
     "ORIGINAL_NOT_FOUND",
 ]
 
-
-class EmbeddingParams(BaseSchema):
-    chunk_size: int
-    chunk_overlap: int
-    enable_partition_pdf: bool
-
-
 class GenerationParams(BaseSchema):
     max_tokens: int
     top_k: int
@@ -84,7 +77,6 @@ class BotInput(BaseSchema):
     title: str
     instruction: str
     description: str | None
-    embedding_params: EmbeddingParams | None
     generation_params: GenerationParams | None
     search_params: SearchParams | None
     knowledge: Knowledge | None
@@ -97,7 +89,6 @@ class BotModifyInput(BaseSchema):
     title: str
     instruction: str
     description: str | None
-    embedding_params: EmbeddingParams | None
     generation_params: GenerationParams | None
     search_params: SearchParams | None
     knowledge: KnowledgeDiffInput | None
@@ -124,22 +115,6 @@ class BotModifyInput(BaseSchema):
             else:
                 return True
 
-        if (
-            self.embedding_params is not None
-            and current_bot_model.embedding_params is not None
-        ):
-            if (
-                self.embedding_params.chunk_size
-                == current_bot_model.embedding_params.chunk_size
-                and self.embedding_params.chunk_overlap
-                == current_bot_model.embedding_params.chunk_overlap
-                and self.embedding_params.enable_partition_pdf
-                == current_bot_model.embedding_params.enable_partition_pdf
-            ):
-                pass
-            else:
-                return True
-
         return False
 
 
@@ -148,7 +123,6 @@ class BotModifyOutput(BaseSchema):
     title: str
     instruction: str
     description: str
-    embedding_params: EmbeddingParams
     generation_params: GenerationParams
     search_params: SearchParams
     knowledge: Knowledge
@@ -166,7 +140,6 @@ class BotOutput(BaseSchema):
     is_pinned: bool
     # Whether the bot is owned by the user
     owned: bool
-    embedding_params: EmbeddingParams
     generation_params: GenerationParams
     search_params: SearchParams
     knowledge: Knowledge

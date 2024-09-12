@@ -1,13 +1,11 @@
 import logging
 import os
 
-from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
 from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG, DEFAULT_SEARCH_CONFIG
 from app.repositories.common import (
     RecordNotFoundError,
     _get_table_client,
-    decompose_bot_alias_id,
     decompose_bot_id,
 )
 from app.repositories.custom_bot import (
@@ -15,7 +13,6 @@ from app.repositories.custom_bot import (
     delete_bot_by_id,
     find_alias_by_id,
     find_private_bot_by_id,
-    store_alias,
     store_bot,
     update_alias_last_used_time,
     update_alias_pin_status,
@@ -24,11 +21,9 @@ from app.repositories.custom_bot import (
     update_bot_pin_status,
 )
 from app.repositories.models.custom_bot import (
-    BotAliasModel,
     BotMeta,
     BotModel,
     ConversationQuickStarterModel,
-    EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
@@ -41,7 +36,6 @@ from app.routes.schemas.bot import (
     BotOutput,
     BotSummaryOutput,
     ConversationQuickStarter,
-    EmbeddingParams,
     GenerationParams,
     Knowledge,
     SearchParams,
@@ -98,6 +92,7 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         len(bot_input.knowledge.filenames) > 0
         or len(bot_input.knowledge.s3_urls) > 0
     )
+    # TODO: as-is 기준 event bridge 태우는 로직, QUEUED 상태는 제거하고 여기서 codebuild 호출하도록 수정 필요 or 화면에서 선택한 kb id 맵핑하는 작업 필요
     sync_status: type_sync_status = "QUEUED" if has_knowledge else "SUCCEEDED"
 
     filenames = []
@@ -114,24 +109,6 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             DOCUMENT_BUCKET, compose_upload_temp_s3_prefix(user_id, bot_input.id)
         )
         filenames = bot_input.knowledge.filenames
-
-    chunk_size = (
-        bot_input.embedding_params.chunk_size
-        if bot_input.embedding_params
-        else DEFAULT_EMBEDDING_CONFIG["chunk_size"]
-    )
-
-    chunk_overlap = (
-        bot_input.embedding_params.chunk_overlap
-        if bot_input.embedding_params
-        else DEFAULT_EMBEDDING_CONFIG["chunk_overlap"]
-    )
-
-    enable_partition_pdf = (
-        bot_input.embedding_params.enable_partition_pdf
-        if bot_input.embedding_params
-        else DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"]
-    )
 
     generation_params = (
         bot_input.generation_params.model_dump()
@@ -154,14 +131,8 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             instruction=bot_input.instruction,
             create_time=current_time,
             last_used_time=current_time,
-            public_bot_id=None,
             is_pinned=False,
             owner_user_id=user_id,  # Owner is the creator
-            embedding_params=EmbeddingParamsModel(
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-                enable_partition_pdf=enable_partition_pdf,
-            ),
             generation_params=GenerationParamsModel(**generation_params),  # type: ignore
             search_params=SearchParamsModel(**search_params),
             knowledge=KnowledgeModel(
@@ -201,11 +172,6 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         last_used_time=current_time,
         is_pinned=False,
         owned=True,
-        embedding_params=EmbeddingParams(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            enable_partition_pdf=enable_partition_pdf,
-        ),
         generation_params=GenerationParams(**generation_params),
         search_params=SearchParams(**search_params),
         knowledge=Knowledge(
@@ -265,24 +231,6 @@ def modify_owned_bot(
             + modify_input.knowledge.unchanged_filenames
         )
 
-    chunk_size = (
-        modify_input.embedding_params.chunk_size
-        if modify_input.embedding_params
-        else DEFAULT_EMBEDDING_CONFIG["chunk_size"]
-    )
-
-    chunk_overlap = (
-        modify_input.embedding_params.chunk_overlap
-        if modify_input.embedding_params
-        else DEFAULT_EMBEDDING_CONFIG["chunk_overlap"]
-    )
-
-    enable_partition_pdf = (
-        modify_input.embedding_params.enable_partition_pdf
-        if modify_input.embedding_params
-        else DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"]
-    )
-
     generation_params = (
         modify_input.generation_params.model_dump()
         if modify_input.generation_params
@@ -307,11 +255,6 @@ def modify_owned_bot(
         title=modify_input.title,
         instruction=modify_input.instruction,
         description=modify_input.description if modify_input.description else "",
-        embedding_params=EmbeddingParamsModel(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            enable_partition_pdf=enable_partition_pdf,
-        ),
         generation_params=GenerationParamsModel(**generation_params),
         search_params=SearchParamsModel(**search_params),
         knowledge=KnowledgeModel(
@@ -346,11 +289,6 @@ def modify_owned_bot(
         title=modify_input.title,
         instruction=modify_input.instruction,
         description=modify_input.description if modify_input.description else "",
-        embedding_params=EmbeddingParams(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            enable_partition_pdf=enable_partition_pdf,
-        ),
         generation_params=GenerationParams(**generation_params),
         search_params=SearchParams(**search_params),
         knowledge=Knowledge(
@@ -386,11 +324,6 @@ def fetch_bot(user_id: str, bot_id: str) -> tuple[bool, BotModel]:
     """
     try:
         return True, find_private_bot_by_id(user_id, bot_id)
-    except RecordNotFoundError:
-        pass  #
-
-    try:
-        return False, find_public_bot_by_id(bot_id)
     except RecordNotFoundError:
         raise RecordNotFoundError(
             f"Bot with ID {bot_id} not found in both private (for user {user_id}) and public items."

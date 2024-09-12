@@ -25,7 +25,6 @@ from app.repositories.models.custom_bot import (
     BotMetaWithStackInfo,
     BotModel,
     ConversationQuickStarterModel,
-    EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
@@ -62,7 +61,6 @@ def store_bot(user_id: str, custom_bot: BotModel):
         "CreateTime": decimal(custom_bot.create_time),
         "LastBotUsed": decimal(custom_bot.last_used_time),
         "IsPinned": custom_bot.is_pinned,
-        "EmbeddingParams": custom_bot.embedding_params.model_dump(),
         "GenerationParams": custom_bot.generation_params.model_dump(),
         "SearchParams": custom_bot.search_params.model_dump(),
         "Knowledge": custom_bot.knowledge.model_dump(),
@@ -87,7 +85,6 @@ def update_bot(
     title: str,
     description: str,
     instruction: str,
-    embedding_params: EmbeddingParamsModel,
     generation_params: GenerationParamsModel,
     search_params: SearchParamsModel,
     knowledge: KnowledgeModel,
@@ -107,7 +104,6 @@ def update_bot(
         "SET Title = :title, "
         "Description = :description, "
         "Instruction = :instruction, "
-        "EmbeddingParams = :embedding_params, "
         "Knowledge = :knowledge, "
         "SyncStatus = :sync_status, "
         "SyncStatusReason = :sync_status_reason, "
@@ -122,7 +118,6 @@ def update_bot(
         ":description": description,
         ":instruction": instruction,
         ":knowledge": knowledge.model_dump(),
-        ":embedding_params": embedding_params.model_dump(),
         ":sync_status": sync_status,
         ":sync_status_reason": sync_status_reason,
         ":display_retrieved_chunks": display_retrieved_chunks,
@@ -384,26 +379,6 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
         last_used_time=float(item["LastBotUsed"]),
         is_pinned=item["IsPinned"],
         owner_user_id=user_id,
-        embedding_params=EmbeddingParamsModel(
-            # For backward compatibility
-            chunk_size=(
-                item["EmbeddingParams"]["chunk_size"]
-                if "EmbeddingParams" in item and "chunk_size" in item["EmbeddingParams"]
-                else 1000
-            ),
-            chunk_overlap=(
-                item["EmbeddingParams"]["chunk_overlap"]
-                if "EmbeddingParams" in item
-                and "chunk_overlap" in item["EmbeddingParams"]
-                else 200
-            ),
-            enable_partition_pdf=(
-                item["EmbeddingParams"]["enable_partition_pdf"]
-                if "EmbeddingParams" in item
-                and "enable_partition_pdf" in item["EmbeddingParams"]
-                else False
-            ),
-        ),
         generation_params=GenerationParamsModel(
             **(
                 item["GenerationParams"]
