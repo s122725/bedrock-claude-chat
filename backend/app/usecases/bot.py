@@ -2,7 +2,7 @@ import logging
 import os
 
 from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
-from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG, DEFAULT_SEARCH_CONFIG
+from app.config import DEFAULT_SEARCH_CONFIG
 from app.repositories.common import (
     RecordNotFoundError,
     _get_table_client,
@@ -58,13 +58,8 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 DOCUMENT_BUCKET = os.environ.get("DOCUMENT_BUCKET", "bedrock-documents")
-ENABLE_MISTRAL = os.environ.get("ENABLE_MISTRAL", "") == "true"
 
-DEFAULT_GENERATION_CONFIG = (
-    DEFAULT_MISTRAL_GENERATION_CONFIG
-    if ENABLE_MISTRAL
-    else DEFAULT_CLAUDE_GENERATION_CONFIG
-)
+DEFAULT_GENERATION_CONFIG = DEFAULT_CLAUDE_GENERATION_CONFIG
 
 
 def _update_s3_documents_by_diff(

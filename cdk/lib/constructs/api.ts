@@ -33,7 +33,6 @@ export interface ApiProps {
   readonly largeMessageBucket: IBucket;
   readonly bedrockKnowledgeBaseProject: codebuild.IProject;
   readonly usageAnalysis?: UsageAnalysis;
-  readonly enableMistral: boolean;
 }
 
 export class Api extends Construct {
@@ -199,7 +198,6 @@ export class Api extends Construct {
           props.usageAnalysis?.ddbExportTable.tableName || "",
         USAGE_ANALYSIS_WORKGROUP: props.usageAnalysis?.workgroupName || "",
         USAGE_ANALYSIS_OUTPUT_LOCATION: usageAnalysisOutputLocation,
-        ENABLE_MISTRAL: props.enableMistral.toString(),
       },
       role: handlerRole,
     });

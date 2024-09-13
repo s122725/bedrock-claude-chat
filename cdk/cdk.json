@@ -51,7 +51,6 @@
     "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": true,
     "@aws-cdk/core:includePrefixInUniqueNameGeneration": true,
     "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": true,
-    "enableMistral": false,
     "bedrockRegion": "us-east-1",
     "identityProviders": [],
     "userPoolDomainPrefix": "",

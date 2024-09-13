@@ -25,7 +25,6 @@ export interface BedrockChatStackProps extends StackProps {
   readonly userPoolDomainPrefix: string;
   readonly allowedSignUpEmailDomains: string[];
   readonly autoJoinUserGroups: string[];
-  readonly enableMistral: boolean;
   readonly enableKB: boolean;
   readonly selfSignUpEnabled: boolean;
 }
@@ -98,7 +97,6 @@ export class BedrockChatStack extends cdk.Stack {
     );
 
     const frontend = new Frontend(this, "Frontend", {
-      enableMistral: props.enableMistral,
       enableKB: props.enableKB,
     });
 
@@ -139,7 +137,6 @@ export class BedrockChatStack extends cdk.Stack {
       bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
       usageAnalysis,
       largeMessageBucket,
-      enableMistral: props.enableMistral,
     });
     documentBucket.grantReadWrite(backendApi.handler);
 
@@ -152,13 +149,11 @@ export class BedrockChatStack extends cdk.Stack {
       bedrockRegion: props.bedrockRegion,
       largeMessageBucket,
       documentBucket,
-      enableMistral: props.enableMistral,
     });
     frontend.buildViteApp({
       backendApiEndpoint: backendApi.api.apiEndpoint,
       webSocketApiEndpoint: websocket.apiEndpoint,
       userPoolDomainPrefix: props.userPoolDomainPrefix,
-      enableMistral: props.enableMistral,
       enableKB: props.enableKB,
       auth,
       idp,

@@ -8,7 +8,6 @@ from typing import TypedDict, no_type_check
 
 from app.config import BEDROCK_PRICING
 from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
-from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.routes.schemas.conversation import type_model_name
@@ -17,12 +16,7 @@ from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client
 logger = logging.getLogger(__name__)
 
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
-ENABLE_MISTRAL = os.environ.get("ENABLE_MISTRAL", "") == "true"
-DEFAULT_GENERATION_CONFIG = (
-    DEFAULT_MISTRAL_GENERATION_CONFIG
-    if ENABLE_MISTRAL
-    else DEFAULT_CLAUDE_GENERATION_CONFIG
-)
+DEFAULT_GENERATION_CONFIG = DEFAULT_CLAUDE_GENERATION_CONFIG
 
 client = get_bedrock_client()
 
@@ -223,10 +217,4 @@ def get_model_id(model: type_model_name) -> str:
         return "anthropic.claude-3-opus-20240229-v1:0"
     elif model == "claude-v3.5-sonnet":
         return "anthropic.claude-3-5-sonnet-20240620-v1:0"
-    elif model == "mistral-7b-instruct":
-        return "mistral.mistral-7b-instruct-v0:2"
-    elif model == "mixtral-8x7b-instruct":
-        return "mistral.mixtral-8x7b-instruct-v0:1"
-    elif model == "mistral-large":
-        return "mistral.mistral-large-2402-v1:0"
 

@@ -19,7 +19,6 @@ const USER_POOL_DOMAIN_PREFIX: string = app.node.tryGetContext(
 const AUTO_JOIN_USER_GROUPS: string[] =
   app.node.tryGetContext("autoJoinUserGroups");
 
-const ENABLE_MISTRAL: boolean = app.node.tryGetContext("enableMistral");
 const SELF_SIGN_UP_ENABLED: boolean =
   app.node.tryGetContext("selfSignUpEnabled");
 const ENABLE_KB: boolean = app.node.tryGetContext(
@@ -36,7 +35,6 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   userPoolDomainPrefix: USER_POOL_DOMAIN_PREFIX,
   allowedSignUpEmailDomains: ALLOWED_SIGN_UP_EMAIL_DOMAINS,
   autoJoinUserGroups: AUTO_JOIN_USER_GROUPS,
-  enableMistral: ENABLE_MISTRAL,
   enableKB: ENABLE_KB,
   selfSignUpEnabled: SELF_SIGN_UP_ENABLED,
 });
