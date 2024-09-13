@@ -16,17 +16,3 @@ class UsagePerUserOutput(BaseSchema):
     id: str = Field(..., description="user_id")
     email: str
     total_price: float
-
-
-class PublicBotOutput(BaseSchema):
-    id: str
-    title: str
-    instruction: str
-    description: str
-    create_time: float
-    last_used_time: float
-    owner_user_id: str
-    knowledge: Knowledge
-    sync_status: type_sync_status
-    sync_status_reason: str
-    sync_last_exec_id: str

@@ -303,9 +303,6 @@ def find_private_bots_by_user_id(
             is_pinned=item["IsPinned"],
             description=item["Description"],
             sync_status=item["SyncStatus"],
-            has_bedrock_knowledge_base=(
-                True if item.get("BedrockKnowledgeBase", None) else False
-            ),
         )
         for item in response["Items"]
     ]
@@ -327,9 +324,6 @@ def find_private_bots_by_user_id(
                     is_pinned=item["IsPinned"],
                     description=item["Description"],
                     sync_status=item["SyncStatus"],
-                    has_bedrock_knowledge_base=(
-                        True if item.get("BedrockKnowledgeBase", None) else False
-                    ),
                 )
                 for item in response["Items"]
             ]
@@ -504,9 +498,6 @@ async def find_public_bots_by_ids(bot_ids: list[str]) -> list[BotMetaWithStackIn
                     is_pinned=item["IsPinned"],
                     description=item["Description"],
                     sync_status=item["SyncStatus"],
-                    has_bedrock_knowledge_base=(
-                        True if item.get("BedrockKnowledgeBase", None) else False
-                    ),
                 )
             )
 

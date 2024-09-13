@@ -50,10 +50,6 @@ class BotModel(BaseModel):
             or len(self.knowledge.s3_urls) > 0
         )
 
-    def has_bedrock_knowledge_base(self) -> bool:
-        return self.bedrock_knowledge_base is not None
-
-
 class BotAliasModel(BaseModel):
     id: str
     title: str

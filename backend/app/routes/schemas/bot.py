@@ -163,7 +163,6 @@ class BotMetaOutput(BaseSchema):
     # This can be `False` if the bot is not owned by the user and original bot is removed.
     available: bool
     sync_status: type_sync_status
-    has_bedrock_knowledge_base: bool
 
 
 class BotSummaryOutput(BaseSchema):

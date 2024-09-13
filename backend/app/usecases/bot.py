@@ -153,8 +153,6 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
                 BedrockKnowledgeBaseModel(
                     **(bot_input.bedrock_knowledge_base.model_dump())
                 )
-                if bot_input.bedrock_knowledge_base
-                else None
             ),
         ),
     )
@@ -367,9 +365,6 @@ def fetch_all_bots_by_user_id(
                 available=True,
                 description=item["Description"],
                 sync_status=item["SyncStatus"],
-                has_bedrock_knowledge_base=(
-                    True if item.get("BedrockKnowledgeBase", None) else False
-                ),
             )
         )
 
