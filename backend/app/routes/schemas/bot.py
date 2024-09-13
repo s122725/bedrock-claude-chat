@@ -67,11 +67,6 @@ class KnowledgeDiffInput(BaseSchema):
     unchanged_filenames: list[str]
 
 
-class ConversationQuickStarter(BaseSchema):
-    title: str
-    example: str
-
-
 class BotInput(BaseSchema):
     id: str
     title: str
@@ -81,7 +76,6 @@ class BotInput(BaseSchema):
     search_params: SearchParams | None
     knowledge: Knowledge | None
     display_retrieved_chunks: bool
-    conversation_quick_starters: list[ConversationQuickStarter] | None
     bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
 
 
@@ -93,7 +87,6 @@ class BotModifyInput(BaseSchema):
     search_params: SearchParams | None
     knowledge: KnowledgeDiffInput | None
     display_retrieved_chunks: bool
-    conversation_quick_starters: list[ConversationQuickStarter] | None
     bedrock_knowledge_base: BedrockKnowledgeBaseInput | None = None
 
     def has_update_files(self) -> bool:
@@ -126,7 +119,6 @@ class BotModifyOutput(BaseSchema):
     generation_params: GenerationParams
     search_params: SearchParams
     knowledge: Knowledge
-    conversation_quick_starters: list[ConversationQuickStarter]
     bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None
 
 
@@ -147,7 +139,6 @@ class BotOutput(BaseSchema):
     sync_status_reason: str
     sync_last_exec_id: str
     display_retrieved_chunks: bool
-    conversation_quick_starters: list[ConversationQuickStarter]
     bedrock_knowledge_base: BedrockKnowledgeBaseOutput | None
 
 
@@ -175,7 +166,6 @@ class BotSummaryOutput(BaseSchema):
     owned: bool
     sync_status: type_sync_status
     has_knowledge: bool
-    conversation_quick_starters: list[ConversationQuickStarter]
     owned_and_has_bedrock_knowledge_base: bool = Field(
         ...,
         description="Whether the bot has Bedrock KnowledgeBase attributes. Note that if bot alias, always false.",

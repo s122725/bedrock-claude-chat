@@ -23,7 +23,6 @@ from app.repositories.custom_bot import (
 from app.repositories.models.custom_bot import (
     BotMeta,
     BotModel,
-    ConversationQuickStarterModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
@@ -35,7 +34,6 @@ from app.routes.schemas.bot import (
     BotModifyOutput,
     BotOutput,
     BotSummaryOutput,
-    ConversationQuickStarter,
     GenerationParams,
     Knowledge,
     SearchParams,
@@ -53,7 +51,6 @@ from app.utils import (
     move_file_in_s3,
 )
 from boto3.dynamodb.conditions import Attr, Key
-from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
@@ -138,17 +135,6 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
             sync_status_reason="",
             sync_last_exec_id="",
             display_retrieved_chunks=bot_input.display_retrieved_chunks,
-            conversation_quick_starters=(
-                []
-                if bot_input.conversation_quick_starters is None
-                else [
-                    ConversationQuickStarterModel(
-                        title=starter.title,
-                        example=starter.example,
-                    )
-                    for starter in bot_input.conversation_quick_starters
-                ]
-            ),
             bedrock_knowledge_base=(
                 BedrockKnowledgeBaseModel(
                     **(bot_input.bedrock_knowledge_base.model_dump())
@@ -175,17 +161,6 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         sync_status_reason="",
         sync_last_exec_id="",
         display_retrieved_chunks=bot_input.display_retrieved_chunks,
-        conversation_quick_starters=(
-            []
-            if bot_input.conversation_quick_starters is None
-            else [
-                ConversationQuickStarter(
-                    title=starter.title,
-                    example=starter.example,
-                )
-                for starter in bot_input.conversation_quick_starters
-            ]
-        ),
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseOutput(
                 **(bot_input.bedrock_knowledge_base.model_dump())
@@ -257,17 +232,6 @@ def modify_owned_bot(
         sync_status=sync_status,
         sync_status_reason="",
         display_retrieved_chunks=modify_input.display_retrieved_chunks,
-        conversation_quick_starters=(
-            []
-            if modify_input.conversation_quick_starters is None
-            else [
-                ConversationQuickStarterModel(
-                    title=starter.title,
-                    example=starter.example,
-                )
-                for starter in modify_input.conversation_quick_starters
-            ]
-        ),
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseModel(
                 **modify_input.bedrock_knowledge_base.model_dump()
@@ -287,17 +251,6 @@ def modify_owned_bot(
         knowledge=Knowledge(
             filenames=filenames,
             s3_urls=s3_urls,
-        ),
-        conversation_quick_starters=(
-            []
-            if modify_input.conversation_quick_starters is None
-            else [
-                ConversationQuickStarter(
-                    title=starter.title,
-                    example=starter.example,
-                )
-                for starter in modify_input.conversation_quick_starters
-            ]
         ),
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseOutput(
@@ -384,13 +337,6 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
             owned=True,
             sync_status=bot.sync_status,
             has_knowledge=bot.has_knowledge(),
-            conversation_quick_starters=[
-                ConversationQuickStarter(
-                    title=starter.title,
-                    example=starter.example,
-                )
-                for starter in bot.conversation_quick_starters
-            ],
             owned_and_has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base(),
         )
 
@@ -409,17 +355,6 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
             owned=False,
             sync_status=alias.sync_status,
             has_knowledge=alias.has_knowledge,
-            conversation_quick_starters=(
-                []
-                if alias.conversation_quick_starters is None
-                else [
-                    ConversationQuickStarter(
-                        title=starter.title,
-                        example=starter.example,
-                    )
-                    for starter in alias.conversation_quick_starters
-                ]
-            ),
             owned_and_has_bedrock_knowledge_base=False,
         )
     except RecordNotFoundError:

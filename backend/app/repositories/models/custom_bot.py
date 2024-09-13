@@ -20,11 +20,6 @@ class SearchParamsModel(BaseModel):
     max_results: int
 
 
-class ConversationQuickStarterModel(BaseModel):
-    title: str
-    example: str
-
-
 class BotModel(BaseModel):
     id: str
     title: str
@@ -41,7 +36,6 @@ class BotModel(BaseModel):
     sync_status_reason: str
     sync_last_exec_id: str
     display_retrieved_chunks: bool
-    conversation_quick_starters: list[ConversationQuickStarterModel]
     bedrock_knowledge_base: BedrockKnowledgeBaseModel | None
 
     def has_knowledge(self) -> bool:
@@ -60,7 +54,6 @@ class BotAliasModel(BaseModel):
     is_pinned: bool
     sync_status: type_sync_status
     has_knowledge: bool
-    conversation_quick_starters: list[ConversationQuickStarterModel]
 
 
 class BotMeta(BaseModel):

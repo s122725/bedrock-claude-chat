@@ -24,7 +24,6 @@ from app.repositories.models.custom_bot import (
     BotMeta,
     BotMetaWithStackInfo,
     BotModel,
-    ConversationQuickStarterModel,
     GenerationParamsModel,
     KnowledgeModel,
     SearchParamsModel,
@@ -63,9 +62,6 @@ def store_bot(user_id: str, custom_bot: BotModel):
         "SyncStatusReason": custom_bot.sync_status_reason,
         "LastExecId": custom_bot.sync_last_exec_id,
         "DisplayRetrievedChunks": custom_bot.display_retrieved_chunks,
-        "ConversationQuickStarters": [
-            starter.model_dump() for starter in custom_bot.conversation_quick_starters
-        ],
     }
     if custom_bot.bedrock_knowledge_base:
         item["BedrockKnowledgeBase"] = custom_bot.bedrock_knowledge_base.model_dump()
@@ -86,7 +82,6 @@ def update_bot(
     sync_status: type_sync_status,
     sync_status_reason: str,
     display_retrieved_chunks: bool,
-    conversation_quick_starters: list[ConversationQuickStarterModel],
     bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
 ):
     """Update bot title, description, and instruction.
@@ -105,7 +100,6 @@ def update_bot(
         "GenerationParams = :generation_params, "
         "SearchParams = :search_params, "
         "DisplayRetrievedChunks = :display_retrieved_chunks, "
-        "ConversationQuickStarters = :conversation_quick_starters"
     )
 
     expression_attribute_values = {
@@ -118,9 +112,6 @@ def update_bot(
         ":display_retrieved_chunks": display_retrieved_chunks,
         ":generation_params": generation_params.model_dump(),
         ":search_params": search_params.model_dump(),
-        ":conversation_quick_starters": [
-            starter.model_dump() for starter in conversation_quick_starters
-        ],
     }
     if bedrock_knowledge_base:
         update_expression += ", BedrockKnowledgeBase = :bedrock_knowledge_base"
@@ -160,9 +151,6 @@ def store_alias(user_id: str, alias: BotAliasModel):
         "IsPinned": alias.is_pinned,
         "SyncStatus": alias.sync_status,
         "HasKnowledge": alias.has_knowledge,
-        "ConversationQuickStarters": [
-            starter.model_dump() for starter in alias.conversation_quick_starters
-        ],
     }
 
     response = table.put_item(Item=item)
@@ -389,7 +377,6 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
         sync_status_reason=item["SyncStatusReason"],
         sync_last_exec_id=item["LastExecId"],
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
-        conversation_quick_starters=item.get("ConversationQuickStarters", []),
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"])
             if "BedrockKnowledgeBase" in item
@@ -423,7 +410,6 @@ def find_alias_by_id(user_id: str, alias_id: str) -> BotAliasModel:
         is_pinned=item["IsPinned"],
         sync_status=item["SyncStatus"],
         has_knowledge=item["HasKnowledge"],
-        conversation_quick_starters=item.get("ConversationQuickStarters", []),
     )
 
     logger.info(f"Found alias: {bot}")

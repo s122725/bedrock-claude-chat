@@ -14,7 +14,6 @@ from app.routes.schemas.bot import (
     BotPinnedInput,
     BotPresignedUrlOutput,
     BotSummaryOutput,
-    ConversationQuickStarter,
     GenerationParams,
     Knowledge,
     SearchParams,
@@ -138,13 +137,6 @@ def get_private_bot(request: Request, bot_id: str):
         sync_status_reason=bot.sync_status_reason,
         sync_last_exec_id=bot.sync_last_exec_id,
         display_retrieved_chunks=bot.display_retrieved_chunks,
-        conversation_quick_starters=[
-            ConversationQuickStarter(
-                title=starter.title,
-                example=starter.example,
-            )
-            for starter in bot.conversation_quick_starters
-        ],
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseOutput(**bot.bedrock_knowledge_base.model_dump())
             if bot.bedrock_knowledge_base
