@@ -14,14 +14,10 @@ import { Auth } from "./auth";
 import { Idp } from "../utils/identity-provider";
 import { NagSuppressions } from "cdk-nag";
 
-export interface FrontendProps {
-  readonly enableKB: boolean;
-}
-
 export class Frontend extends Construct {
   readonly cloudFrontWebDistribution: CloudFrontWebDistribution;
   readonly assetBucket: Bucket;
-  constructor(scope: Construct, id: string, props: FrontendProps) {
+  constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const assetBucket = new Bucket(this, "AssetBucket", {
@@ -86,14 +82,12 @@ export class Frontend extends Construct {
     backendApiEndpoint,
     webSocketApiEndpoint,
     userPoolDomainPrefix,
-    enableKB,
     auth,
     idp,
   }: {
     backendApiEndpoint: string;
     webSocketApiEndpoint: string;
     userPoolDomainPrefix: string;
-    enableKB: boolean;
     auth: Auth;
     idp: Idp;
   }) {
@@ -105,7 +99,6 @@ export class Frontend extends Construct {
         VITE_APP_WS_ENDPOINT: webSocketApiEndpoint,
         VITE_APP_USER_POOL_ID: auth.userPool.userPoolId,
         VITE_APP_USER_POOL_CLIENT_ID: auth.client.userPoolClientId,
-        VITE_APP_ENABLE_KB: enableKB.toString(),
         VITE_APP_REGION: region,
         VITE_APP_USE_STREAMING: "true",
       };

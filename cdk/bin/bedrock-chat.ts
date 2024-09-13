@@ -35,6 +35,5 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   userPoolDomainPrefix: USER_POOL_DOMAIN_PREFIX,
   allowedSignUpEmailDomains: ALLOWED_SIGN_UP_EMAIL_DOMAINS,
   autoJoinUserGroups: AUTO_JOIN_USER_GROUPS,
-  enableKB: ENABLE_KB,
   selfSignUpEnabled: SELF_SIGN_UP_ENABLED,
 });
