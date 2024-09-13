@@ -93,11 +93,9 @@ def get_all_bots(
             create_time=bot.create_time,
             last_used_time=bot.last_used_time,
             is_pinned=bot.is_pinned,
-            owned=bot.owned,
             available=bot.available,
             description=bot.description,
             sync_status=bot.sync_status,
-            has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base,
         )
         for bot in bots
     ]
@@ -118,7 +116,6 @@ def get_private_bot(request: Request, bot_id: str):
         create_time=bot.create_time,
         last_used_time=bot.last_used_time,
         is_pinned=bot.is_pinned,
-        owned=True,
         knowledge=Knowledge(
             filenames=bot.knowledge.filenames,
             s3_urls=bot.knowledge.s3_urls,

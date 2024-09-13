@@ -9,13 +9,9 @@ from app.repositories.common import (
     decompose_bot_id,
 )
 from app.repositories.custom_bot import (
-    delete_alias_by_id,
     delete_bot_by_id,
-    find_alias_by_id,
     find_private_bot_by_id,
     store_bot,
-    update_alias_last_used_time,
-    update_alias_pin_status,
     update_bot,
     update_bot_last_used_time,
     update_bot_pin_status,
@@ -150,7 +146,6 @@ def create_new_bot(user_id: str, bot_input: BotInput) -> BotOutput:
         create_time=current_time,
         last_used_time=current_time,
         is_pinned=False,
-        owned=True,
         generation_params=GenerationParams(**generation_params),
         search_params=SearchParams(**search_params),
         knowledge=Knowledge(
@@ -262,14 +257,14 @@ def modify_owned_bot(
     )
 
 
-def fetch_bot(user_id: str, bot_id: str) -> tuple[bool, BotModel]:
+def fetch_bot(user_id: str, bot_id: str) -> BotModel:
     """Fetch bot by id.
     The first element of the returned tuple is whether the bot is owned or not.
     `True` means the bot is owned by the user.
     `False` means the bot is shared by another user.
     """
     try:
-        return True, find_private_bot_by_id(user_id, bot_id)
+        return find_private_bot_by_id(user_id, bot_id)
     except RecordNotFoundError:
         raise RecordNotFoundError(
             f"Bot with ID {bot_id} not found in both private (for user {user_id}) and public items."
@@ -314,7 +309,6 @@ def fetch_all_bots_by_user_id(
                 create_time=float(item["CreateTime"]),
                 last_used_time=float(item["LastBotUsed"]),
                 is_pinned=item["IsPinned"],
-                owned=True,
                 available=True,
                 description=item["Description"],
                 sync_status=item["SyncStatus"],
@@ -334,57 +328,26 @@ def fetch_bot_summary(user_id: str, bot_id: str) -> BotSummaryOutput:
             create_time=bot.create_time,
             last_used_time=bot.last_used_time,
             is_pinned=bot.is_pinned,
-            owned=True,
             sync_status=bot.sync_status,
             has_knowledge=bot.has_knowledge(),
-            owned_and_has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base(),
         )
 
-    except RecordNotFoundError:
-        pass
-
-    try:
-        alias = find_alias_by_id(user_id, bot_id)
-        return BotSummaryOutput(
-            id=alias.id,
-            title=alias.title,
-            description=alias.description,
-            create_time=alias.create_time,
-            last_used_time=alias.last_used_time,
-            is_pinned=alias.is_pinned,
-            owned=False,
-            sync_status=alias.sync_status,
-            has_knowledge=alias.has_knowledge,
-            owned_and_has_bedrock_knowledge_base=False,
-        )
     except RecordNotFoundError:
         raise RecordNotFoundError(
             f"Bot with ID {bot_id} not found in both private (for user {user_id}) and alias, shared items."
         )
-
 
 def modify_pin_status(user_id: str, bot_id: str, pinned: bool):
     """Modify bot pin status."""
     try:
         return update_bot_pin_status(user_id, bot_id, pinned)
     except RecordNotFoundError:
-        pass
-
-    try:
-        return update_alias_pin_status(user_id, bot_id, pinned)
-    except RecordNotFoundError:
         raise RecordNotFoundError(f"Bot {bot_id} is neither owned nor alias.")
-
 
 def remove_bot_by_id(user_id: str, bot_id: str):
     """Remove bot by id."""
     try:
         return delete_bot_by_id(user_id, bot_id)
-    except RecordNotFoundError:
-        pass
-
-    try:
-        return delete_alias_by_id(user_id, bot_id)
     except RecordNotFoundError:
         raise RecordNotFoundError(f"Bot {bot_id} is neither owned nor alias.")
 
@@ -394,13 +357,7 @@ def modify_bot_last_used_time(user_id: str, bot_id: str):
     try:
         return update_bot_last_used_time(user_id, bot_id)
     except RecordNotFoundError:
-        pass
-
-    try:
-        return update_alias_last_used_time(user_id, bot_id)
-    except RecordNotFoundError:
         raise RecordNotFoundError(f"Bot {bot_id} is neither owned nor alias.")
-
 
 def issue_presigned_url(
     user_id: str, bot_id: str, filename: str, content_type: str

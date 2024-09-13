@@ -1,7 +1,6 @@
 from app.auth import verify_token
 from app.user import User
 from fastapi import Depends, HTTPException, status
-from fastapi.exceptions import RequestValidationError
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 

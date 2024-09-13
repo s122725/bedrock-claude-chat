@@ -14,13 +14,10 @@ from app.repositories.common import (
     RecordNotFoundError,
     _get_table_client,
     _get_table_public_client,
-    compose_bot_alias_id,
     compose_bot_id,
-    decompose_bot_alias_id,
     decompose_bot_id,
 )
 from app.repositories.models.custom_bot import (
-    BotAliasModel,
     BotMeta,
     BotMetaWithStackInfo,
     BotModel,
@@ -135,28 +132,6 @@ def update_bot(
 
     return response
 
-
-def store_alias(user_id: str, alias: BotAliasModel):
-    table = _get_table_client(user_id)
-    logger.info(f"Storing alias: {alias}")
-
-    item = {
-        "PK": user_id,
-        "SK": compose_bot_alias_id(user_id, alias.id),
-        "Title": alias.title,
-        "Description": alias.description,
-        "OriginalBotId": alias.original_bot_id,
-        "CreateTime": decimal(alias.create_time),
-        "LastBotUsed": decimal(alias.last_used_time),
-        "IsPinned": alias.is_pinned,
-        "SyncStatus": alias.sync_status,
-        "HasKnowledge": alias.has_knowledge,
-    }
-
-    response = table.put_item(Item=item)
-    return response
-
-
 def update_bot_last_used_time(user_id: str, bot_id: str):
     """Update last used time for bot."""
     table = _get_table_client(user_id)
@@ -171,25 +146,6 @@ def update_bot_last_used_time(user_id: str, bot_id: str):
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             raise RecordNotFoundError(f"Bot with id {bot_id} not found")
-        else:
-            raise e
-    return response
-
-
-def update_alias_last_used_time(user_id: str, alias_id: str):
-    """Update last used time for alias."""
-    table = _get_table_client(user_id)
-    logger.info(f"Updating last used time for alias: {alias_id}")
-    try:
-        response = table.update_item(
-            Key={"PK": user_id, "SK": compose_bot_alias_id(user_id, alias_id)},
-            UpdateExpression="SET LastBotUsed = :val",
-            ExpressionAttributeValues={":val": decimal(get_current_time())},
-            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
-        )
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise RecordNotFoundError(f"Alias with id {alias_id} not found")
         else:
             raise e
     return response
@@ -212,26 +168,6 @@ def update_bot_pin_status(user_id: str, bot_id: str, pinned: bool):
         else:
             raise e
     return response
-
-
-def update_alias_pin_status(user_id: str, alias_id: str, pinned: bool):
-    """Update pin status for alias."""
-    table = _get_table_client(user_id)
-    logger.info(f"Updating pin status for alias: {alias_id}")
-    try:
-        response = table.update_item(
-            Key={"PK": user_id, "SK": compose_bot_alias_id(user_id, alias_id)},
-            UpdateExpression="SET IsPinned = :val",
-            ExpressionAttributeValues={":val": pinned},
-            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
-        )
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise RecordNotFoundError(f"Alias with id {alias_id} not found")
-        else:
-            raise e
-    return response
-
 
 def update_knowledge_base_id(
     user_id: str, bot_id: str, knowledge_base_id: str, data_source_ids: list[str]
@@ -274,9 +210,6 @@ def find_private_bots_by_user_id(
         "IndexName": "LastBotUsedIndex",
         "KeyConditionExpression": Key("PK").eq(user_id),
         "ScanIndexForward": False,
-        # NOTE: Filter out alias bots (public shared bots)
-        "FilterExpression": Attr("OriginalBotId").not_exists()
-        | Attr("OriginalBotId").eq(""),
     }
 
     response = table.query(**query_params)
@@ -286,7 +219,6 @@ def find_private_bots_by_user_id(
             title=item["Title"],
             create_time=float(item["CreateTime"]),
             last_used_time=float(item["LastBotUsed"]),
-            owned=True,
             available=True,
             is_pinned=item["IsPinned"],
             description=item["Description"],
@@ -307,7 +239,6 @@ def find_private_bots_by_user_id(
                     title=item["Title"],
                     create_time=float(item["CreateTime"]),
                     last_used_time=float(item["LastBotUsed"]),
-                    owned=True,
                     available=True,
                     is_pinned=item["IsPinned"],
                     description=item["Description"],
@@ -343,9 +274,6 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
     if len(response["Items"]) == 0:
         raise RecordNotFoundError(f"Bot with id {bot_id} not found")
     item = response["Items"][0]
-
-    if "OriginalBotId" in item:
-        raise RecordNotFoundError(f"Bot with id {bot_id} is alias")
 
     bot = BotModel(
         id=decompose_bot_id(item["SK"]),
@@ -387,34 +315,6 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
     logger.info(f"Found bot: {bot}")
     return bot
 
-
-def find_alias_by_id(user_id: str, alias_id: str) -> BotAliasModel:
-    """Find alias bot by id."""
-    table = _get_table_client(user_id)
-    logger.info(f"Finding alias bot with id: {alias_id}")
-    response = table.query(
-        IndexName="SKIndex",
-        KeyConditionExpression=Key("SK").eq(compose_bot_alias_id(user_id, alias_id)),
-    )
-    if len(response["Items"]) == 0:
-        raise RecordNotFoundError(f"Alias bot with id {alias_id} not found")
-    item = response["Items"][0]
-
-    bot = BotAliasModel(
-        id=decompose_bot_alias_id(item["SK"]),
-        title=item["Title"],
-        description=item["Description"],
-        original_bot_id=item["OriginalBotId"],
-        create_time=float(item["CreateTime"]),
-        last_used_time=float(item["LastBotUsed"]),
-        is_pinned=item["IsPinned"],
-        sync_status=item["SyncStatus"],
-        has_knowledge=item["HasKnowledge"],
-    )
-
-    logger.info(f"Found alias: {bot}")
-    return bot
-
 def delete_bot_by_id(user_id: str, bot_id: str):
     table = _get_table_client(user_id)
     logger.info(f"Deleting bot with id: {bot_id}")
@@ -431,25 +331,6 @@ def delete_bot_by_id(user_id: str, bot_id: str):
             raise e
 
     return response
-
-
-def delete_alias_by_id(user_id: str, bot_id: str):
-    table = _get_table_client(user_id)
-    logger.info(f"Deleting alias with id: {bot_id}")
-
-    try:
-        response = table.delete_item(
-            Key={"PK": user_id, "SK": compose_bot_alias_id(user_id, bot_id)},
-            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
-        )
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise RecordNotFoundError(f"Bot alias with id {bot_id} not found")
-        else:
-            raise e
-
-    return response
-
 
 async def find_public_bots_by_ids(bot_ids: list[str]) -> list[BotMetaWithStackInfo]:
     """Find all public bots by ids. This method is intended for administrator use."""
@@ -479,7 +360,6 @@ async def find_public_bots_by_ids(bot_ids: list[str]) -> list[BotMetaWithStackIn
                     title=item["Title"],
                     create_time=float(item["CreateTime"]),
                     last_used_time=float(item["LastBotUsed"]),
-                    owned=True,
                     available=True,
                     is_pinned=item["IsPinned"],
                     description=item["Description"],

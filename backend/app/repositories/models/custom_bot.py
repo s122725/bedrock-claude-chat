@@ -44,18 +44,6 @@ class BotModel(BaseModel):
             or len(self.knowledge.s3_urls) > 0
         )
 
-class BotAliasModel(BaseModel):
-    id: str
-    title: str
-    description: str
-    original_bot_id: str
-    create_time: float
-    last_used_time: float
-    is_pinned: bool
-    sync_status: type_sync_status
-    has_knowledge: bool
-
-
 class BotMeta(BaseModel):
     id: str
     title: str
@@ -63,13 +51,10 @@ class BotMeta(BaseModel):
     create_time: float
     last_used_time: float
     is_pinned: bool
-    # Whether the bot is owned by the user
-    owned: bool
     # Whether the bot is available or not.
     # This can be `False` if the bot is not owned by the user and original bot is removed.
     available: bool
     sync_status: type_sync_status
-    has_bedrock_knowledge_base: bool
 
 
 class BotMetaWithStackInfo(BotMeta):

@@ -12,8 +12,7 @@ from app.repositories.common import (
 from app.routes.admin import router as admin_router
 from app.routes.bot import router as bot_router
 from app.routes.conversation import router as conversation_router
-from app.user import User
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials

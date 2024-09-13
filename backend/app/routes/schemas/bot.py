@@ -130,8 +130,6 @@ class BotOutput(BaseSchema):
     create_time: float
     last_used_time: float
     is_pinned: bool
-    # Whether the bot is owned by the user
-    owned: bool
     generation_params: GenerationParams
     search_params: SearchParams
     knowledge: Knowledge
@@ -149,7 +147,6 @@ class BotMetaOutput(BaseSchema):
     create_time: float
     last_used_time: float
     is_pinned: bool
-    owned: bool
     # Whether the bot is available or not.
     # This can be `False` if the bot is not owned by the user and original bot is removed.
     available: bool
@@ -163,13 +160,8 @@ class BotSummaryOutput(BaseSchema):
     create_time: float
     last_used_time: float
     is_pinned: bool
-    owned: bool
     sync_status: type_sync_status
     has_knowledge: bool
-    owned_and_has_bedrock_knowledge_base: bool = Field(
-        ...,
-        description="Whether the bot has Bedrock KnowledgeBase attributes. Note that if bot alias, always false.",
-    )
 
 
 class BotPinnedInput(BaseSchema):

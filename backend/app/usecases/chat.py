@@ -11,14 +11,12 @@ from app.repositories.conversation import (
     RecordNotFoundError,
     find_conversation_by_id,
 )
-from app.repositories.custom_bot import find_alias_by_id, store_alias
 from app.repositories.models.conversation import (
     ContentModel,
     ConversationModel,
     MessageModel,
 )
 from app.repositories.models.custom_bot import (
-    BotAliasModel,
     BotModel,
 )
 from app.routes.schemas.conversation import (
@@ -62,7 +60,7 @@ def prepare_conversation(
             parent_id = conversation.last_message_id
         if chat_input.bot_id:
             logger.info("Bot id is provided. Fetching bot.")
-            owned, bot = fetch_bot(user_id, chat_input.bot_id)
+            bot = fetch_bot(user_id, chat_input.bot_id)
     except RecordNotFoundError:
         # The case for new conversation. Note that editing first user message is not considered as new conversation.
         logger.info(
@@ -95,7 +93,7 @@ def prepare_conversation(
             logger.info("Bot id is provided. Fetching bot.")
             parent_id = "instruction"
             # Fetch bot and append instruction
-            owned, bot = fetch_bot(user_id, chat_input.bot_id)
+            bot = fetch_bot(user_id, chat_input.bot_id)
             initial_message_map["instruction"] = MessageModel(
                 role="instruction",
                 content=[
@@ -115,30 +113,6 @@ def prepare_conversation(
                 thinking_log=None,
             )
             initial_message_map["system"].children.append("instruction")
-
-            if not owned:
-                try:
-                    # Check alias is already created
-                    find_alias_by_id(user_id, chat_input.bot_id)
-                except RecordNotFoundError:
-                    logger.info(
-                        "Bot is not owned by the user. Creating alias to shared bot."
-                    )
-                    # Create alias item
-                    store_alias(
-                        user_id,
-                        BotAliasModel(
-                            id=bot.id,
-                            title=bot.title,
-                            description=bot.description,
-                            original_bot_id=chat_input.bot_id,
-                            create_time=current_time,
-                            last_used_time=current_time,
-                            is_pinned=False,
-                            sync_status=bot.sync_status,
-                            has_knowledge=bot.has_knowledge(),
-                        ),
-                    )
 
         # Create new conversation
         conversation = ConversationModel(
@@ -355,7 +329,7 @@ def fetch_related_documents(
     if not chat_input.bot_id:
         return []
 
-    _, bot = fetch_bot(user_id, chat_input.bot_id)
+    bot = fetch_bot(user_id, chat_input.bot_id)
     if not bot.display_retrieved_chunks:
         return None
 
