@@ -9,7 +9,6 @@ from app.repositories.custom_bot import (
 from app.routes.schemas.bot import (
     Agent,
     AgentTool,
-    BedrockKnowledgeBaseOutput,
     BotInput,
     BotMetaOutput,
     BotModifyInput,
@@ -18,7 +17,6 @@ from app.routes.schemas.bot import (
     BotPresignedUrlOutput,
     BotSummaryOutput,
     BotSwitchVisibilityInput,
-    ConversationQuickStarter,
     EmbeddingParams,
     GenerationParams,
     Knowledge,
@@ -114,7 +112,6 @@ def get_all_bots(
             description=bot.description,
             is_public=bot.is_public,
             sync_status=bot.sync_status,
-            has_bedrock_knowledge_base=bot.has_bedrock_knowledge_base,
         )
         for bot in bots
     ]
@@ -152,7 +149,6 @@ def get_private_bot(request: Request, bot_id: str):
             source_urls=bot.knowledge.source_urls,
             sitemap_urls=bot.knowledge.sitemap_urls,
             filenames=bot.knowledge.filenames,
-            s3_urls=bot.knowledge.s3_urls,
         ),
         generation_params=GenerationParams(
             max_tokens=bot.generation_params.max_tokens,
@@ -168,18 +164,6 @@ def get_private_bot(request: Request, bot_id: str):
         sync_status_reason=bot.sync_status_reason,
         sync_last_exec_id=bot.sync_last_exec_id,
         display_retrieved_chunks=bot.display_retrieved_chunks,
-        conversation_quick_starters=[
-            ConversationQuickStarter(
-                title=starter.title,
-                example=starter.example,
-            )
-            for starter in bot.conversation_quick_starters
-        ],
-        bedrock_knowledge_base=(
-            BedrockKnowledgeBaseOutput(**bot.bedrock_knowledge_base.model_dump())
-            if bot.bedrock_knowledge_base
-            else None
-        ),
     )
     return output
 

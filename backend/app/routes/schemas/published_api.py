@@ -15,7 +15,6 @@ class ChatInputWithoutBotId(BaseSchema):
         If not provided, new conversation will be generated.""",
     )
     message: MessageInputWithoutMessageId
-    continue_generate: bool = Field(False)
 
 
 class ChatOutputWithoutBotId(BaseSchema):

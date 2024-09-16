@@ -1,9 +1,8 @@
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { Auth } from 'aws-amplify';
 import { PostMessageRequest } from '../@types/conversation';
 import { create } from 'zustand';
 import i18next from 'i18next';
-import { AgentEvent } from '../features/agent/xstates/agentThink';
-import { PostStreamingStatus } from '../constants';
+import { AgentThinkingEventKeys } from '../features/agent/xstates/agentThinkProgress';
 
 const WS_ENDPOINT: string = import.meta.env.VITE_APP_WS_ENDPOINT;
 const CHUNK_SIZE = 32 * 1024; //32KB
@@ -13,7 +12,9 @@ const usePostMessageStreaming = create<{
     input: PostMessageRequest;
     hasKnowledge?: boolean;
     dispatch: (completion: string) => void;
-    thinkingDispatch: (event: AgentEvent) => void;
+    thinkingDispatch: (
+      event: Exclude<AgentThinkingEventKeys, 'wakeup'>
+    ) => void;
   }) => Promise<string>;
 }>(() => {
   return {
@@ -23,7 +24,7 @@ const usePostMessageStreaming = create<{
       } else {
         dispatch(i18next.t('app.chatWaitingSymbol'));
       }
-      const token = (await fetchAuthSession()).tokens?.idToken?.toString();
+      const token = (await Auth.currentSession()).getIdToken().getJwtToken();
       const payloadString = JSON.stringify({
         ...input,
         token,
@@ -46,7 +47,7 @@ const usePostMessageStreaming = create<{
         ws.onopen = () => {
           ws.send(
             JSON.stringify({
-              step: PostStreamingStatus.START,
+              step: 'START',
               token: token,
             })
           );
@@ -67,7 +68,7 @@ const usePostMessageStreaming = create<{
               chunkedPayloads.forEach((chunk, index) => {
                 ws.send(
                   JSON.stringify({
-                    step: PostStreamingStatus.BODY,
+                    step: 'BODY',
                     index,
                     part: chunk,
                   })
@@ -79,7 +80,7 @@ const usePostMessageStreaming = create<{
               if (receivedCount === chunkedPayloads.length) {
                 ws.send(
                   JSON.stringify({
-                    step: PostStreamingStatus.END,
+                    step: 'END',
                   })
                 );
               }
@@ -90,32 +91,13 @@ const usePostMessageStreaming = create<{
 
             if (data.status) {
               switch (data.status) {
-                case PostStreamingStatus.FETCHING_KNOWLEDGE:
+                case 'FETCHING_KNOWLEDGE':
                   dispatch(i18next.t('bot.label.retrievingKnowledge'));
                   break;
-                case PostStreamingStatus.AGENT_THINKING:
-                  Object.entries(data.log).forEach(([toolUseId, toolInfo]) => {
-                    const typedToolInfo = toolInfo as {
-                      name: string;
-                      input: { [key: string]: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
-                    };
-                    thinkingDispatch({
-                      type: 'go-on',
-                      toolUseId: toolUseId,
-                      name: typedToolInfo.name,
-                      input: typedToolInfo.input,
-                    });
-                  });
+                case 'THINKING':
+                  thinkingDispatch('go-on');
                   break;
-                case PostStreamingStatus.AGENT_TOOL_RESULT:
-                  thinkingDispatch({
-                    type: 'tool-result',
-                    toolUseId: data.result.toolUseId,
-                    status: data.result.status,
-                    content: data.result.content,
-                  });
-                  break;
-                case PostStreamingStatus.STREAMING:
+                case 'STREAMING':
                   if (data.completion || data.completion === '') {
                     if (
                       completion.endsWith(i18next.t('app.chatWaitingSymbol'))
@@ -127,10 +109,8 @@ const usePostMessageStreaming = create<{
                     dispatch(completion);
                   }
                   break;
-                case PostStreamingStatus.STREAMING_END:
-                  thinkingDispatch({
-                    type: 'goodbye',
-                  });
+                case 'STREAMING_END':
+                  thinkingDispatch('goodbye');
 
                   if (completion.endsWith(i18next.t('app.chatWaitingSymbol'))) {
                     completion = completion.slice(0, -1);
@@ -138,7 +118,7 @@ const usePostMessageStreaming = create<{
                   }
                   ws.close();
                   break;
-                case PostStreamingStatus.ERROR:
+                case 'ERROR':
                   ws.close();
                   console.error(data);
                   throw new Error(i18next.t('error.predict.invalidResponse'));

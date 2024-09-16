@@ -1,5 +1,4 @@
 from app.repositories.models.common import Float
-from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.routes.schemas.bot import type_sync_status
 from pydantic import BaseModel
 
@@ -14,7 +13,6 @@ class KnowledgeModel(BaseModel):
     source_urls: list[str]
     sitemap_urls: list[str]
     filenames: list[str]
-    s3_urls: list[str]
 
     def __str_in_claude_format__(self) -> str:
         """Description of the knowledge in Claude format."""
@@ -30,11 +28,7 @@ class KnowledgeModel(BaseModel):
         for filename in self.filenames:
             _filenames += f"<filename>{filename}</filename>"
         _filenames += "</filenames>"
-        _s3_urls = "<s3_urls>"
-        for url in self.s3_urls:
-            _s3_urls += f"<url>{url}</url>"
-        _s3_urls += "</s3_urls>"
-        return f"{_source_urls}{_sitemap_urls}{_filenames}{_s3_urls}"
+        return f"{_source_urls}{_sitemap_urls}{_filenames}"
 
 
 class GenerationParamsModel(BaseModel):
@@ -56,11 +50,6 @@ class AgentToolModel(BaseModel):
 
 class AgentModel(BaseModel):
     tools: list[AgentToolModel]
-
-
-class ConversationQuickStarterModel(BaseModel):
-    title: str
-    example: str
 
 
 class BotModel(BaseModel):
@@ -86,22 +75,16 @@ class BotModel(BaseModel):
     published_api_datetime: int | None
     published_api_codebuild_id: str | None
     display_retrieved_chunks: bool
-    conversation_quick_starters: list[ConversationQuickStarterModel]
-    bedrock_knowledge_base: BedrockKnowledgeBaseModel | None
 
     def has_knowledge(self) -> bool:
         return (
             len(self.knowledge.source_urls) > 0
             or len(self.knowledge.sitemap_urls) > 0
             or len(self.knowledge.filenames) > 0
-            or len(self.knowledge.s3_urls) > 0
         )
 
     def is_agent_enabled(self) -> bool:
         return len(self.agent.tools) > 0
-
-    def has_bedrock_knowledge_base(self) -> bool:
-        return self.bedrock_knowledge_base is not None
 
 
 class BotAliasModel(BaseModel):
@@ -114,8 +97,6 @@ class BotAliasModel(BaseModel):
     is_pinned: bool
     sync_status: type_sync_status
     has_knowledge: bool
-    has_agent: bool
-    conversation_quick_starters: list[ConversationQuickStarterModel]
 
 
 class BotMeta(BaseModel):
@@ -132,7 +113,6 @@ class BotMeta(BaseModel):
     # This can be `False` if the bot is not owned by the user and original bot is removed.
     available: bool
     sync_status: type_sync_status
-    has_bedrock_knowledge_base: bool
 
 
 class BotMetaWithStackInfo(BotMeta):

@@ -7,7 +7,6 @@ type Props = {
   type?: HTMLInputTypeAttribute;
   value: string;
   disabled?: boolean;
-  placeholder?: string;
   hint?: string;
   errorMessage?: string;
   onChange?: (s: string) => void;
@@ -26,7 +25,6 @@ const InputText: React.FC<Props> = (props) => {
         )}
         disabled={props.disabled}
         value={props.value}
-        placeholder={props.placeholder}
         onChange={(e) => {
           props.onChange ? props.onChange(e.target.value) : null;
         }}

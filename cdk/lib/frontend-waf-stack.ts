@@ -17,89 +17,70 @@ export class FrontendWafStack extends Stack {
    */
   public readonly webAclArn: CfnOutput;
 
-  /**
-   * Whether IPv6 is used or not
-   */
-  public readonly ipV6Enabled: boolean;
-
   constructor(scope: Construct, id: string, props: FrontendWafStackProps) {
     super(scope, id, props);
 
-    const rules: wafv2.CfnWebACL.RuleProperty[] = [];
-
     // create Ipset for ACL
-    if (props.allowedIpV4AddressRanges.length > 0) {
-      const ipV4SetReferenceStatement = new wafv2.CfnIPSet(
-        this,
-        "FrontendIpV4Set",
-        {
-          ipAddressVersion: "IPV4",
-          scope: "CLOUDFRONT",
-          addresses: props.allowedIpV4AddressRanges,
-        }
-      );
-      rules.push({
-        priority: 0,
-        name: "FrontendWebAclIpV4RuleSet",
-        action: { allow: {} },
-        visibilityConfig: {
-          cloudWatchMetricsEnabled: true,
-          metricName: "FrontendWebAcl",
-          sampledRequestsEnabled: true,
-        },
-        statement: {
-          ipSetReferenceStatement: { arn: ipV4SetReferenceStatement.attrArn },
-        },
-      });
-    }
-    if (props.allowedIpV6AddressRanges.length > 0) {
-      const ipV6SetReferenceStatement = new wafv2.CfnIPSet(
-        this,
-        "FrontendIpV6Set",
-        {
-          ipAddressVersion: "IPV6",
-          scope: "CLOUDFRONT",
-          addresses: props.allowedIpV6AddressRanges,
-        }
-      );
-      rules.push({
-        priority: 1,
-        name: "FrontendWebAclIpV6RuleSet",
-        action: { allow: {} },
-        visibilityConfig: {
-          cloudWatchMetricsEnabled: true,
-          metricName: "FrontendWebAcl",
-          sampledRequestsEnabled: true,
-        },
-        statement: {
-          ipSetReferenceStatement: { arn: ipV6SetReferenceStatement.attrArn },
-        },
-      });
-      this.ipV6Enabled = true;
-    } else {
-      this.ipV6Enabled = false;
-    }
-
-    if (rules.length > 0) {
-      const webAcl = new wafv2.CfnWebACL(this, "WebAcl", {
-        defaultAction: { block: {} },
-        name: "FrontendWebAcl",
+    const ipV4SetReferenceStatement = new wafv2.CfnIPSet(
+      this,
+      "FrontendIpV4Set",
+      {
+        ipAddressVersion: "IPV4",
         scope: "CLOUDFRONT",
-        visibilityConfig: {
-          cloudWatchMetricsEnabled: true,
-          metricName: "FrontendWebAcl",
-          sampledRequestsEnabled: true,
-        },
-        rules,
-      });
+        addresses: props.allowedIpV4AddressRanges,
+      }
+    );
+    const ipV6SetReferenceStatement = new wafv2.CfnIPSet(
+      this,
+      "FrontendIpV6Set",
+      {
+        ipAddressVersion: "IPV6",
+        scope: "CLOUDFRONT",
+        addresses: props.allowedIpV6AddressRanges,
+      }
+    );
 
-      this.webAclArn = new cdk.CfnOutput(this, "WebAclId", {
-        value: webAcl.attrArn,
-      });
-    } else {
-      throw new Error(
-        "One or more allowed IP ranges must be specified in IPv4 or IPv6."
-      );
-    }
+    const webAcl = new wafv2.CfnWebACL(this, "WebAcl", {
+      defaultAction: { block: {} },
+      name: "FrontendWebAcl",
+      scope: "CLOUDFRONT",
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: "FrontendWebAcl",
+        sampledRequestsEnabled: true,
+      },
+      rules: [
+        {
+          priority: 0,
+          name: "FrontendWebAclIpV4RuleSet",
+          action: { allow: {} },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: "FrontendWebAcl",
+            sampledRequestsEnabled: true,
+          },
+          statement: {
+            ipSetReferenceStatement: { arn: ipV4SetReferenceStatement.attrArn },
+          },
+        },
+        {
+          priority: 1,
+          name: "FrontendWebAclIpV6RuleSet",
+          action: { allow: {} },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: "FrontendWebAcl",
+            sampledRequestsEnabled: true,
+          },
+          statement: {
+            ipSetReferenceStatement: { arn: ipV6SetReferenceStatement.attrArn },
+          },
+        },
+      ],
+    });
+
+    this.webAclArn = new cdk.CfnOutput(this, "WebAclId", {
+      value: webAcl.attrArn,
+    });
   }
 }

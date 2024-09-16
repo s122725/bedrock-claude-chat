@@ -20,11 +20,9 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as path from "path";
 import { IBucket } from "aws-cdk-lib/aws-s3";
-import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
+import { ISecret } from "aws-cdk-lib/aws-secretsmanager"
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { UsageAnalysis } from "./usage-analysis";
-import { excludeDockerImage } from "../constants/docker";
-
 export interface ApiProps {
   readonly vpc: ec2.IVpc;
   readonly database: ITable;
@@ -36,7 +34,6 @@ export interface ApiProps {
   readonly documentBucket: IBucket;
   readonly largeMessageBucket: IBucket;
   readonly apiPublishProject: codebuild.IProject;
-  readonly bedrockKnowledgeBaseProject: codebuild.IProject;
   readonly usageAnalysis?: UsageAnalysis;
   readonly enableMistral: boolean;
 }
@@ -81,10 +78,7 @@ export class Api extends Construct {
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["codebuild:StartBuild"],
-        resources: [
-          props.apiPublishProject.projectArn,
-          props.bedrockKnowledgeBaseProject.projectArn,
-        ],
+        resources: [props.apiPublishProject.projectArn],
       })
     );
     handlerRole.addToPolicy(
@@ -104,10 +98,7 @@ export class Api extends Construct {
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["codebuild:BatchGetBuilds"],
-        resources: [
-          props.apiPublishProject.projectArn,
-          props.bedrockKnowledgeBaseProject.projectArn,
-        ],
+        resources: [props.apiPublishProject.projectArn],
       })
     );
     handlerRole.addToPolicy(
@@ -180,9 +171,6 @@ export class Api extends Construct {
         {
           platform: Platform.LINUX_AMD64,
           file: "Dockerfile",
-          exclude: [
-            ...excludeDockerImage
-          ]
         }
       ),
       vpc: props.vpc,
@@ -202,8 +190,6 @@ export class Api extends Construct {
         DOCUMENT_BUCKET: props.documentBucket.bucketName,
         LARGE_MESSAGE_BUCKET: props.largeMessageBucket.bucketName,
         PUBLISH_API_CODEBUILD_PROJECT_NAME: props.apiPublishProject.projectName,
-        KNOWLEDGE_BASE_CODEBUILD_PROJECT_NAME:
-          props.bedrockKnowledgeBaseProject.projectName,
         USAGE_ANALYSIS_DATABASE:
           props.usageAnalysis?.database.databaseName || "",
         USAGE_ANALYSIS_TABLE:
@@ -214,7 +200,7 @@ export class Api extends Construct {
       },
       role: handlerRole,
     });
-    props.dbSecrets.grantRead(handler);
+    props.dbSecrets.grantRead(handler)
 
     const api = new HttpApi(this, "Default", {
       corsPreflight: {

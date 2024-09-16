@@ -19,20 +19,13 @@ import Textarea from './Textarea';
 import Button from './Button';
 import ModalDialog from './ModalDialog';
 import { useTranslation } from 'react-i18next';
+import useChat from '../hooks/useChat';
 import DialogFeedback from './DialogFeedback';
-import UploadedAttachedFile from './UploadedAttachedFile';
-import { TEXT_FILE_EXTENSIONS } from '../constants/supportedAttachedFiles';
-import AgentToolList from '../features/agent/components/AgentToolList';
-import { AgentToolsProps } from '../features/agent/xstates/agentThink';
 
 type Props = BaseProps & {
-  isAgentThinking: boolean;
-  tools?: AgentToolsProps;
   chatContent?: DisplayMessageContent;
-  relatedDocuments?: RelatedDocument[];
   onChangeMessageId?: (messageId: string) => void;
   onSubmit?: (messageId: string, content: string) => void;
-  onSubmitFeedback?: (messageId: string, feedback: PutFeedbackRequest) => void;
 };
 
 const ChatMessage: React.FC<Props> = (props) => {
@@ -41,27 +34,35 @@ const ChatMessage: React.FC<Props> = (props) => {
   const [changedContent, setChangedContent] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
-  const { relatedDocuments } = props;
-
-  const [firstTextContent, setFirstTextContent] = useState(0);
+  const { getRelatedDocuments, conversationId, giveFeedback } = useChat();
+  const [relatedDocuments, setRelatedDocuments] = useState<RelatedDocument[]>(
+    []
+  );
 
   useEffect(() => {
     if (props.chatContent) {
-      setFirstTextContent(
-        props.chatContent.content.findIndex(
-          (content) => content.contentType === 'text'
-        )
-      );
+      if (props.chatContent.usedChunks) {
+        // usedChunks is available for existing messages
+        setRelatedDocuments(
+          props.chatContent.usedChunks.map((chunk) => {
+            return {
+              chunkBody: chunk.content,
+              contentType: chunk.contentType,
+              sourceLink: chunk.source,
+              rank: chunk.rank,
+            };
+          })
+        );
+      } else {
+        // For new messages, get related documents from the api
+        setRelatedDocuments(getRelatedDocuments(props.chatContent.id));
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.chatContent]);
 
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [isOpenPreviewImage, setIsOpenPreviewImage] = useState(false);
-  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
-  const [dialogFileName, setDialogFileName] = useState<string>('');
-  const [dialogFileContent, setDialogFileContent] = useState<string | null>(
-    null
-  );
 
   const chatContent = useMemo<DisplayMessageContent | undefined>(() => {
     return props.chatContent;
@@ -89,12 +90,12 @@ const ChatMessage: React.FC<Props> = (props) => {
 
   const handleFeedbackSubmit = useCallback(
     (messageId: string, feedback: PutFeedbackRequest) => {
-      if (chatContent) {
-        props.onSubmitFeedback?.(messageId, feedback);
+      if (chatContent && conversationId) {
+        giveFeedback(messageId, feedback);
       }
       setIsFeedbackOpen(false);
     },
-    [chatContent, props]
+    [chatContent, conversationId, giveFeedback]
   );
 
   return (
@@ -138,98 +139,32 @@ const ChatMessage: React.FC<Props> = (props) => {
         )}
 
         <div className="ml-5 grow ">
-          {chatContent?.role === 'assistant' && (
-            <div className="flex flex-col">
-              {props.isAgentThinking ? (
-                <AgentToolList tools={props.tools ?? {}} isRunning={true} />
-              ) : (
-                <>
-                  {chatContent.thinkingLog && (
-                    <div className="mb-3 mt-0">
-                      <AgentToolList
-                        tools={props.tools ?? {}}
-                        isRunning={false}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
           {chatContent?.role === 'user' && !isEdit && (
             <div>
-              {chatContent.content.some(
-                (content) => content.contentType === 'image'
-              ) && (
-                <div key="images">
-                  {chatContent.content.map((content, idx) => {
-                    if (content.contentType === 'image') {
-                      const imageUrl = `data:${content.mediaType};base64,${content.body}`;
-                      return (
-                        <img
-                          key={idx}
-                          src={imageUrl}
-                          className="mb-2 h-48 cursor-pointer"
-                          onClick={() => {
-                            setPreviewImageUrl(imageUrl);
-                            setIsOpenPreviewImage(true);
-                          }}
-                        />
-                      );
-                    }
-                  })}
-                </div>
-              )}
-              {chatContent.content.some(
-                (content) => content.contentType === 'attachment'
-              ) && (
-                <div key="files" className="my-2 flex">
-                  {chatContent.content.map((content, idx) => {
-                    if (content.contentType === 'attachment') {
-                      const isTextFile = TEXT_FILE_EXTENSIONS.some((ext) =>
-                        content.fileName?.toLowerCase().endsWith(ext)
-                      );
-                      return (
-                        <UploadedAttachedFile
-                          key={idx}
-                          fileName={content.fileName ?? ''}
-                          onClick={
-                            // Only text file can be previewed
-                            isTextFile
-                              ? () => {
-                                  const textContent = new TextDecoder(
-                                    'utf-8'
-                                  ).decode(
-                                    Uint8Array.from(atob(content.body), (c) =>
-                                      c.charCodeAt(0)
-                                    )
-                                  ); // base64 encoded text to be decoded string
-                                  setDialogFileName(content.fileName ?? '');
-                                  setDialogFileContent(textContent);
-                                  setIsFileModalOpen(true);
-                                }
-                              : undefined
-                          }
-                        />
-                      );
-                    }
-                  })}
-                </div>
-              )}
-              {chatContent.content.some(
-                (content) => content.contentType === 'text'
-              ) &&
-                chatContent.content.map((content, idx) => {
-                  if (content.contentType === 'text') {
-                    return (
-                      <React.Fragment key={idx}>
-                        {content.body.split('\n').map((c, idxBody) => (
-                          <div key={idxBody}>{c}</div>
-                        ))}
-                      </React.Fragment>
-                    );
-                  }
-                })}
+              {chatContent.content.map((content, idx) => {
+                if (content.contentType === 'image') {
+                  const imageUrl = `data:${content.mediaType};base64,${content.body}`;
+                  return (
+                    <img
+                      key={idx}
+                      src={imageUrl}
+                      className="mb-2 h-48 cursor-pointer"
+                      onClick={() => {
+                        setPreviewImageUrl(imageUrl);
+                        setIsOpenPreviewImage(true);
+                      }}
+                    />
+                  );
+                } else {
+                  return (
+                    <React.Fragment key={idx}>
+                      {content.body.split('\n').map((c, idxBody) => (
+                        <div key={idxBody}>{c}</div>
+                      ))}
+                    </React.Fragment>
+                  );
+                }
+              })}
               <ModalDialog
                 isOpen={isOpenPreviewImage}
                 onClose={() => setIsOpenPreviewImage(false)}
@@ -242,19 +177,6 @@ const ChatMessage: React.FC<Props> = (props) => {
                     className="mx-auto max-h-[80vh] max-w-full rounded-md"
                   />
                 )}
-              </ModalDialog>
-              <ModalDialog
-                isOpen={isFileModalOpen}
-                onClose={() => setIsFileModalOpen(false)}
-                widthFromContent={true}
-                title={dialogFileName ?? ''}>
-                <div className="relative flex size-auto max-h-[80vh] max-w-[80vh] flex-col">
-                  <div className="overflow-auto px-4">
-                    <pre className="whitespace-pre-wrap break-all">
-                      {dialogFileContent}
-                    </pre>
-                  </div>
-                </div>
               </ModalDialog>
             </div>
           )}
@@ -294,7 +216,7 @@ const ChatMessage: React.FC<Props> = (props) => {
             <ButtonIcon
               className="text-dark-gray"
               onClick={() => {
-                setChangedContent(chatContent.content[firstTextContent].body);
+                setChangedContent(chatContent.content[0].body);
                 setIsEdit(true);
               }}>
               <PiNotePencil />

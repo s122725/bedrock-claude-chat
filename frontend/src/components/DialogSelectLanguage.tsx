@@ -8,14 +8,12 @@ import { LANGUAGES } from '../i18n';
 
 type Props = BaseProps & {
   isOpen: boolean;
-  initialLanguage?: string;
-  onSelectLanguage: (language: string) => void;
   onClose: () => void;
 };
 
 const DialogSelectLanguage: React.FC<Props> = (props) => {
-  const { t } = useTranslation();
-  const [language, setLanguage] = useState(props.initialLanguage ?? 'en');
+  const { t, i18n } = useTranslation();
+  const [language, setLanguage] = useState(i18n.language);
 
   return (
     <ModalDialog {...props} title={t('languageDialog.title')}>
@@ -35,7 +33,8 @@ const DialogSelectLanguage: React.FC<Props> = (props) => {
         </Button>
         <Button
           onClick={() => {
-            props.onSelectLanguage(language);
+            i18n.changeLanguage(language);
+            props.onClose();
           }}
           className="p-2">
           {t('button.ok')}

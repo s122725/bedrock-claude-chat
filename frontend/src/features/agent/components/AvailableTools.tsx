@@ -5,7 +5,6 @@ import { Dispatch, useCallback } from 'react';
 import { formatDescription } from '../functions/formatDescription';
 import Help from '../../../components/Help';
 import Skeleton from '../../../components/Skeleton';
-import { TooltipDirection } from '../../../constants';
 
 type Props = {
   availableTools: AgentTool[] | undefined;
@@ -29,7 +28,7 @@ export const AvailableTools = ({ availableTools, tools, setTools }: Props) => {
     <>
       <div className="flex items-center gap-1">
         <div className="text-lg font-bold">{t('agent.label')}</div>
-        <Help direction={TooltipDirection.RIGHT} message={t('agent.hint')} />
+        <Help direction="right" message={t('agent.hint')} />
       </div>
 
       <div className="text-sm text-aws-font-color/50">

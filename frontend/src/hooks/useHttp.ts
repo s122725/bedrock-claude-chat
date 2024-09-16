@@ -1,4 +1,5 @@
-import { fetchAuthSession } from 'aws-amplify/auth';
+// import { Auth } from "aws-amplify";
+import { Auth } from 'aws-amplify';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import useSWR, { SWRConfiguration } from 'swr';
 // import useAlertSnackbar from "./useAlertSnackbar";
@@ -10,9 +11,10 @@ const api = axios.create({
 // // HTTP Request Preprocessing
 api.interceptors.request.use(async (config) => {
   // If Authenticated, append ID Token to Request Header
-  const idToken = (await fetchAuthSession()).tokens?.idToken;
-  if (idToken) {
-    config.headers['Authorization'] = 'Bearer ' + idToken.toString();
+  const user = await Auth.currentAuthenticatedUser();
+  if (user) {
+    const token = (await Auth.currentSession()).getIdToken().getJwtToken();
+    config.headers['Authorization'] = 'Bearer ' + token;
   }
   config.headers['Content-Type'] = 'application/json';
 

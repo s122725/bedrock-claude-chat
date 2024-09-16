@@ -3,7 +3,6 @@ import unittest
 
 sys.path.append(".")
 
-from app.agents.tools.internet_search import internet_search_tool
 from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.custom_bot import (
     AgentModel,
@@ -18,14 +17,7 @@ from app.repositories.models.custom_bot import (
 
 
 def create_test_private_bot(
-    id,
-    is_pinned,
-    owner_user_id,
-    instruction="Test Bot Prompt",
-    sync_status="RUNNING",
-    include_internet_tool=False,
-    set_dummy_knowledge=True,
-    bedrock_knowledge_base=None,
+    id, is_pinned, owner_user_id, instruction="Test Bot Prompt", sync_status="RUNNING"
 ):
     return BotModel(
         id=id,
@@ -54,28 +46,15 @@ def create_test_private_bot(
             max_results=20,
         ),
         agent=AgentModel(
-            tools=(
-                [
-                    AgentToolModel(
-                        name=internet_search_tool.name,
-                        description=internet_search_tool.description,
-                    )
-                ]
-                if include_internet_tool
-                else []
-            )
+            tools=[
+                AgentToolModel(name="tool1", description="tool1 description"),
+                AgentToolModel(name="tool2", description="tool2 description"),
+            ]
         ),
-        knowledge=(
-            KnowledgeModel(
-                source_urls=["https://aws.amazon.com/"],
-                sitemap_urls=["https://aws.amazon.sitemap.xml"],
-                filenames=["test.txt"],
-                s3_urls=["s3://example/doc/"],
-            )
-            if set_dummy_knowledge
-            else KnowledgeModel(
-                source_urls=[], sitemap_urls=[], filenames=[], s3_urls=[]
-            )
+        knowledge=KnowledgeModel(
+            source_urls=["https://aws.amazon.com/"],
+            sitemap_urls=["https://aws.amazon.sitemap.xml"],
+            filenames=["test.txt"],
         ),
         sync_status=sync_status,
         sync_status_reason="reason",
@@ -83,9 +62,6 @@ def create_test_private_bot(
         published_api_stack_name=None,
         published_api_datetime=None,
         published_api_codebuild_id=None,
-        display_retrieved_chunks=True,
-        conversation_quick_starters=[],
-        bedrock_knowledge_base=bedrock_knowledge_base,
     )
 
 
@@ -95,7 +71,6 @@ def create_test_public_bot(
     owner_user_id,
     public_bot_id=None,
     instruction="Test Public Bot Prompt",
-    bedrock_knowledge_base=None,
 ):
     return BotModel(
         id=id,
@@ -123,19 +98,15 @@ def create_test_public_bot(
             max_results=20,
         ),
         agent=AgentModel(
-            # tools=[
-            #     AgentToolModel(
-            #         name=internet_search_tool.name,
-            #         description=internet_search_tool.description,
-            #     )
-            # ]
-            tools=[]
+            tools=[
+                AgentToolModel(name="tool1", description="tool1 description"),
+                AgentToolModel(name="tool2", description="tool2 description"),
+            ]
         ),
         knowledge=KnowledgeModel(
             source_urls=["https://aws.amazon.com/"],
             sitemap_urls=["https://aws.amazon.sitemap.xml"],
             filenames=["test.txt"],
-            s3_urls=["s3://example/doc/"],
         ),
         sync_status="RUNNING",
         sync_status_reason="reason",
@@ -143,9 +114,6 @@ def create_test_public_bot(
         published_api_stack_name=None,
         published_api_datetime=None,
         published_api_codebuild_id=None,
-        display_retrieved_chunks=True,
-        conversation_quick_starters=[],
-        bedrock_knowledge_base=bedrock_knowledge_base,
     )
 
 
@@ -161,8 +129,6 @@ def create_test_bot_alias(id, original_bot_id, is_pinned):
         is_pinned=is_pinned,
         sync_status="RUNNING",
         has_knowledge=True,
-        has_agent=False,
-        conversation_quick_starters=[],
     )
 
 

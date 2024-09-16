@@ -1,4 +1,4 @@
-import { CfnOutput, RemovalPolicy, StackProps, IgnoreMode } from "aws-cdk-lib";
+import { CfnOutput, RemovalPolicy, StackProps } from "aws-cdk-lib";
 import {
   BlockPublicAccess,
   Bucket,
@@ -21,9 +21,7 @@ import { TIdentityProvider, identityProvider } from "./utils/identity-provider";
 import { ApiPublishCodebuild } from "./constructs/api-publish-codebuild";
 import { WebAclForPublishedApi } from "./constructs/webacl-for-published-api";
 import { CronScheduleProps, createCronSchedule } from "./utils/cron-schedule";
-import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
-import * as path from "path";
-import { BedrockKnowledgeBaseCodebuild } from "./constructs/bedrock-knowledge-base-codebuild";
+import { NagSuppressions } from "cdk-nag";
 
 export interface BedrockChatStackProps extends StackProps {
   readonly bedrockRegion: string;
@@ -36,12 +34,9 @@ export interface BedrockChatStackProps extends StackProps {
   readonly autoJoinUserGroups: string[];
   readonly rdsSchedules: CronScheduleProps;
   readonly enableMistral: boolean;
-  readonly enableKB: boolean;
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
   readonly selfSignUpEnabled: boolean;
-  readonly enableIpV6: boolean;
-  readonly natgatewayCount: number;
 }
 
 export class BedrockChatStack extends cdk.Stack {
@@ -52,11 +47,11 @@ export class BedrockChatStack extends cdk.Stack {
     });
     const cronSchedule = createCronSchedule(props.rdsSchedules);
 
-    const vpc = new ec2.Vpc(this, "VPC", {
-      natGateways: props.natgatewayCount,
-    });
-    vpc.publicSubnets.forEach((subnet) => {
-      (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
+    // const vpc = new ec2.Vpc(this, "VPC", {});
+    const vpc = ec2.Vpc.fromLookup(this, "VPC", {
+      vpcName: 'ai-platfrom-vpc-qa',
+      ownerAccountId: process.env.CDK_DEFAULT_ACCOUNT,
+      region: process.env.CDK_DEFAULT_REGION,
     });
 
     // vpc.publicSubnets.forEach((subnet) => {
@@ -89,60 +84,13 @@ export class BedrockChatStack extends cdk.Stack {
       serverAccessLogsPrefix: "DocumentBucket",
     });
 
-    // Bucket for source code
-    const sourceBucket = new Bucket(this, "SourceBucketForCodeBuild", {
-      encryption: BucketEncryption.S3_MANAGED,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      objectOwnership: ObjectOwnership.OBJECT_WRITER,
-      autoDeleteObjects: true,
-      serverAccessLogsBucket: accessLogBucket,
-      serverAccessLogsPrefix: "SourceBucketForCodeBuild",
-    });
-    new s3deploy.BucketDeployment(this, "SourceDeploy", {
-      sources: [
-        s3deploy.Source.asset(path.join(__dirname, "../../"), {
-          ignoreMode: IgnoreMode.GIT,
-          exclude: [
-            "**/node_modules/**",
-            "**/dist/**",
-            "**/dev-dist/**",
-            "**/.venv/**",
-            "**/__pycache__/**",
-            "**/cdk.out/**",
-            "**/.vscode/**",
-            "**/.DS_Store/**",
-            "**/.git/**",
-            "**/.github/**",
-            "**/.mypy_cache/**",
-            "**/examples/**",
-            "**/docs/**",
-            "**/.env",
-            "**/.env.local",
-            "**/.gitignore",
-            "**/test/**",
-            "**/tests/**",
-          ],
-        }),
-      ],
-      destinationBucket: sourceBucket,
-    });
-    // CodeBuild used for api publication
+    // CodeBuild is used for api publication
     const apiPublishCodebuild = new ApiPublishCodebuild(
       this,
       "ApiPublishCodebuild",
       {
-        sourceBucket,
+        accessLogBucket,
         dbSecret: vectorStore.secret,
-      }
-    );
-    // CodeBuild used for KnowledgeBase
-    const bedrockKnowledgeBaseCodebuild = new BedrockKnowledgeBaseCodebuild(
-      this,
-      "BedrockKnowledgeBaseCodebuild",
-      {
-        sourceBucket,
       }
     );
 
@@ -150,8 +98,6 @@ export class BedrockChatStack extends cdk.Stack {
       accessLogBucket,
       webAclId: props.webAclId,
       enableMistral: props.enableMistral,
-      enableKB: props.enableKB,
-      enableIpV6: props.enableIpV6,
     });
 
     const auth = new Auth(this, "Auth", {
@@ -192,7 +138,6 @@ export class BedrockChatStack extends cdk.Stack {
       dbSecrets: vectorStore.secret,
       documentBucket,
       apiPublishProject: apiPublishCodebuild.project,
-      bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
       usageAnalysis,
       largeMessageBucket,
       enableMistral: props.enableMistral,
@@ -210,15 +155,12 @@ export class BedrockChatStack extends cdk.Stack {
       auth,
       bedrockRegion: props.bedrockRegion,
       largeMessageBucket,
-      documentBucket,
-      enableMistral: props.enableMistral,
     });
     frontend.buildViteApp({
       backendApiEndpoint: backendApi.api.apiEndpoint,
       webSocketApiEndpoint: websocket.apiEndpoint,
       userPoolDomainPrefix: props.userPoolDomainPrefix,
       enableMistral: props.enableMistral,
-      enableKB: props.enableKB,
       auth,
       idp,
     });
@@ -239,7 +181,6 @@ export class BedrockChatStack extends cdk.Stack {
       documentBucket,
       embeddingContainerVcpu: props.embeddingContainerVcpu,
       embeddingContainerMemory: props.embeddingContainerMemory,
-      bedrockKnowledgeBaseProject: bedrockKnowledgeBaseCodebuild.project,
     });
     documentBucket.grantRead(embedding.container.taskDefinition.taskRole);
 

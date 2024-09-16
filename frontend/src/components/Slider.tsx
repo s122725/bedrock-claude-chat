@@ -11,7 +11,6 @@ interface Props {
     step: number;
   };
   onChange: Dispatch<number>;
-  disabled?: boolean;
   errorMessage?: string;
   enableDecimal?: boolean;
 }
@@ -46,17 +45,13 @@ export const Slider: FC<Props> = (props) => {
       </label>
       <div className="flex gap-2">
         <input
-          className={twMerge(
-            'w-full cursor-pointer',
-            props.disabled && 'cursor-default'
-          )}
+          className="w-full cursor-pointer"
           type="range"
           min={props.range.min}
           max={props.range.max}
           step={props.range.step}
           value={props.value}
           onChange={handleChange}
-          disabled={props.disabled}
         />
         <input
           className={twMerge(
@@ -69,7 +64,6 @@ export const Slider: FC<Props> = (props) => {
           max={props.range.max}
           min={props.range.min}
           onChange={handleChange}
-          disabled={props.disabled}
         />
       </div>
       {props.hint && !props.errorMessage && (

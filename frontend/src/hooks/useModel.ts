@@ -19,11 +19,6 @@ const availableModels: {
     supportMediaType: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   },
   {
-    modelId: 'claude-v3.5-sonnet',
-    label: 'Claude 3.5 (Sonnet)',
-    supportMediaType: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  },
-  {
     modelId: 'claude-v3-opus',
     label: 'Claude 3 (Opus)',
     supportMediaType: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
@@ -71,10 +66,9 @@ const useModel = () => {
     model,
     disabledImageUpload: (model?.supportMediaType.length ?? 0) === 0,
     acceptMediaType:
-      model?.supportMediaType.flatMap((mediaType) => {
-        const ext = mediaType.split('/')[1];
-        return ext === 'jpeg' ? ['.jpg', '.jpeg'] : [`.${ext}`];
-      }) ?? [],
+      model?.supportMediaType.map(
+        (mediaType) => `.${mediaType.split('/')[1]}`
+      ) ?? [],
     availableModels,
   };
 };

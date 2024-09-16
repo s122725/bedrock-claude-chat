@@ -22,18 +22,11 @@ from app.repositories.custom_bot import (
     find_private_bots_by_user_id,
     store_bot,
 )
-from app.repositories.models.conversation import (
-    AgentContentModel,
-    AgentMessageModel,
-    AgentToolUseContentModel,
-    ChunkModel,
-    FeedbackModel,
-)
+from app.repositories.models.conversation import ChunkModel, FeedbackModel
 from app.repositories.models.custom_bot import (
     AgentModel,
     AgentToolModel,
     BotModel,
-    ConversationQuickStarterModel,
     EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
@@ -134,16 +127,12 @@ class TestConversationRepository(unittest.TestCase):
                     role="user",
                     content=[
                         ContentModel(
-                            content_type="text",
-                            body="Hello",
-                            media_type=None,
-                            file_name=None,
+                            content_type="text", body="Hello", media_type=None
                         ),
                         ContentModel(
                             content_type="image",
                             body="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
                             media_type="image/png",
-                            file_name=None,
                         ),
                     ],
                     model="claude-instant-v1",
@@ -152,37 +141,13 @@ class TestConversationRepository(unittest.TestCase):
                     create_time=1627984879.9,
                     feedback=None,
                     used_chunks=[
-                        ChunkModel(
-                            content="chunk1",
-                            source="source1",
-                            rank=1,
-                            content_type="url",
-                        ),
+                        ChunkModel(content="chunk1", source="source1", rank=1),
                     ],
-                    thinking_log=[
-                        AgentMessageModel(
-                            role="agent",
-                            content=[
-                                AgentContentModel(
-                                    content_type="toolUse",
-                                    body=AgentToolUseContentModel(
-                                        tool_use_id="xyz1234",
-                                        name="internet_search",
-                                        input={
-                                            "query": "Google news",
-                                            "country": "us-en",
-                                            "time_limit": "d",
-                                        },
-                                    ),
-                                )
-                            ],
-                        )
-                    ],
+                    thinking_log="test thinking log",
                 )
             },
             last_message_id="x",
             bot_id=None,
-            should_continue=False,
         )
 
         # Test storing conversation
@@ -216,23 +181,10 @@ class TestConversationRepository(unittest.TestCase):
         self.assertEqual(message_map["a"].parent, "z")
         self.assertEqual(message_map["a"].create_time, 1627984879.9)
         self.assertEqual(len(message_map["a"].used_chunks), 1)  # type: ignore
+        self.assertEqual(message_map["a"].thinking_log, "test thinking log")
         self.assertEqual(found_conversation.last_message_id, "x")
         self.assertEqual(found_conversation.total_price, 100)
         self.assertEqual(found_conversation.bot_id, None)
-        self.assertEqual(found_conversation.should_continue, False)
-
-        # Agent thinking log
-        assert message_map["a"].thinking_log is not None
-        self.assertEqual(message_map["a"].thinking_log[0].role, "agent")
-        self.assertEqual(
-            message_map["a"].thinking_log[0].content[0].content_type, "toolUse"
-        )
-        self.assertEqual(
-            message_map["a"].thinking_log[0].content[0].body.name, "internet_search"  # type: ignore
-        )
-        self.assertEqual(
-            message_map["a"].thinking_log[0].content[0].body.input["query"], "Google news"  # type: ignore
-        )
 
         # Test update title
         response = change_conversation_title(
@@ -286,7 +238,6 @@ class TestConversationRepository(unittest.TestCase):
                         body="This is a large message."
                         * 1000,  # Repeating to make it large
                         media_type=None,
-                        file_name=None,
                     )
                 ],
                 model="claude-instant-v1",
@@ -308,7 +259,6 @@ class TestConversationRepository(unittest.TestCase):
             message_map=large_message_map,
             last_message_id="msg_9",
             bot_id=None,
-            should_continue=False,
         )
 
         # Test storing large conversation with a small threshold
@@ -324,7 +274,6 @@ class TestConversationRepository(unittest.TestCase):
         self.assertEqual(found_conversation.total_price, 200)
         self.assertEqual(found_conversation.last_message_id, "msg_9")
         self.assertEqual(found_conversation.bot_id, None)
-        self.assertEqual(found_conversation.should_continue, False)
 
         message_map = found_conversation.message_map
         self.assertEqual(len(message_map), 10)
@@ -366,16 +315,12 @@ class TestConversationBotRepository(unittest.TestCase):
                     role="user",
                     content=[
                         ContentModel(
-                            content_type="text",
-                            body="Hello",
-                            media_type=None,
-                            file_name=None,
+                            content_type="text", body="Hello", media_type=None
                         ),
                         ContentModel(
                             content_type="image",
                             body="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
                             media_type="image/png",
-                            file_name=None,
                         ),
                     ],
                     model="claude-instant-v1",
@@ -389,7 +334,6 @@ class TestConversationBotRepository(unittest.TestCase):
             },
             last_message_id="x",
             bot_id=None,
-            should_continue=False,
         )
         conversation2 = ConversationModel(
             id="2",
@@ -401,16 +345,12 @@ class TestConversationBotRepository(unittest.TestCase):
                     role="user",
                     content=[
                         ContentModel(
-                            content_type="text",
-                            body="Hello",
-                            media_type=None,
-                            file_name=None,
+                            content_type="text", body="Hello", media_type=None
                         ),
                         ContentModel(
                             content_type="image",
                             body="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
                             media_type="image/png",
-                            file_name=None,
                         ),
                     ],
                     model="claude-instant-v1",
@@ -424,7 +364,6 @@ class TestConversationBotRepository(unittest.TestCase):
             },
             last_message_id="x",
             bot_id="1",
-            should_continue=False,
         )
         bot1 = BotModel(
             id="1",
@@ -461,7 +400,6 @@ class TestConversationBotRepository(unittest.TestCase):
                 source_urls=["https://aws.amazon.com/"],
                 sitemap_urls=["https://aws.amazon.sitemap.xml"],
                 filenames=["aws.pdf"],
-                s3_urls=["s3://example/path/"],
             ),
             sync_status="RUNNING",
             sync_status_reason="reason",
@@ -470,10 +408,6 @@ class TestConversationBotRepository(unittest.TestCase):
             published_api_datetime=0,
             published_api_stack_name="",
             display_retrieved_chunks=True,
-            conversation_quick_starters=[
-                ConversationQuickStarterModel(title="QS title", example="QS example")
-            ],
-            bedrock_knowledge_base=None,
         )
         bot2 = BotModel(
             id="2",
@@ -510,7 +444,6 @@ class TestConversationBotRepository(unittest.TestCase):
                 source_urls=["https://aws.amazon.com/"],
                 sitemap_urls=["https://aws.amazon.sitemap.xml"],
                 filenames=["aws.pdf"],
-                s3_urls=[],
             ),
             sync_status="RUNNING",
             sync_status_reason="reason",
@@ -519,10 +452,6 @@ class TestConversationBotRepository(unittest.TestCase):
             published_api_datetime=0,
             published_api_stack_name="",
             display_retrieved_chunks=True,
-            conversation_quick_starters=[
-                ConversationQuickStarterModel(title="QS title", example="QS example")
-            ],
-            bedrock_knowledge_base=None,
         )
 
         store_conversation("user", conversation1)

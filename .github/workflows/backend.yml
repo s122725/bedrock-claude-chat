@@ -8,7 +8,17 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  black-mypy-check:
+  black-formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--check --diff"
+          src: "./backend"
+          version: "~=22.0"
+
+  mypy-type-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,17 +28,12 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: |
-          pip install poetry
-          cd backend
-          poetry install
+          pip install -r backend/requirements.txt
+          pip install mypy==1.9.0
       - name: Run mypy
         run: |
           cd backend
-          poetry run mypy --config-file mypy.ini .
-      - name: Run black
-        run: |
-          cd backend
-          poetry run black --check .
+          mypy --config-file mypy.ini .
 
   uvicorn-launch:
     runs-on: ubuntu-latest
@@ -39,16 +44,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: |
-          pip install poetry
-          cd backend
-          poetry install
+        run: pip install -r backend/requirements.txt
       - name: Run Uvicorn
         env:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           cd backend
-          timeout 10s poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          timeout 10s uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 5
           curl http://localhost:8000/health
 
@@ -60,7 +62,7 @@ jobs:
         run: |
           cd backend
           docker build -t backend .
-      - name: Build backend/embedding/Dockerfile
+      - name: Build backend/embedding.Dockerfile
         run: |
           cd backend
-          docker build -t embedding -f embedding/Dockerfile .
+          docker build -t embedding -f embedding.Dockerfile .

@@ -195,7 +195,7 @@ def main(
             )
             return
 
-        # Calculate embeddings
+        # Calculate embeddings using LangChain
         with multiprocessing.Manager() as manager:
             contents: ListProxy = manager.list()
             sources: ListProxy = manager.list()
@@ -265,11 +265,11 @@ def main(
 
 
 if __name__ == "__main__":
-    # Get dynamodb stream event
-    event_json = os.getenv("EVENT")
-    logger.debug(f"event_json: {event_json}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("Keys", type=str)
+    args = parser.parse_args()
 
-    keys = json.loads(event_json)  # type:ignore
+    keys = json.loads(args.Keys)
     sk = keys["SK"]["S"]
 
     bot_id = decompose_bot_id(sk)

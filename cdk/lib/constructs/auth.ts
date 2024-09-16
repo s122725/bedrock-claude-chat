@@ -76,7 +76,7 @@ export class Auth extends Construct {
     ) => {
       const secret = secretsmanager.Secret.fromSecretNameV2(
         this,
-        `Secret-${provider.secretName}`,
+        "Secret",
         provider.secretName
       );
 
@@ -91,7 +91,7 @@ export class Auth extends Construct {
         case "google": {
           const googleProvider = new UserPoolIdentityProviderGoogle(
             this,
-            `GoogleProvider-${provider.secretName}`,
+            "GoogleProvider",
             {
               userPool,
               clientId,
@@ -113,7 +113,7 @@ export class Auth extends Construct {
 
           const oidcProvider = new UserPoolIdentityProviderOidc(
             this,
-            `OidcProvider-${provider.secretName}`,
+            "OidcProvider",
             {
               name: provider.serviceName,
               userPool,

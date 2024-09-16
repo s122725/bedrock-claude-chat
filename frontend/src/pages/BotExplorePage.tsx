@@ -25,15 +25,11 @@ import Help from '../components/Help';
 import StatusSyncBot from '../components/StatusSyncBot';
 import useUser from '../hooks/useUser';
 import ListItemBot from '../components/ListItemBot';
-import { TooltipDirection } from '../constants';
 
 const BotExplorePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAllowCreatingBot, isAllowApiSettings } = useUser();
-
-  // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
-  const KB_ENABLED: boolean = import.meta.env.VITE_APP_ENABLE_KB === 'true';
 
   const [isOpenDeleteDialog, setIsOpenDeleteDialog] = useState(false);
   const [isOpenShareDialog, setIsOpenShareDialog] = useState(false);
@@ -136,10 +132,7 @@ const BotExplorePage: React.FC = () => {
             <div className="flex items-end justify-between">
               <div className="flex items-center gap-2">
                 <div className="text-xl font-bold">{t('bot.label.myBots')}</div>
-                <Help
-                  direction={TooltipDirection.RIGHT}
-                  message={t('bot.help.overview')}
-                />
+                <Help direction="right" message={t('bot.help.overview')} />
               </div>
 
               <Button
@@ -155,21 +148,14 @@ const BotExplorePage: React.FC = () => {
 
             <div className="h-4/5 overflow-x-hidden overflow-y-scroll border-b border-gray pr-1 scrollbar-thin scrollbar-thumb-aws-font-color/20 ">
               {myBots?.length === 0 && (
-                <div className="flex size-full items-center justify-center italic text-dark-gray">
+                <div className="flex h-full w-full items-center justify-center italic text-dark-gray">
                   {t('bot.label.noBots')}
                 </div>
               )}
               {myBots?.map((bot, idx) => (
                 <ListItemBot
                   key={bot.id}
-                  // Add "Unsupported" prefix for bots created under opposite VITE_APP_ENABLE_KB environment state
-                  bot={{
-                    ...bot,
-                    title:
-                      bot.hasBedrockKnowledgeBase === KB_ENABLED
-                        ? bot.title
-                        : `[${t('bot.label.unsupported')}] ${bot.title}`,
-                  }}
+                  bot={bot}
                   onClick={onClickBot}
                   className="last:border-b-0">
                   <div className="flex items-center">
@@ -190,14 +176,8 @@ const BotExplorePage: React.FC = () => {
                           <ButtonIcon
                             className="-mr-3"
                             onClick={() => {
-                              if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                                onClickShare(idx);
-                              }
-                            }}
-                            // Disable the share button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                            disabled={
-                              bot.hasBedrockKnowledgeBase !== KB_ENABLED
-                            }>
+                              onClickShare(idx);
+                            }}>
                             <PiLink />
                           </ButtonIcon>
                         </div>
@@ -232,42 +212,24 @@ const BotExplorePage: React.FC = () => {
                       className="mr-2 h-8 text-sm font-semibold"
                       outlined
                       onClick={() => {
-                        if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                          onClickEditBot(bot.id);
-                        }
-                      }}
-                      // Disable the edit button for bots created under opposite VITE_APP_ENABLE_KB environment state
-                      disabled={bot.hasBedrockKnowledgeBase !== KB_ENABLED}>
+                        onClickEditBot(bot.id);
+                      }}>
                       {t('bot.button.edit')}
                     </Button>
                     <div className="relative">
                       <PopoverMenu className="h-8" target="bottom-right">
                         <PopoverItem
-                          // Disable the share action for bots created under opposite VITE_APP_ENABLE_KB environment state
                           onClick={() => {
-                            if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                              onClickShare(idx);
-                            }
-                          }}
-                          className={`${
-                            bot.hasBedrockKnowledgeBase !== KB_ENABLED &&
-                            'opacity-30 hover:filter-none'
-                          }`}>
+                            onClickShare(idx);
+                          }}>
                           <PiUsers />
                           {t('bot.button.share')}
                         </PopoverItem>
                         {isAllowApiSettings && (
                           <PopoverItem
                             onClick={() => {
-                              // Disable the API settings action for bots created under opposite VITE_APP_ENABLE_KB environment state
-                              if (bot.hasBedrockKnowledgeBase === KB_ENABLED) {
-                                onClickApiSettings(bot.id);
-                              }
-                            }}
-                            className={`${
-                              bot.hasBedrockKnowledgeBase !== KB_ENABLED &&
-                              'opacity-30 hover:filter-none'
-                            }`}>
+                              onClickApiSettings(bot.id);
+                            }}>
                             <PiGlobe />
                             {t('bot.button.apiSettings')}
                           </PopoverItem>
@@ -294,7 +256,7 @@ const BotExplorePage: React.FC = () => {
             <div className="mt-2 border-b border-gray"></div>
             <div className="h-4/5 overflow-y-scroll border-b border-gray  pr-1 scrollbar-thin scrollbar-thumb-aws-font-color/20">
               {recentlyUsedSharedBots?.length === 0 && (
-                <div className="flex size-full items-center justify-center italic text-dark-gray">
+                <div className="flex h-full w-full items-center justify-center italic text-dark-gray">
                   {t('bot.label.noBotsRecentlyUsed')}
                 </div>
               )}

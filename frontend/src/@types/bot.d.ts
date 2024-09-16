@@ -1,5 +1,3 @@
-import { BedrockKnowledgeBase } from '../features/knowledgeBase/types';
-
 export type BotKind = 'private' | 'mixed';
 
 export type BotMeta = {
@@ -19,12 +17,6 @@ export type BotKnowledge = {
   // Sitemap cannot be used yet.
   sitemapUrls: string[];
   filenames: string[];
-  s3Urls: string[];
-};
-
-export type ConversationQuickStarter = {
-  title: string;
-  example: string;
 };
 
 export type EmdeddingParams = {
@@ -40,14 +32,12 @@ export type BotKnowledgeDiff = {
   addedFilenames: string[];
   deletedFilenames: string[];
   unchangedFilenames: string[];
-  s3Urls: string[];
 };
 
 export type BotSyncStatus = 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
 
 export type BotListItem = BotMeta & {
   available: boolean;
-  hasBedrockKnowledgeBase: boolean;
 };
 
 export type GenerationParams = {
@@ -71,15 +61,11 @@ export type BotDetails = BotMeta & {
   knowledge: BotKnowledge;
   syncStatusReason: string;
   displayRetrievedChunks: boolean;
-  conversationQuickStarters: ConversationQuickStarter[];
-  bedrockKnowledgeBase: BedrockKnowledgeBase | null;
 };
 
 export type BotSummary = BotMeta & {
   hasKnowledge: boolean;
   hasAgent: boolean;
-  ownedAndHasBedrockKnowledgeBase: boolean;
-  conversationQuickStarters: ConversationQuickStarter[];
 };
 
 export type BotFile = {
@@ -95,13 +81,11 @@ export type RegisterBotRequest = {
   instruction: string;
   agent: AgentInput;
   description?: string;
-  embeddingParams?: EmdeddingParams | null;
+  embeddingParams?: EmdeddingParams;
   generationParams?: GenerationParams;
   searchParams?: SearchParams;
   knowledge?: BotKnowledge;
   displayRetrievedChunks: boolean;
-  conversationQuickStarters: ConversationQuickStarter[];
-  bedrockKnowledgeBase?: BedrockKnowledgeBase;
 };
 
 export type RegisterBotResponse = BotDetails;
@@ -111,13 +95,11 @@ export type UpdateBotRequest = {
   instruction: string;
   description?: string;
   agent: AgentInput;
-  embeddingParams?: EmdeddingParams | null;
+  embeddingParams?: EmdeddingParams;
   generationParams?: BotGenerationConfig;
   searchParams?: SearchParams;
   knowledge?: BotKnowledgeDiff;
   displayRetrievedChunks: boolean;
-  conversationQuickStarters: ConversationQuickStarter[];
-  bedrockKnowledgeBase?: BedrockKnowledgeBase;
 };
 
 export type UpdateBotResponse = {
@@ -130,8 +112,6 @@ export type UpdateBotResponse = {
   searchParams: SearchParams;
   knowledge?: BotKnowledge;
   displayRetrievedChunks: boolean;
-  conversationQuickStarters: ConversationQuickStarter[];
-  bedrockKnowledgeBase: BedrockKnowledgeBase;
 };
 
 export type UpdateBotPinnedRequest = {
