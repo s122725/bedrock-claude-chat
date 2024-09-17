@@ -19,7 +19,7 @@ PUBLISH_API_CODEBUILD_PROJECT_NAME = os.environ.get(
     "PUBLISH_API_CODEBUILD_PROJECT_NAME", ""
 )
 DB_SECRETS_ARN = os.environ.get("DB_SECRETS_ARN", "")
-
+ENABLE_BEDROCK_CROSS_REGION_INFERENCE = os.environ.get("ENABLE_BEDROCK_CROSS_REGION_INFERENCE", "false").lower() == "true"
 
 def snake_to_camel(snake_str):
     components = snake_str.split("_")
@@ -40,9 +40,18 @@ def is_running_on_lambda():
     return "AWS_EXECUTION_ENV" in os.environ
 
 
+def is_region_supported_for_inference(region: str) -> bool:
+    supported_regions = ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-west-3', 'eu-central-1']  # Add more as they become available
+    return region in supported_regions
+
 def get_bedrock_client(region=BEDROCK_REGION):
-    client = boto3.client("bedrock-runtime", region)
-    return client
+    if ENABLE_BEDROCK_CROSS_REGION_INFERENCE and is_region_supported_for_inference(region):
+        logger.info(f"Using cross-region Bedrock client for region {region}")
+        return boto3.client("bedrock-runtime", region_name=region)
+    else:
+        if ENABLE_BEDROCK_CROSS_REGION_INFERENCE:
+            logger.warning(f"Cross-region inference is enabled, but the region {region} is not supported. Using default region.")
+        return boto3.client("bedrock-runtime", region_name=REGION
 
 
 def get_bedrock_agent_client(region=REGION):

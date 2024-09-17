@@ -11,7 +11,7 @@ from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.routes.schemas.conversation import type_model_name
-from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client
+from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client, is_region_supported_for_inference, ENABLE_BEDROCK_CROSS_REGION_INFERENCE
 from typing_extensions import NotRequired, TypedDict, no_type_check
 
 logger = logging.getLogger(__name__)
@@ -23,8 +23,9 @@ DEFAULT_GENERATION_CONFIG = (
     if ENABLE_MISTRAL
     else DEFAULT_CLAUDE_GENERATION_CONFIG
 )
+ENABLE_BEDROCK_CROSS_REGION_INFERENCE = os.environ.get("ENABLE_BEDROCK_CROSS_REGION_INFERENCE", "false").lower() == "true"
 
-client = get_bedrock_client()
+client = get_bedrock_client(BEDROCK_REGION)
 
 
 class ConverseApiToolSpec(TypedDict):
@@ -219,7 +220,7 @@ def compose_args_for_converse_api(
 
 
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
-    client = get_bedrock_client()
+    client = get_bedrock_client(BEDROCK_REGION)
     messages = args["messages"]
     inference_config = args["inference_config"]
     additional_model_request_fields = args["additional_model_request_fields"]
@@ -256,27 +257,39 @@ def calculate_price(
 
     return input_price * input_tokens / 1000.0 + output_price * output_tokens / 1000.0
 
+CROSS_REGION_INFERENCE_MODELS = {
+    "claude-v3-sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "claude-v3-haiku": "anthropic.claude-3-haiku-20240307-v1:0",
+    "claude-v3-opus": "anthropic.claude-3-opus-20240229-v1:0",
+    "claude-v3.5-sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+}
 
 def get_model_id(model: type_model_name) -> str:
     # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids-arns.html
-    if model == "claude-v2":
-        return "anthropic.claude-v2:1"
-    elif model == "claude-instant-v1":
-        return "anthropic.claude-instant-v1"
-    elif model == "claude-v3-sonnet":
-        return "anthropic.claude-3-sonnet-20240229-v1:0"
-    elif model == "claude-v3-haiku":
-        return "anthropic.claude-3-haiku-20240307-v1:0"
-    elif model == "claude-v3-opus":
-        return "anthropic.claude-3-opus-20240229-v1:0"
-    elif model == "claude-v3.5-sonnet":
-        return "anthropic.claude-3-5-sonnet-20240620-v1:0"
-    elif model == "mistral-7b-instruct":
-        return "mistral.mistral-7b-instruct-v0:2"
-    elif model == "mixtral-8x7b-instruct":
-        return "mistral.mixtral-8x7b-instruct-v0:1"
-    elif model == "mistral-large":
-        return "mistral.mistral-large-2402-v1:0"
+    base_model_id = {
+        "claude-v2": "anthropic.claude-v2:1",
+        "claude-instant-v1": "anthropic.claude-instant-v1",
+        "claude-v3-sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "claude-v3-haiku": "anthropic.claude-3-haiku-20240307-v1:0",
+        "claude-v3-opus": "anthropic.claude-3-opus-20240229-v1:0",
+        "claude-v3.5-sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "mistral-7b-instruct": "mistral.mistral-7b-instruct-v0:2",
+        "mixtral-8x7b-instruct": "mistral.mixtral-8x7b-instruct-v0:1",
+        "mistral-large": "mistral.mistral-large-2402-v1:0",
+    }[model]
+
+    if (ENABLE_BEDROCK_CROSS_REGION_INFERENCE and 
+        is_region_supported_for_inference(BEDROCK_REGION) and 
+        model in CROSS_REGION_INFERENCE_MODELS):
+        logger.info(f"Using cross-region inference for model {model} in region {BEDROCK_REGION}")
+        return base_model_id
+    else:
+        if ENABLE_BEDROCK_CROSS_REGION_INFERENCE:
+            if not is_region_supported_for_inference(BEDROCK_REGION):
+                logger.warning(f"Cross-region inference is enabled, but the region {BEDROCK_REGION} is not supported. Using local model.")
+            elif model not in CROSS_REGION_INFERENCE_MODELS:
+                logger.warning(f"Cross-region inference is not available for model {model}. Using local model.")
+        return f"{base_model_id}-local"
 
 
 def calculate_query_embedding(question: str) -> list[float]:
