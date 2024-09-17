@@ -259,7 +259,7 @@ def calculate_price(
 
 def get_model_id(model: type_model_name) -> str:
     # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids-arns.html
-    region = BEDROCK_REGION.split("-")[0] # Cross-region inference
+    region = BEDROCK_REGION.split("-")[0]  # Cross-region inference
     if model == "claude-v2":
         return "anthropic.claude-v2:1"
     elif model == "claude-instant-v1":
