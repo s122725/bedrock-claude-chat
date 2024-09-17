@@ -51,7 +51,7 @@ def get_bedrock_client(region=BEDROCK_REGION):
     else:
         if ENABLE_BEDROCK_CROSS_REGION_INFERENCE:
             logger.warning(f"Cross-region inference is enabled, but the region {region} is not supported. Using default region.")
-        return boto3.client("bedrock-runtime", region_name=REGION
+        return boto3.client("bedrock-runtime", region_name=REGION)
 
 
 def get_bedrock_agent_client(region=REGION):
