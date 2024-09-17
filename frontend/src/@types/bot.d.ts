@@ -7,14 +7,10 @@ export type BotMeta = {
   createTime: Date;
   lastUsedTime: Date;
   isPinned: boolean;
-  owned: boolean;
   syncStatus: BotSyncStatus;
 };
 
 export type BotKnowledge = {
-  sourceUrls: string[];
-  // Sitemap cannot be used yet.
-  sitemapUrls: string[];
   filenames: string[];
   s3Urls: string[];
 };
@@ -26,9 +22,6 @@ export type EmbeddingParams = {
 };
 
 export type BotKnowledgeDiff = {
-  sourceUrls: string[];
-  // Sitemap cannot be used yet.
-  sitemapUrls: string[];
   addedFilenames: string[];
   deletedFilenames: string[];
   unchangedFilenames: string[];
@@ -61,7 +54,7 @@ export type BotDetails = BotMeta & {
   knowledge: BotKnowledge;
   syncStatusReason: string;
   displayRetrievedChunks: boolean;
-  bedrockKnowledgeBase: BedrockKnowledgeBase | null;
+  bedrockKnowledgeBase: BedrockKnowledgeBase | null; // FIXME: nullable 하였으나 이제는 필수이기 때문에 null 제거 필요
 };
 
 export type BotSummary = BotMeta & {

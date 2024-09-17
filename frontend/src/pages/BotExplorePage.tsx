@@ -122,15 +122,13 @@ const BotExplorePage: React.FC = () => {
                   onClick={onClickBot}
                   className="last:border-b-0">
                   <div className="flex items-center">
-                    {bot.owned && (
-                      <StatusSyncBot
-                        className="mr-5"
-                        syncStatus={bot.syncStatus}
-                        onClickError={() => {
-                          navigate(`/bot/edit/${bot.id}`);
-                        }}
-                      />
-                    )}
+                    <StatusSyncBot
+                      className="mr-5"
+                      syncStatus={bot.syncStatus}
+                      onClickError={() => {
+                        navigate(`/bot/edit/${bot.id}`);
+                      }}
+                    />
 
                     <div className="mr-5">
                       {bot.isPinned ? (

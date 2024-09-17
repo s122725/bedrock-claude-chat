@@ -102,9 +102,7 @@ const ChatPage: React.FC = () => {
     setIsAvailabilityBot(false);
     if (bot) {
       setIsAvailabilityBot(true);
-      setPageTitle(
-        !bot.owned ? bot.title : `[${t('bot.label.unsupported')}] ${bot.title}`
-      );
+      setPageTitle(bot.title);
     } else {
       setPageTitle(t('bot.label.normalChat'));
     }
@@ -173,7 +171,7 @@ const ChatPage: React.FC = () => {
     }
   }, [messages, scrollToBottom, scrollToTop]);
 
-  const { updateMyBotStarred, updateSharedBotStarred } = useBot();
+  const { updateMyBotStarred } = useBot();
   const onClickBotEdit = useCallback(
     (botId: string) => {
       navigate(`/bot/edit/${botId}`);
@@ -196,15 +194,11 @@ const ChatPage: React.FC = () => {
     );
 
     try {
-      if (bot.owned) {
-        updateMyBotStarred(bot.id, isStarred);
-      } else {
-        updateSharedBotStarred(bot.id, isStarred);
-      }
+      updateMyBotStarred(bot.id, isStarred);
     } finally {
       mutateBot();
     }
-  }, [bot, mutateBot, updateMyBotStarred, updateSharedBotStarred]);
+  }, [bot, mutateBot, updateMyBotStarred]);
 
   const onClickSyncError = useCallback(() => {
     navigate(`/bot/edit/${bot?.id}`);
@@ -313,12 +307,10 @@ const ChatPage: React.FC = () => {
               <div className="absolute -top-1 right-0 flex h-full items-center">
                 <div className="h-full w-5 bg-gradient-to-r from-transparent to-aws-paper"></div>
                 <div className="flex items-center bg-aws-paper">
-                  {bot?.owned && (
-                    <StatusSyncBot
-                      syncStatus={bot.syncStatus}
-                      onClickError={onClickSyncError}
-                    />
-                  )}
+                  <StatusSyncBot
+                    syncStatus={bot!.syncStatus}
+                    onClickError={onClickSyncError}
+                  />
                   <ButtonIcon onClick={onClickStar}>
                     {bot?.isPinned ? (
                       <PiStarFill className="text-aws-aqua" />
@@ -327,12 +319,10 @@ const ChatPage: React.FC = () => {
                     )}
                   </ButtonIcon>
                   <ButtonPopover className="mx-1" target="bottom-right">
-                    {bot?.owned && (
-                      <PopoverItem onClick={() => onClickBotEdit(bot.id)}>
-                        <PiPencilLine />
-                        {t('bot.titleSubmenu.edit')}
-                      </PopoverItem>
-                    )}
+                    <PopoverItem onClick={() => onClickBotEdit(bot!.id)}>
+                      <PiPencilLine />
+                      {t('bot.titleSubmenu.edit')}
+                    </PopoverItem>
                   </ButtonPopover>
                 </div>
               </div>

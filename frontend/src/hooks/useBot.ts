@@ -38,7 +38,7 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
     recentlyUsedUnstarredBots: recentlyUsedBots?.filter(
       (bot) => !bot.isPinned && bot.available
     ),
-    recentlyUsedSharedBots: recentlyUsedBots?.filter((bot) => !bot.owned),
+    recentlyUsedSharedBots: recentlyUsedBots,
     getMyBot: async (botId: string) => {
       return (await api.getOnceMyBot(botId)).data;
     },
@@ -53,7 +53,6 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
             createTime: new Date(),
             lastUsedTime: new Date(),
             isPinned: false,
-            owned: true,
             syncStatus: 'QUEUED',
           });
         }),

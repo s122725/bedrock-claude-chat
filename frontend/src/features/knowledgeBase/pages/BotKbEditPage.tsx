@@ -67,7 +67,6 @@ const BotKbEditPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [instruction, setInstruction] = useState('');
-  const [urls, setUrls] = useState<string[]>(['']);
   const [s3Urls, setS3Urls] = useState<string[]>(['']);
   const [files, setFiles] = useState<BotFile[]>([]);
   const [addedFilenames, setAddedFilenames] = useState<string[]>([]);
@@ -216,20 +215,9 @@ const BotKbEditPage: React.FC = () => {
       setIsLoading(true);
       getMyBot(botId)
         .then((bot) => {
-          // Disallow editing of bots created under opposite VITE_APP_ENABLE_KB environment state
-          if (!bot.bedrockKnowledgeBase) {
-            navigate('/');
-            return;
-          }
-
           setTitle(bot.title);
           setDescription(bot.description);
           setInstruction(bot.instruction);
-          setUrls(
-            bot.knowledge.sourceUrls.length === 0
-              ? ['']
-              : bot.knowledge.sourceUrls
-          );
           setS3Urls(
             bot.knowledge.s3Urls.length === 0 ? [''] : bot.knowledge.s3Urls
           );
@@ -254,11 +242,15 @@ const BotKbEditPage: React.FC = () => {
               bot.syncStatusReason
             );
           }
-          setKnowledgeBaseId(bot.bedrockKnowledgeBase.knowledgeBaseId);
-          setEmbeddingsModel(bot.bedrockKnowledgeBase!.embeddingsModel);
-          setChunkingStrategy(bot.bedrockKnowledgeBase!.chunkingStrategy);
+          setKnowledgeBaseId(bot.bedrockKnowledgeBase?.knowledgeBaseId ?? ''); // FIXME: null 제거 시에 같이 수정
+          if (bot.bedrockKnowledgeBase?.embeddingsModel) {
+            setEmbeddingsModel(bot.bedrockKnowledgeBase.embeddingsModel);
+          }
+          if (bot.bedrockKnowledgeBase?.chunkingStrategy) {
+            setChunkingStrategy(bot.bedrockKnowledgeBase.chunkingStrategy);
+          }
           setChunkingMaxTokens(
-            bot.bedrockKnowledgeBase!.maxTokens ?? DEFAULT_CHUNKING_MAX_TOKENS
+            bot.bedrockKnowledgeBase?.maxTokens ?? DEFAULT_CHUNKING_MAX_TOKENS
           );
           setChunkingOverlapPercentage(
             bot.bedrockKnowledgeBase!.overlapPercentage ??
@@ -571,9 +563,6 @@ const BotKbEditPage: React.FC = () => {
         maxResults: searchParams.maxResults,
       },
       knowledge: {
-        sourceUrls: urls.filter((s) => s !== ''),
-        // Sitemap cannot be used yet.
-        sitemapUrls: [],
         s3Urls: s3Urls.filter((s) => s !== ''),
         filenames: files.map((f) => f.filename),
       },
@@ -608,7 +597,6 @@ const BotKbEditPage: React.FC = () => {
     topP,
     stopSequences,
     searchParams,
-    urls,
     s3Urls,
     files,
     displayRetrievedChunks,
@@ -644,9 +632,6 @@ const BotKbEditPage: React.FC = () => {
           maxResults: searchParams.maxResults,
         },
         knowledge: {
-          sourceUrls: urls.filter((s) => s !== ''),
-          // Sitemap cannot be used yet.
-          sitemapUrls: [],
           s3Urls: s3Urls.filter((s) => s !== ''),
           addedFilenames,
           deletedFilenames,
@@ -686,7 +671,6 @@ const BotKbEditPage: React.FC = () => {
     topP,
     stopSequences,
     searchParams,
-    urls,
     s3Urls,
     addedFilenames,
     deletedFilenames,
@@ -869,7 +853,7 @@ const BotKbEditPage: React.FC = () => {
                   {t('bot.help.quickStarter.overview')}
                 </div>
               </div>
-
+              {/* TODO: pgvector 관련 파라미터 설정 요소지만 knowledge base 설정 시 사용가능하다면 사용하기 */}
               <ExpandableDrawerGroup
                 isDefaultShow={false}
                 label={t('generationConfig.title')}
@@ -889,7 +873,7 @@ const BotKbEditPage: React.FC = () => {
                   errorMessages={errorMessages}
                 />
               </ExpandableDrawerGroup>
-
+              {/* TODO: pgvector 관련 파라미터 설정 요소지만 knowledge base 설정 시 사용가능하다면 사용하기 */}
               <ExpandableDrawerGroup
                 isDefaultShow={false}
                 label={t('knowledgeBaseSettings.title')}
@@ -1047,7 +1031,7 @@ const BotKbEditPage: React.FC = () => {
                   </div>
                 )}
               </ExpandableDrawerGroup>
-
+              {/* TODO: pgvector 관련 파라미터 설정 요소지만 knowledge base 설정 시 사용가능하다면 사용하기 */}
               <ExpandableDrawerGroup
                 isDefaultShow={false}
                 label={t('searchSettings.title')}
