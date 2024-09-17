@@ -124,15 +124,15 @@ export type UpdateBotPinnedResponse = null;
 
 export type GetBotsRequest =
   | {
-      kind: 'mixed';
+      kind: 'private';
       limit?: number;
     }
   | {
-      kind: 'mixed';
+      kind: 'private';
       limit: number;
     }
   | {
-      kind: 'mixed';
+      kind: 'private';
       pinned: boolean;
     };
 

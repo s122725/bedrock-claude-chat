@@ -7,7 +7,7 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
 
   const { data: myBots, mutate: mutateMyBots } = api.bots(
     {
-      kind: 'mixed', // FIXME: 모든 챗봇을 mixed 으로 사용
+      kind: 'private', // FIXME: 모든 챗봇을 private 으로 사용
     },
     shouldAutoRefreshMyBots
       ? (data) => {
@@ -23,12 +23,12 @@ const useBot = (shouldAutoRefreshMyBots?: boolean) => {
   );
 
   const { data: starredBots, mutate: mutateStarredBots } = api.bots({
-    kind: 'mixed', // FIXME: 모든 챗봇을 mixed 으로 사용
+    kind: 'private', // FIXME: 모든 챗봇을 private 으로 사용
     pinned: true,
   });
 
   const { data: recentlyUsedBots, mutate: mutateRecentlyUsedBots } = api.bots({
-    kind: 'mixed', // FIXME: 모든 챗봇을 mixed 으로 사용
+    kind: 'private', // FIXME: 모든 챗봇을 private 으로 사용
     limit: 30,
   });
 
