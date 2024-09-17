@@ -116,7 +116,7 @@ const validateSocialProvider = (
   | Effect.Effect<never, InvalidSocialProvider, never>
   | Effect.Effect<TIdentityProvider, never, never> => {
   if (
-    !["google", "facebook", "amazon", "apple", "oidc"].includes(
+    !["google", "facebook", "amazon", "apple", "oidc","saml"].includes(
       provider.service
     )
   ) {
