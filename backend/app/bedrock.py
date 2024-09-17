@@ -11,7 +11,12 @@ from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.routes.schemas.conversation import type_model_name
-from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client, is_region_supported_for_inference, ENABLE_BEDROCK_CROSS_REGION_INFERENCE
+from app.utils import (
+    convert_dict_keys_to_camel_case,
+    get_bedrock_client,
+    is_region_supported_for_inference,
+    ENABLE_BEDROCK_CROSS_REGION_INFERENCE,
+)
 from typing_extensions import NotRequired, TypedDict, no_type_check
 
 logger = logging.getLogger(__name__)
@@ -23,7 +28,9 @@ DEFAULT_GENERATION_CONFIG = (
     if ENABLE_MISTRAL
     else DEFAULT_CLAUDE_GENERATION_CONFIG
 )
-ENABLE_BEDROCK_CROSS_REGION_INFERENCE = os.environ.get("ENABLE_BEDROCK_CROSS_REGION_INFERENCE", "false").lower() == "true"
+ENABLE_BEDROCK_CROSS_REGION_INFERENCE = (
+    os.environ.get("ENABLE_BEDROCK_CROSS_REGION_INFERENCE", "false").lower() == "true"
+)
 
 client = get_bedrock_client(BEDROCK_REGION)
 
@@ -257,12 +264,14 @@ def calculate_price(
 
     return input_price * input_tokens / 1000.0 + output_price * output_tokens / 1000.0
 
+
 CROSS_REGION_INFERENCE_MODELS = {
     "claude-v3-sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
     "claude-v3-haiku": "anthropic.claude-3-haiku-20240307-v1:0",
     "claude-v3-opus": "anthropic.claude-3-opus-20240229-v1:0",
     "claude-v3.5-sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
 }
+
 
 def get_model_id(model: type_model_name) -> str:
     # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids-arns.html
@@ -278,17 +287,25 @@ def get_model_id(model: type_model_name) -> str:
         "mistral-large": "mistral.mistral-large-2402-v1:0",
     }[model]
 
-    if (ENABLE_BEDROCK_CROSS_REGION_INFERENCE and 
-        is_region_supported_for_inference(BEDROCK_REGION) and 
-        model in CROSS_REGION_INFERENCE_MODELS):
-        logger.info(f"Using cross-region inference for model {model} in region {BEDROCK_REGION}")
+    if (
+        ENABLE_BEDROCK_CROSS_REGION_INFERENCE
+        and is_region_supported_for_inference(BEDROCK_REGION)
+        and model in CROSS_REGION_INFERENCE_MODELS
+    ):
+        logger.info(
+            f"Using cross-region inference for model {model} in region {BEDROCK_REGION}"
+        )
         return base_model_id
     else:
         if ENABLE_BEDROCK_CROSS_REGION_INFERENCE:
             if not is_region_supported_for_inference(BEDROCK_REGION):
-                logger.warning(f"Cross-region inference is enabled, but the region {BEDROCK_REGION} is not supported. Using local model.")
+                logger.warning(
+                    f"Cross-region inference is enabled, but the region {BEDROCK_REGION} is not supported. Using local model."
+                )
             elif model not in CROSS_REGION_INFERENCE_MODELS:
-                logger.warning(f"Cross-region inference is not available for model {model}. Using local model.")
+                logger.warning(
+                    f"Cross-region inference is not available for model {model}. Using local model."
+                )
         return f"{base_model_id}-local"
 
 
