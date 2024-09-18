@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "tsc && vite build",
     "sample": "test",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "^3.1.0",
+    "@azure/msal-react": "^2.0.3",
     "@aws-amplify/ui-react": "^5.0.6",
     "@headlessui/react": "^1.7.15",
     "@react-icons/all-files": "^4.1.0",
