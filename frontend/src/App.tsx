@@ -9,8 +9,6 @@ import { useTranslation } from 'react-i18next';
 import './i18n';
 import { validateSocialProvider } from './utils/SocialProviderUtils';
 import AppContent from './components/AppContent';
-import { IPublicClientApplication } from '@azure/msal-browser';
-import { MsalProvider } from "@azure/msal-react";
 
 const customProviderEnabled =
   import.meta.env.VITE_APP_CUSTOM_PROVIDER_ENABLED === 'true';
@@ -20,11 +18,7 @@ const socialProviderFromEnv = import.meta.env.VITE_APP_SOCIAL_PROVIDERS?.split(
 const MISTRAL_ENABLED: boolean =
   import.meta.env.VITE_APP_ENABLE_MISTRAL === 'true';
 
-type AppProps = {
-    pca: IPublicClientApplication;
-};
-
-const App: React.FC<AppProps> = ({ pca }: AppProps) => {
+const App: React.FC = () => {
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
@@ -55,10 +49,7 @@ const App: React.FC<AppProps> = ({ pca }: AppProps) => {
 
   return (
     <>
-    <MsalProvider instance={pca}>
-      <AppContent />
-    </MsalProvider>
-      {/* {customProviderEnabled ? (
+      {customProviderEnabled ? (
         <AuthCustom>
           <AppContent />
         </AuthCustom>
@@ -68,7 +59,7 @@ const App: React.FC<AppProps> = ({ pca }: AppProps) => {
             <AppContent />
           </AuthAmplify>
         </Authenticator.Provider>
-      )} */}
+      )}
     </>
   );
 };
