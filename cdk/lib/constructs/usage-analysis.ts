@@ -14,7 +14,6 @@ import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface UsageAnalysisProps {
   sourceDatabase: Database;
-  accessLogBucket?: s3.Bucket;
 }
 
 export class UsageAnalysis extends Construct {
@@ -40,7 +39,6 @@ export class UsageAnalysis extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-      serverAccessLogsBucket: props.accessLogBucket,
       serverAccessLogsPrefix: "DdbBucket",
     });
 
@@ -52,7 +50,6 @@ export class UsageAnalysis extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
       autoDeleteObjects: true,
-      serverAccessLogsBucket: props.accessLogBucket,
       serverAccessLogsPrefix: "QueryResultBucket",
     });
 
@@ -120,10 +117,6 @@ export class UsageAnalysis extends Construct {
         type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
       },
       {
-        name: "PublicBotId",
-        type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
-      },
-      {
         name: "IsPinned",
         type: glue.Schema.struct([{ name: "BOOL", type: glue.Schema.BOOLEAN }]),
       },
@@ -153,14 +146,6 @@ export class UsageAnalysis extends Construct {
       },
       {
         name: "SyncStatusReason",
-        type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
-      },
-      {
-        name: "PublishedApiStackName",
-        type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
-      },
-      {
-        name: "PublishedApiDatetime",
         type: glue.Schema.struct([{ name: "S", type: glue.Schema.STRING }]),
       },
     ]);

@@ -17,28 +17,22 @@ import { Auth } from "./auth";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Stack } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as path from "path";
 import { IBucket } from "aws-cdk-lib/aws-s3";
-import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { UsageAnalysis } from "./usage-analysis";
 import { excludeDockerImage } from "../constants/docker";
 
 export interface ApiProps {
-  readonly vpc: ec2.IVpc;
   readonly database: ITable;
-  readonly dbSecrets: ISecret;
   readonly corsAllowOrigins?: string[];
   readonly auth: Auth;
   readonly bedrockRegion: string;
   readonly tableAccessRole: iam.IRole;
   readonly documentBucket: IBucket;
   readonly largeMessageBucket: IBucket;
-  readonly apiPublishProject: codebuild.IProject;
   readonly bedrockKnowledgeBaseProject: codebuild.IProject;
   readonly usageAnalysis?: UsageAnalysis;
-  readonly enableMistral: boolean;
 }
 
 export class Api extends Construct {
@@ -82,7 +76,6 @@ export class Api extends Construct {
         effect: iam.Effect.ALLOW,
         actions: ["codebuild:StartBuild"],
         resources: [
-          props.apiPublishProject.projectArn,
           props.bedrockKnowledgeBaseProject.projectArn,
         ],
       })
@@ -105,7 +98,6 @@ export class Api extends Construct {
         effect: iam.Effect.ALLOW,
         actions: ["codebuild:BatchGetBuilds"],
         resources: [
-          props.apiPublishProject.projectArn,
           props.bedrockKnowledgeBaseProject.projectArn,
         ],
       })
@@ -185,8 +177,6 @@ export class Api extends Construct {
           ]
         }
       ),
-      vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       memorySize: 1024,
       timeout: Duration.minutes(15),
       environment: {
@@ -198,10 +188,8 @@ export class Api extends Construct {
         REGION: Stack.of(this).region,
         BEDROCK_REGION: props.bedrockRegion,
         TABLE_ACCESS_ROLE_ARN: tableAccessRole.roleArn,
-        DB_SECRETS_ARN: props.dbSecrets.secretArn,
         DOCUMENT_BUCKET: props.documentBucket.bucketName,
         LARGE_MESSAGE_BUCKET: props.largeMessageBucket.bucketName,
-        PUBLISH_API_CODEBUILD_PROJECT_NAME: props.apiPublishProject.projectName,
         KNOWLEDGE_BASE_CODEBUILD_PROJECT_NAME:
           props.bedrockKnowledgeBaseProject.projectName,
         USAGE_ANALYSIS_DATABASE:
@@ -210,11 +198,9 @@ export class Api extends Construct {
           props.usageAnalysis?.ddbExportTable.tableName || "",
         USAGE_ANALYSIS_WORKGROUP: props.usageAnalysis?.workgroupName || "",
         USAGE_ANALYSIS_OUTPUT_LOCATION: usageAnalysisOutputLocation,
-        ENABLE_MISTRAL: props.enableMistral.toString(),
       },
       role: handlerRole,
     });
-    props.dbSecrets.grantRead(handler);
 
     const api = new HttpApi(this, "Default", {
       corsPreflight: {

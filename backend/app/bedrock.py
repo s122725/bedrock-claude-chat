@@ -1,14 +1,12 @@
 import base64
-import json
 import logging
 import os
 import re
 from pathlib import Path
 from typing import TypedDict, no_type_check
 
-from app.config import BEDROCK_PRICING, DEFAULT_EMBEDDING_CONFIG
+from app.config import BEDROCK_PRICING
 from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
-from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
 from app.routes.schemas.conversation import type_model_name
@@ -17,12 +15,7 @@ from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client
 logger = logging.getLogger(__name__)
 
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
-ENABLE_MISTRAL = os.environ.get("ENABLE_MISTRAL", "") == "true"
-DEFAULT_GENERATION_CONFIG = (
-    DEFAULT_MISTRAL_GENERATION_CONFIG
-    if ENABLE_MISTRAL
-    else DEFAULT_CLAUDE_GENERATION_CONFIG
-)
+DEFAULT_GENERATION_CONFIG = DEFAULT_CLAUDE_GENERATION_CONFIG
 
 client = get_bedrock_client()
 
@@ -60,24 +53,6 @@ class ConverseApiResponse(TypedDict):
     output: ConverseApiResponseOutput
     stopReason: str
     usage: ConverseApiResponseUsage
-
-
-def compose_args(
-    messages: list[MessageModel],
-    model: type_model_name,
-    instruction: str | None = None,
-    stream: bool = False,
-    generation_params: GenerationParamsModel | None = None,
-) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
-    return dict(
-        compose_args_for_converse_api(
-            messages, model, instruction, stream, generation_params
-        )
-    )
-
 
 def _get_converse_supported_format(ext: str) -> str:
     supported_formats = {
@@ -241,57 +216,4 @@ def get_model_id(model: type_model_name) -> str:
         return "anthropic.claude-3-opus-20240229-v1:0"
     elif model == "claude-v3.5-sonnet":
         return "anthropic.claude-3-5-sonnet-20240620-v1:0"
-    elif model == "mistral-7b-instruct":
-        return "mistral.mistral-7b-instruct-v0:2"
-    elif model == "mixtral-8x7b-instruct":
-        return "mistral.mixtral-8x7b-instruct-v0:1"
-    elif model == "mistral-large":
-        return "mistral.mistral-large-2402-v1:0"
 
-
-def calculate_query_embedding(question: str) -> list[float]:
-    model_id = DEFAULT_EMBEDDING_CONFIG["model_id"]
-
-    # Currently only supports "cohere.embed-multilingual-v3"
-    assert model_id == "cohere.embed-multilingual-v3"
-
-    payload = json.dumps({"texts": [question], "input_type": "search_query"})
-    accept = "application/json"
-    content_type = "application/json"
-
-    response = client.invoke_model(
-        accept=accept, contentType=content_type, body=payload, modelId=model_id
-    )
-    output = json.loads(response.get("body").read())
-    embedding = output.get("embeddings")[0]
-
-    return embedding
-
-
-def calculate_document_embeddings(documents: list[str]) -> list[list[float]]:
-    def _calculate_document_embeddings(documents: list[str]) -> list[list[float]]:
-        payload = json.dumps({"texts": documents, "input_type": "search_document"})
-        accept = "application/json"
-        content_type = "application/json"
-
-        response = client.invoke_model(
-            accept=accept, contentType=content_type, body=payload, modelId=model_id
-        )
-        output = json.loads(response.get("body").read())
-        embeddings = output.get("embeddings")
-
-        return embeddings
-
-    BATCH_SIZE = 10
-    model_id = DEFAULT_EMBEDDING_CONFIG["model_id"]
-
-    # Currently only supports "cohere.embed-multilingual-v3"
-    assert model_id == "cohere.embed-multilingual-v3"
-
-    embeddings = []
-    for i in range(0, len(documents), BATCH_SIZE):
-        # Split documents into batches to avoid exceeding the payload size limit
-        batch = documents[i : i + BATCH_SIZE]
-        embeddings += _calculate_document_embeddings(batch)
-
-    return embeddings

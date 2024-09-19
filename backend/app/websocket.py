@@ -6,13 +6,6 @@ from datetime import datetime
 from decimal import Decimal as decimal
 
 import boto3
-from app.agents.agent import AgentExecutor, create_react_agent, format_log_to_str
-from app.agents.handlers.apigw_websocket import ApigwWebsocketCallbackHandler
-from app.agents.handlers.token_count import get_token_count_callback
-from app.agents.handlers.used_chunk import get_used_chunk_callback
-from app.agents.langchain import BedrockLLM
-from app.agents.tools.knowledge import AnswerWithKnowledgeTool
-from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
 from app.bedrock import compose_args_for_converse_api
 from app.repositories.conversation import RecordNotFoundError, store_conversation
@@ -57,101 +50,6 @@ def process_chat_input(
             return {"statusCode": 404, "body": f"bot {chat_input.bot_id} not found."}
         else:
             return {"statusCode": 400, "body": "Invalid request."}
-
-    if bot and bot.is_agent_enabled():
-        logger.info("Bot has agent tools. Using agent for response.")
-        llm = BedrockLLM.from_model(model=chat_input.message.model)
-
-        tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
-
-        if bot and bot.has_knowledge():
-            logger.info("Bot has knowledge. Adding answer with knowledge tool.")
-            answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
-                bot=bot,
-                llm=llm,
-            )
-            tools.append(answer_with_knowledge_tool)
-
-        logger.info(f"Tools: {tools}")
-        agent = create_react_agent(
-            model=chat_input.message.model,
-            tools=tools,
-            generation_config=bot.generation_params,
-        )
-        executor = AgentExecutor(
-            name="Agent Executor",
-            agent=agent,
-            tools=tools,
-            return_intermediate_steps=True,
-            callbacks=[],
-            verbose=False,
-            max_iterations=15,
-            max_execution_time=None,
-            early_stopping_method="force",
-            handle_parsing_errors=True,
-        )
-
-        price = 0.0
-        used_chunks = None
-        thinking_log = None
-        with get_token_count_callback() as token_cb, get_used_chunk_callback() as chunk_cb:
-            response = executor.invoke(
-                {
-                    "input": chat_input.message.content[0].body,
-                },
-                config={
-                    "callbacks": [
-                        ApigwWebsocketCallbackHandler(gatewayapi, connection_id),
-                        token_cb,
-                        chunk_cb,
-                    ],
-                },
-            )
-            price = token_cb.total_cost
-            if bot.display_retrieved_chunks and chunk_cb.used_chunks:
-                used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(response.get("intermediate_steps", []))
-            logger.info(f"Thinking log: {thinking_log}")
-
-        # Append entire completion as the last message
-        assistant_msg_id = str(ULID())
-        message = MessageModel(
-            role="assistant",
-            content=[
-                ContentModel(
-                    content_type="text",
-                    body=response["output"],
-                    media_type=None,
-                    file_name=None,
-                )
-            ],
-            model=chat_input.message.model,
-            children=[],
-            parent=user_msg_id,
-            create_time=get_current_time(),
-            feedback=None,
-            used_chunks=used_chunks,
-            thinking_log=thinking_log,
-        )
-        conversation.message_map[assistant_msg_id] = message
-        # Append children to parent
-        conversation.message_map[user_msg_id].children.append(assistant_msg_id)
-        conversation.last_message_id = assistant_msg_id
-
-        conversation.total_price += price
-
-        # Store conversation before finish streaming so that front-end can avoid 404 issue
-        store_conversation(user_id, conversation)
-
-        # Send signal so that frontend can close the connection
-        last_data_to_send = json.dumps(
-            dict(status="STREAMING_END", completion="", stop_reason="agent_finish")
-        ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
-
-        return {"statusCode": 200, "body": "Message sent."}
 
     message_map = conversation.message_map
     search_results = []

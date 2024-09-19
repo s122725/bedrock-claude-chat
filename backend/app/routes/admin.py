@@ -1,15 +1,11 @@
 from datetime import date
 
 from app.dependencies import check_admin
-from app.repositories.custom_bot import find_all_published_bots, find_public_bot_by_id
 from app.repositories.usage_analysis import (
     find_bots_sorted_by_price,
     find_users_sorted_by_price,
 )
 from app.routes.schemas.admin import (
-    PublicBotOutput,
-    PublishedBotOutput,
-    PublishedBotOutputsWithNextToken,
     UsagePerBotOutput,
     UsagePerUserOutput,
 )
@@ -19,31 +15,7 @@ from fastapi import APIRouter, Depends, Request
 
 router = APIRouter(tags=["admin"])
 
-
-@router.get("/admin/published-bots", response_model=PublishedBotOutputsWithNextToken)
-def get_all_published_bots(
-    next_token: str | None = None,
-    limit: int = 1000,
-    admin_check=Depends(check_admin),
-):
-    """Get all published bots. This is intended to be used by admin."""
-    bots, next_token = find_all_published_bots(next_token=next_token, limit=limit)
-
-    bot_outputs = [
-        PublishedBotOutput(
-            id=bot.id,
-            title=bot.title,
-            description=bot.description,
-            published_stack_name=bot.published_api_stack_name,
-            published_datetime=bot.published_api_datetime,
-            owner_user_id=bot.owner_user_id,
-        )
-        for bot in bots
-    ]
-
-    return PublishedBotOutputsWithNextToken(bots=bot_outputs, next_token=next_token)
-
-
+# TODO: public bot은 없으나 추후 봇별 가격 조회 기능 구현시 참고용으로 삭제하지 않음
 @router.get("/admin/public-bots", response_model=list[UsagePerBotOutput])
 async def get_all_public_bots(
     limit: int = 100,
@@ -66,8 +38,6 @@ async def get_all_public_bots(
             id=bot.id,
             title=bot.title,
             description=bot.description,
-            is_published=True if bot.published_api_stack_name else False,
-            published_datetime=bot.published_api_datetime,
             owner_user_id=bot.owner_user_id,
             total_price=bot.total_price,
         )
@@ -100,28 +70,3 @@ async def get_users(
         )
         for user in users
     ]
-
-
-@router.get("/admin/bot/public/{bot_id}", response_model=PublicBotOutput)
-def get_public_bot(request: Request, bot_id: str, admin_check=Depends(check_admin)):
-    """Get public (shared) bot by id."""
-    bot = find_public_bot_by_id(bot_id)
-    output = PublicBotOutput(
-        id=bot.id,
-        title=bot.title,
-        instruction=bot.instruction,
-        description=bot.description,
-        create_time=bot.create_time,
-        last_used_time=bot.last_used_time,
-        owner_user_id=bot.owner_user_id,
-        knowledge=Knowledge(
-            source_urls=bot.knowledge.source_urls,
-            sitemap_urls=bot.knowledge.sitemap_urls,
-            filenames=bot.knowledge.filenames,
-            s3_urls=bot.knowledge.s3_urls,
-        ),
-        sync_status=bot.sync_status,
-        sync_status_reason=bot.sync_status_reason,
-        sync_last_exec_id=bot.sync_last_exec_id,
-    )
-    return output

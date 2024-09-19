@@ -51,30 +51,12 @@
     "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": true,
     "@aws-cdk/core:includePrefixInUniqueNameGeneration": true,
     "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": true,
-    "enableMistral": false,
     "bedrockRegion": "us-east-1",
-    "allowedIpV4AddressRanges": ["0.0.0.0/1", "128.0.0.0/1"],
-    "allowedIpV6AddressRanges": [
-      "0000:0000:0000:0000:0000:0000:0000:0000/1",
-      "8000:0000:0000:0000:0000:0000:0000:0000/1"
-    ],
     "identityProviders": [],
     "userPoolDomainPrefix": "",
     "allowedSignUpEmailDomains": [],
     "autoJoinUserGroups": ["CreatingBotAllowed"],
     "selfSignUpEnabled": true,
-    "publishedApiAllowedIpV4AddressRanges": ["0.0.0.0/1", "128.0.0.0/1"],
-    "publishedApiAllowedIpV6AddressRanges": [
-      "0000:0000:0000:0000:0000:0000:0000:0000/1",
-      "8000:0000:0000:0000:0000:0000:0000:0000/1"
-    ],
-    "rdbSchedules": {
-      "stop": {},
-      "start": {}
-    },
-    "embeddingContainerVcpu": 2048,
-    "embeddingContainerMemory": 4096,
-    "natgatewayCount": 2,
     "useBedrockKnowledgeBaseForRag": false
   }
 }

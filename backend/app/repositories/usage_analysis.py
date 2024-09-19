@@ -204,8 +204,6 @@ LIMIT {limit};
                     id=bot_id,
                     title=bot.title,
                     description=bot.description,
-                    published_api_stack_name=bot.published_api_stack_name,
-                    published_api_datetime=bot.published_api_datetime,
                     owner_user_id=bot.owner_user_id,
                     total_price=total_price,
                 )

@@ -2,14 +2,7 @@ import logging
 from copy import deepcopy
 from typing import Literal
 
-from app.agents.agent import AgentExecutor, create_react_agent, format_log_to_str
-from app.agents.handlers.token_count import get_token_count_callback
-from app.agents.handlers.used_chunk import get_used_chunk_callback
-from app.agents.langchain import BedrockLLM
-from app.agents.tools.knowledge import AnswerWithKnowledgeTool
-from app.agents.utils import get_tool_by_name
 from app.bedrock import (
-    calculate_price,
     call_converse_api,
     compose_args_for_converse_api,
 )
@@ -17,23 +10,17 @@ from app.prompt import build_rag_prompt
 from app.repositories.conversation import (
     RecordNotFoundError,
     find_conversation_by_id,
-    store_conversation,
 )
-from app.repositories.custom_bot import find_alias_by_id, store_alias
 from app.repositories.models.conversation import (
-    ChunkModel,
     ContentModel,
     ConversationModel,
     MessageModel,
 )
 from app.repositories.models.custom_bot import (
-    BotAliasModel,
     BotModel,
-    ConversationQuickStarterModel,
 )
 from app.routes.schemas.conversation import (
     ChatInput,
-    ChatOutput,
     Chunk,
     Content,
     Conversation,
@@ -41,11 +28,10 @@ from app.routes.schemas.conversation import (
     MessageOutput,
     RelatedDocumentsOutput,
 )
-from app.usecases.bot import fetch_bot, modify_bot_last_used_time
-from app.utils import get_current_time, is_running_on_lambda
+from app.usecases.bot import fetch_bot
+from app.utils import get_current_time
 from app.vector_search import (
     SearchResult,
-    filter_used_results,
     get_source_link,
     search_related_docs,
 )
@@ -74,7 +60,7 @@ def prepare_conversation(
             parent_id = conversation.last_message_id
         if chat_input.bot_id:
             logger.info("Bot id is provided. Fetching bot.")
-            owned, bot = fetch_bot(user_id, chat_input.bot_id)
+            bot = fetch_bot(user_id, chat_input.bot_id)
     except RecordNotFoundError:
         # The case for new conversation. Note that editing first user message is not considered as new conversation.
         logger.info(
@@ -107,7 +93,7 @@ def prepare_conversation(
             logger.info("Bot id is provided. Fetching bot.")
             parent_id = "instruction"
             # Fetch bot and append instruction
-            owned, bot = fetch_bot(user_id, chat_input.bot_id)
+            bot = fetch_bot(user_id, chat_input.bot_id)
             initial_message_map["instruction"] = MessageModel(
                 role="instruction",
                 content=[
@@ -127,42 +113,6 @@ def prepare_conversation(
                 thinking_log=None,
             )
             initial_message_map["system"].children.append("instruction")
-
-            if not owned:
-                try:
-                    # Check alias is already created
-                    find_alias_by_id(user_id, chat_input.bot_id)
-                except RecordNotFoundError:
-                    logger.info(
-                        "Bot is not owned by the user. Creating alias to shared bot."
-                    )
-                    # Create alias item
-                    store_alias(
-                        user_id,
-                        BotAliasModel(
-                            id=bot.id,
-                            title=bot.title,
-                            description=bot.description,
-                            original_bot_id=chat_input.bot_id,
-                            create_time=current_time,
-                            last_used_time=current_time,
-                            is_pinned=False,
-                            sync_status=bot.sync_status,
-                            has_knowledge=bot.has_knowledge(),
-                            has_agent=bot.is_agent_enabled(),
-                            conversation_quick_starters=(
-                                []
-                                if bot.conversation_quick_starters is None
-                                else [
-                                    ConversationQuickStarterModel(
-                                        title=starter.title,
-                                        example=starter.example,
-                                    )
-                                    for starter in bot.conversation_quick_starters
-                                ]
-                            ),
-                        ),
-                    )
 
         # Create new conversation
         conversation = ConversationModel(
@@ -247,211 +197,6 @@ def insert_knowledge(
     return conversation_with_context
 
 
-def chat(user_id: str, chat_input: ChatInput) -> ChatOutput:
-    user_msg_id, conversation, bot = prepare_conversation(user_id, chat_input)
-    used_chunks = None
-    price = 0.0
-    thinking_log = None
-
-    if bot and bot.is_agent_enabled():
-        logger.info("Bot has agent tools. Using agent for response.")
-        llm = BedrockLLM.from_model(model=chat_input.message.model)
-
-        tools = [get_tool_by_name(t.name) for t in bot.agent.tools]
-
-        if bot and bot.has_knowledge():
-            logger.info("Bot has knowledge. Adding answer with knowledge tool.")
-            answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
-                bot=bot,
-                llm=llm,
-            )
-            tools.append(answer_with_knowledge_tool)
-
-        logger.info(f"Tools: {tools}")
-        agent = create_react_agent(
-            model=chat_input.message.model,
-            tools=tools,
-            generation_config=bot.generation_params,
-        )
-        executor = AgentExecutor(
-            name="Agent Executor",
-            agent=agent,
-            tools=tools,
-            return_intermediate_steps=True,
-            callbacks=[],
-            verbose=False,
-            max_iterations=15,
-            max_execution_time=None,
-            early_stopping_method="force",
-            handle_parsing_errors=True,
-        )
-
-        with get_token_count_callback() as token_cb, get_used_chunk_callback() as chunk_cb:
-            agent_response = executor.invoke(
-                {
-                    "input": chat_input.message.content[0].body,  # type: ignore
-                },
-                config={
-                    "callbacks": [
-                        token_cb,
-                        chunk_cb,
-                    ],
-                },
-            )
-            price = token_cb.total_cost
-            if bot.display_retrieved_chunks and chunk_cb.used_chunks:
-                used_chunks = chunk_cb.used_chunks
-            thinking_log = format_log_to_str(
-                agent_response.get("intermediate_steps", [])
-            )
-            logger.info(f"Thinking log: {thinking_log}")
-
-        reply_txt = agent_response["output"]
-        conversation.should_continue = False
-    else:
-        message_map = conversation.message_map
-        search_results = []
-        if bot and is_running_on_lambda():
-            # NOTE: `is_running_on_lambda`is a workaround for local testing due to no postgres mock.
-            # Fetch most related documents from vector store
-            # NOTE: Currently embedding not support multi-modal. For now, use the last content.
-            query: str = conversation.message_map[user_msg_id].content[-1].body  # type: ignore[assignment]
-
-            search_results = search_related_docs(bot=bot, query=query)
-            logger.info(f"Search results from vector store: {search_results}")
-
-            # Insert contexts to instruction
-            conversation_with_context = insert_knowledge(
-                conversation,
-                search_results,
-                display_citation=bot.display_retrieved_chunks,
-            )
-            message_map = conversation_with_context.message_map
-
-        messages = trace_to_root(
-            node_id=conversation.message_map[user_msg_id].parent,
-            message_map=message_map,
-        )
-
-        if not chat_input.continue_generate:
-            messages.append(MessageModel.from_message_input(chat_input.message))
-
-        # Create payload to invoke Bedrock
-        args = compose_args_for_converse_api(
-            messages=messages,
-            model=chat_input.message.model,
-            instruction=(
-                message_map["instruction"].content[0].body
-                if "instruction" in message_map
-                else None  # type: ignore[union-attr]
-            ),
-            generation_params=(bot.generation_params if bot else None),
-        )
-
-        converse_response = call_converse_api(args)
-        reply_txt = converse_response["output"]["message"]["content"][0]["text"]
-        reply_txt = reply_txt.rstrip()
-
-        # Used chunks for RAG generation
-        if bot and bot.display_retrieved_chunks and is_running_on_lambda():
-            if len(search_results) > 0:
-                used_chunks = []
-                for r in filter_used_results(reply_txt, search_results):
-                    content_type, source_link = get_source_link(r.source)
-                    used_chunks.append(
-                        ChunkModel(
-                            content=r.content,
-                            content_type=content_type,
-                            source=source_link,
-                            rank=r.rank,
-                        )
-                    )
-
-        input_tokens = converse_response["usage"]["inputTokens"]
-        output_tokens = converse_response["usage"]["outputTokens"]
-
-        price = calculate_price(chat_input.message.model, input_tokens, output_tokens)
-        # Published API does not support continued generation
-        conversation.should_continue = False
-
-    # Issue id for new assistant message
-    assistant_msg_id = str(ULID())
-    # Append bedrock output to the existing conversation
-    message = MessageModel(
-        role="assistant",
-        content=[
-            ContentModel(
-                content_type="text", body=reply_txt, media_type=None, file_name=None
-            )
-        ],
-        model=chat_input.message.model,
-        children=[],
-        parent=user_msg_id,
-        create_time=get_current_time(),
-        feedback=None,
-        used_chunks=used_chunks,
-        thinking_log=thinking_log,
-    )
-
-    if chat_input.continue_generate:
-        conversation.message_map[conversation.last_message_id].content[
-            0
-        ].body += reply_txt  # type: ignore[union-attr]
-    else:
-        conversation.message_map[assistant_msg_id] = message
-
-        # Append children to parent
-        conversation.message_map[user_msg_id].children.append(assistant_msg_id)
-        conversation.last_message_id = assistant_msg_id
-
-    conversation.total_price += price
-
-    # Store updated conversation
-    store_conversation(user_id, conversation)
-    # Update bot last used time
-    if chat_input.bot_id:
-        logger.info("Bot id is provided. Updating bot last used time.")
-        # Update bot last used time
-        modify_bot_last_used_time(user_id, chat_input.bot_id)
-
-    output = ChatOutput(
-        conversation_id=conversation.id,
-        create_time=conversation.create_time,
-        message=MessageOutput(
-            role=message.role,
-            content=[
-                Content(
-                    content_type=c.content_type,
-                    body=c.body,
-                    media_type=c.media_type,
-                    file_name=None,
-                )
-                for c in message.content
-            ],
-            model=message.model,
-            children=message.children,
-            parent=message.parent,
-            feedback=None,
-            used_chunks=(
-                [
-                    Chunk(
-                        content=c.content,
-                        content_type=c.content_type,
-                        source=c.source,
-                        rank=c.rank,
-                    )
-                    for c in message.used_chunks
-                ]
-                if message.used_chunks
-                else None
-            ),
-        ),
-        bot_id=conversation.bot_id,
-    )
-
-    return output
-
-
 def propose_conversation_title(
     user_id: str,
     conversation_id: str,
@@ -462,9 +207,6 @@ def propose_conversation_title(
         "claude-v3-sonnet",
         "claude-v3.5-sonnet",
         "claude-v3-haiku",
-        "mistral-7b-instruct",
-        "mixtral-8x7b-instruct",
-        "mistral-large",
     ] = "claude-v3-haiku",
 ) -> str:
     PROMPT = """Reading the conversation above, what is the appropriate title for the conversation? When answering the title, please follow the rules below:
@@ -587,7 +329,7 @@ def fetch_related_documents(
     if not chat_input.bot_id:
         return []
 
-    _, bot = fetch_bot(user_id, chat_input.bot_id)
+    bot = fetch_bot(user_id, chat_input.bot_id)
     if not bot.display_retrieved_chunks:
         return None
 

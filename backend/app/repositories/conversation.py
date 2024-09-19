@@ -158,6 +158,7 @@ def find_conversation_by_user_id(user_id: str) -> list[ConversationMeta]:
 def find_conversation_by_id(user_id: str, conversation_id: str) -> ConversationModel:
     logger.info(f"Finding conversation: {conversation_id}")
     table = _get_table_client(user_id)
+    logger.info(f"key : {compose_conv_id(user_id, conversation_id)}")
     response = table.query(
         IndexName="SKIndex",
         KeyConditionExpression=Key("SK").eq(compose_conv_id(user_id, conversation_id)),

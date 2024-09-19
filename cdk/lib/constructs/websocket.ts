@@ -6,9 +6,7 @@ import {
   DockerImageCode,
   DockerImageFunction,
   IFunction,
-  Runtime,
 } from "aws-cdk-lib/aws-lambda";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { CfnOutput, Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
@@ -16,23 +14,17 @@ import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Auth } from "./auth";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { CfnRouteResponse } from "aws-cdk-lib/aws-apigatewayv2";
-import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { excludeDockerImage } from "../constants/docker";
 
 export interface WebSocketProps {
-  readonly vpc: ec2.IVpc;
   readonly database: ITable;
-  readonly dbSecrets: ISecret;
   readonly auth: Auth;
   readonly bedrockRegion: string;
   readonly tableAccessRole: iam.IRole;
   readonly documentBucket: s3.IBucket;
   readonly websocketSessionTable: ITable;
   readonly largeMessageBucket: s3.IBucket;
-  readonly accessLogBucket?: s3.Bucket;
-  readonly enableMistral: boolean;
 }
 
 export class WebSocket extends Construct {
@@ -57,7 +49,6 @@ export class WebSocket extends Construct {
         removalPolicy: RemovalPolicy.DESTROY,
         objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
         autoDeleteObjects: true,
-        serverAccessLogsBucket: props.accessLogBucket,
         serverAccessLogsPrefix: "LargePayloadSupportBucket",
       }
     );
@@ -99,8 +90,6 @@ export class WebSocket extends Construct {
           ]
         }
       ),
-      vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       memorySize: 512,
       timeout: Duration.minutes(15),
       environment: {
@@ -112,14 +101,11 @@ export class WebSocket extends Construct {
         TABLE_NAME: database.tableName,
         TABLE_ACCESS_ROLE_ARN: tableAccessRole.roleArn,
         LARGE_MESSAGE_BUCKET: props.largeMessageBucket.bucketName,
-        DB_SECRETS_ARN: props.dbSecrets.secretArn,
         LARGE_PAYLOAD_SUPPORT_BUCKET: largePayloadSupportBucket.bucketName,
         WEBSOCKET_SESSION_TABLE_NAME: props.websocketSessionTable.tableName,
-        ENABLE_MISTRAL: props.enableMistral.toString(),
       },
       role: handlerRole,
     });
-    props.dbSecrets.grantRead(handler);
 
     const webSocketApi = new apigwv2.WebSocketApi(this, "WebSocketApi", {
       connectRouteOptions: {

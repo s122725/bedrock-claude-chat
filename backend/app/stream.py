@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Callable
 
-from app.bedrock import ConverseApiRequest, calculate_price, get_model_id
+from app.bedrock import ConverseApiRequest, calculate_price
 from app.routes.schemas.conversation import type_model_name
 from app.utils import get_bedrock_client
 from langchain_core.outputs import GenerationChunk

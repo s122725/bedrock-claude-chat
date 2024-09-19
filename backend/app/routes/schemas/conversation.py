@@ -11,9 +11,6 @@ type_model_name = Literal[
     "claude-v3.5-sonnet",
     "claude-v3-haiku",
     "claude-v3-opus",
-    "mistral-7b-instruct",
-    "mixtral-8x7b-instruct",
-    "mistral-large",
 ]
 
 
@@ -113,13 +110,6 @@ class ChatInput(BaseSchema):
     message: MessageInput
     bot_id: str | None = Field(None)
     continue_generate: bool = Field(False)
-
-
-class ChatOutput(BaseSchema):
-    conversation_id: str
-    message: MessageOutput
-    bot_id: str | None
-    create_time: float
 
 
 class RelatedDocumentsOutput(BaseSchema):
