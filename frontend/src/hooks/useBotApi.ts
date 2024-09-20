@@ -11,8 +11,6 @@ import {
   UpdateBotPinnedResponse,
   UpdateBotRequest,
   UpdateBotResponse,
-  UpdateBotVisibilityRequest,
-  UpdateBotVisibilityResponse,
 } from '../@types/bot';
 import useHttp from './useHttp';
 
@@ -58,15 +56,6 @@ const useBotApi = () => {
     },
     updateBotPinned: (botId: string, params: UpdateBotPinnedRequest) => {
       return http.patch<UpdateBotPinnedResponse>(`bot/${botId}/pinned`, params);
-    },
-    updateBotVisibility: (
-      botId: string,
-      params: UpdateBotVisibilityRequest
-    ) => {
-      return http.patch<UpdateBotVisibilityResponse>(
-        `bot/${botId}/visibility`,
-        params
-      );
     },
     deleteBot: (botId: string) => {
       return http.delete(`bot/${botId}`);

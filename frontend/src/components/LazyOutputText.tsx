@@ -22,7 +22,7 @@ const LazyOutputText: React.FC<Props> = (props) => {
     });
 
     return () => {
-      // 多重読み込み対策でクリアする
+      // 다중 읽기 방법으로 clear
       functions.forEach((f) => {
         clearTimeout(f);
       });

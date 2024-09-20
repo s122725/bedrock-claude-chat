@@ -1,13 +1,12 @@
 import { fetchAuthSession } from 'aws-amplify/auth';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import useSWR, { SWRConfiguration } from 'swr';
-// import useAlertSnackbar from "./useAlertSnackbar";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_APP_API_ENDPOINT,
 });
 
-// // HTTP Request Preprocessing
+// HTTP Request Preprocessing
 api.interceptors.request.use(async (config) => {
   // If Authenticated, append ID Token to Request Header
   const idToken = (await fetchAuthSession()).tokens?.idToken;
@@ -24,7 +23,7 @@ const fetcher = (url: string) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fetcfWithParams = ([url, params]: [string, Record<string, any>]) => {
+const fetchWithParams = ([url, params]: [string, Record<string, any>]) => {
   return api
     .get(url, {
       params,
@@ -32,19 +31,11 @@ const fetcfWithParams = ([url, params]: [string, Record<string, any>]) => {
     .then((res) => res.data);
 };
 
-// const getErrorMessage = (error: AxiosError<any>): string => {
-//   return error.response?.data?.message ?? error.message;
-// };
-
-// FIXME:バックエンドができた時点で最適化する
-
 /**
  * Hooks for Http Request
  * @returns
  */
 const useHttp = () => {
-  // const alert = useAlertSnackbar();
-
   return {
     /**
      * GET Request
@@ -60,7 +51,7 @@ const useHttp = () => {
       // eslint-disable-next-line react-hooks/rules-of-hooks
       return useSWR<Data, AxiosError<Error>>(
         url,
-        typeof url === 'string' ? fetcher : fetcfWithParams,
+        typeof url === 'string' ? fetcher : fetchWithParams,
         {
           ...config,
         }
@@ -86,7 +77,7 @@ const useHttp = () => {
             if (errorProcess) {
               errorProcess(err);
             } else {
-              // alert.openError(getErrorMessage(err));
+              console.log(err);
             }
             reject(err);
           });

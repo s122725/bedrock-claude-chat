@@ -128,8 +128,8 @@ const ChatMessage: React.FC<Props> = (props) => {
           </div>
         )}
         {chatContent?.role === 'assistant' && (
-          <div className="min-w-[2.3rem] max-w-[2.3rem]">
-            <img src="/images/bedrock_icon_64.png" className="rounded" />
+          <div className="flex min-w-[2.3rem] max-w-[2.3rem] items-start justify-center">
+            <img src="/img_chatbot.svg" className="rounded" />
           </div>
         )}
 
@@ -164,8 +164,8 @@ const ChatMessage: React.FC<Props> = (props) => {
                 <div key="files" className="my-2 flex">
                   {chatContent.content.map((content, idx) => {
                     if (content.contentType === 'attachment') {
-                      const isTextFile = TEXT_FILE_EXTENSIONS.some(
-                        (ext) => content.fileName?.toLowerCase().endsWith(ext)
+                      const isTextFile = TEXT_FILE_EXTENSIONS.some((ext) =>
+                        content.fileName?.toLowerCase().endsWith(ext)
                       );
                       return (
                         <UploadedAttachedFile
