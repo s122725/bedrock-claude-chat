@@ -60,7 +60,7 @@ class TestCustomBotRepository(unittest.TestCase):
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
             bedrock_knowledge_base=BedrockKnowledgeBaseModel(
-                embeddings_model="titan_v1",
+                embeddings_model="titan_v2",
                 open_search=OpenSearchParamsModel(
                     analyzer=AnalyzerParamsModel(
                         character_filters=["icu_normalizer"],
@@ -190,7 +190,7 @@ class TestCustomBotRepository(unittest.TestCase):
             False,
             "user1",
             bedrock_knowledge_base=BedrockKnowledgeBaseModel(
-                embeddings_model="titan_v1",
+                embeddings_model="titan_v2",
                 open_search=OpenSearchParamsModel(
                     analyzer=AnalyzerParamsModel(
                         character_filters=["icu_normalizer"],
