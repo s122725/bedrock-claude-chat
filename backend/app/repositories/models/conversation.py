@@ -1,7 +1,7 @@
 import base64
 from typing import Literal
 
-from app.routes.schemas.conversation import MessageInput, type_model_name
+from routes.schemas.conversation import MessageInput, type_model_name
 from pydantic import BaseModel, Field
 
 

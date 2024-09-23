@@ -2,15 +2,16 @@ import base64
 import logging
 import os
 import re
+import pprint
 from pathlib import Path
 from typing import TypedDict, no_type_check
 
-from app.config import BEDROCK_PRICING
-from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
-from app.repositories.models.conversation import MessageModel
-from app.repositories.models.custom_bot import GenerationParamsModel
-from app.routes.schemas.conversation import type_model_name
-from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client
+from config import BEDROCK_PRICING
+from config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
+from repositories.models.conversation import MessageModel
+from repositories.models.custom_bot import GenerationParamsModel
+from routes.schemas.conversation import type_model_name
+from utils import convert_dict_keys_to_camel_case, get_bedrock_client, get_aws_bedrock_client, get_aws_bedrock_agent_client
 
 logger = logging.getLogger(__name__)
 
@@ -217,3 +218,73 @@ def get_model_id(model: type_model_name) -> str:
     elif model == "claude-v3.5-sonnet":
         return "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
+# 가드레일 리스트 조회
+def get_guardrail_list():
+    client = get_aws_bedrock_client()
+    try:
+        response = client.list_guardrails()
+        return response.get('guardrails', [])
+    except Exception as e:
+        print(f"Error fetching guardrail list: {e}")
+        return []
+
+# 가드레일 상세정보 조회
+def get_guardrail_detail_info(id):
+    client = get_aws_bedrock_client()
+    try:
+        response = client.get_guardrail(guardrailIdentifier=id)
+        return response
+    except Exception as e:
+        print(f"Error fetching guardrail detail: {e}")
+        return {}
+
+# 프롬프트 리스트 조회 함수
+def get_prompt_list():
+    client = get_aws_bedrock_agent_client()
+    try:
+        # 'list_prompts' 메서드를 사용해 프롬프트 리스트 조회
+        response = client.list_prompts()
+
+        # API 호출 결과에서 프롬프트 목록을 추출하여 반환
+        return response.get('promptSummaries', [])
+    
+    except Exception as e:
+        print(f"Error fetching prompt list: {e}")
+        return []
+    
+# 프롬프트 상세정보 조회
+def get_prompt_detail_info(id):
+    client = get_aws_bedrock_agent_client()
+    try:
+        response = client.get_prompt(promptIdentifier=id)
+        return response
+    except Exception as e:
+        print(f"Error fetching prompt detail: {e}")
+        return {}
+
+# 임시 dict 타입의 응답 값을 보기 좋게 출력하는 함수
+def pretty_print_dict_pprint(response_dict):
+    pprint.pprint(response_dict, indent=4, width=80)
+
+
+# Guardrail 리스트 조회 예시
+if __name__ == "__main__":
+    # Guardrail 리스트 가져오기
+    guardrail_list = get_guardrail_list()
+
+    # 결과 출력
+    print("Guardrail List:")
+    for guardrail in guardrail_list:
+        print('--------------------가드레일 요약-------------------------')
+        pretty_print_dict_pprint(guardrail)
+        print('--------------------가드레일 상세-------------------------')
+        pretty_print_dict_pprint(get_guardrail_detail_info(guardrail['id']))
+
+    # 프롬프트 조회
+    prompt_list = get_prompt_list()
+
+    for prompt in prompt_list:
+        print('--------------------PROMPT 요약-------------------------')
+        pretty_print_dict_pprint(prompt)
+        print('--------------------PROMPT 상세-------------------------')
+        pretty_print_dict_pprint(get_prompt_detail_info(prompt['id']))

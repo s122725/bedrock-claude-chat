@@ -1,7 +1,7 @@
 import base64
 from typing import Literal
 
-from app.routes.schemas.base import BaseSchema
+from routes.schemas.base import BaseSchema
 from pydantic import Field, root_validator, validator
 
 type_model_name = Literal[

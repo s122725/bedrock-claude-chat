@@ -13,7 +13,7 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
-REGION = os.environ.get("REGION", "us-east-1")
+REGION = os.environ.get("REGION", "ap-northeast-2")
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
 PUBLISH_API_CODEBUILD_PROJECT_NAME = os.environ.get(
     "PUBLISH_API_CODEBUILD_PROJECT_NAME", ""
@@ -40,9 +40,16 @@ def get_bedrock_client(region=BEDROCK_REGION):
     client = boto3.client("bedrock-runtime", region)
     return client
 
+def get_aws_bedrock_client(region=BEDROCK_REGION):
+    client = boto3.client("bedrock", region)
+    return client
 
-def get_bedrock_agent_client(region=REGION):
+def get_bedrock_agent_client(region=BEDROCK_REGION):
     client = boto3.client("bedrock-agent-runtime", region)
+    return client
+
+def get_aws_bedrock_agent_client(region=BEDROCK_REGION):
+    client = boto3.client("bedrock-agent", region)
     return client
 
 

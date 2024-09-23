@@ -1,6 +1,6 @@
 from typing import Literal
 
-from app.routes.schemas.base import BaseSchema
+from routes.schemas.base import BaseSchema
 from pydantic import Field
 
 # Ref: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ChunkingConfiguration.html

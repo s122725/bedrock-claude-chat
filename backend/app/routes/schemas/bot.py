@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, Optional
 
-from app.routes.schemas.base import BaseSchema
-from app.routes.schemas.bot_kb import (
+from routes.schemas.base import BaseSchema
+from routes.schemas.bot_kb import (
     BedrockKnowledgeBaseInput,
     BedrockKnowledgeBaseOutput,
 )

@@ -1,4 +1,4 @@
-from app.routes.schemas.bot_kb import (
+from routes.schemas.bot_kb import (
     type_kb_chunking_strategy,
     type_kb_embeddings_model,
     type_kb_search_type,

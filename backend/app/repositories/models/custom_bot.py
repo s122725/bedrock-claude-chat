@@ -1,6 +1,6 @@
-from app.repositories.models.common import Float
-from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
-from app.routes.schemas.bot import type_sync_status
+from repositories.models.common import Float
+from repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
+from routes.schemas.bot import type_sync_status
 from pydantic import BaseModel
 
 
