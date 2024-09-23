@@ -14,7 +14,6 @@ import {
   PiChat,
   PiCheck,
   PiCompass,
-  PiGlobe,
   PiNotePencil,
   PiPencilLine,
   PiRobot,

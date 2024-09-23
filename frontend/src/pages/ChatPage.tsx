@@ -56,7 +56,6 @@ const ChatPage: React.FC = () => {
     hasError,
     setCurrentMessageId,
     getPostedModel,
-    loadingConversation,
     getShouldContinue,
     getRelatedDocuments,
     giveFeedback,

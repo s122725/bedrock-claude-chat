@@ -1,6 +1,6 @@
-import { EmdeddingParams, GenerationParams, SearchParams } from '../@types/bot';
+import { EmbeddingParams, GenerationParams, SearchParams } from '../@types/bot';
 
-export const DEFAULT_EMBEDDING_CONFIG: EmdeddingParams = {
+export const DEFAULT_EMBEDDING_CONFIG: EmbeddingParams = {
   chunkSize: 1000,
   chunkOverlap: 200,
   enablePartitionPdf: false,
