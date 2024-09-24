@@ -520,8 +520,8 @@ How would you categorize this email?`,
         'Select the embedded model for configuring knowledge, and set the method for splitting documents added as knowledge. These settings cannot be changed after creating the bot.',
       embeddingModel: {
         label: 'Embeddings Model',
-        titan_v1: {
-          label: 'Titan Embeddings G1 - Text v1.2',
+        titan_v2: {
+          label: 'Titan Embedding Text v2',
         },
         cohere_multilingual_v3: {
           label: 'Embed Multilingual v3',
