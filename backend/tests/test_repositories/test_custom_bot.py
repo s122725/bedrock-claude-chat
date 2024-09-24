@@ -117,7 +117,7 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(len(bot.conversation_quick_starters), 1)
         self.assertEqual(bot.conversation_quick_starters[0].title, "QS title")
         self.assertEqual(bot.conversation_quick_starters[0].example, "QS example")
-        self.assertEqual(bot.bedrock_knowledge_base.embeddings_model, "titan_v1")
+        self.assertEqual(bot.bedrock_knowledge_base.embeddings_model, "titan_v2")
         self.assertEqual(bot.bedrock_knowledge_base.chunking_strategy, "default")
         self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
         self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
@@ -256,7 +256,7 @@ class TestCustomBotRepository(unittest.TestCase):
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
             bedrock_knowledge_base=BedrockKnowledgeBaseModel(
-                embeddings_model="titan_v1",
+                embeddings_model="titan_v2",
                 open_search=OpenSearchParamsModel(
                     analyzer=AnalyzerParamsModel(
                         character_filters=["icu_normalizer"],
@@ -301,7 +301,7 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.conversation_quick_starters[0].title, "QS title")
         self.assertEqual(bot.conversation_quick_starters[0].example, "QS example")
 
-        self.assertEqual(bot.bedrock_knowledge_base.embeddings_model, "titan_v1")
+        self.assertEqual(bot.bedrock_knowledge_base.embeddings_model, "titan_v2")
         self.assertEqual(bot.bedrock_knowledge_base.chunking_strategy, "default")
         self.assertEqual(bot.bedrock_knowledge_base.max_tokens, 2000)
         self.assertEqual(bot.bedrock_knowledge_base.overlap_percentage, 0)
