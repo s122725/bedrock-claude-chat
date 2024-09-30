@@ -11,6 +11,7 @@ from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CO
 from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
+from app.repositories.models.custom_bot_guardrails import BedrockGuardrailsModel
 from app.routes.schemas.conversation import type_model_name
 from app.utils import convert_dict_keys_to_camel_case, get_bedrock_runtime_client
 
@@ -203,19 +204,19 @@ def compose_args_for_converse_api_with_guardrail(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
     grounding_source: dict | None = None,
-    guardrail: dict | None = None,
+    guardrail: BedrockGuardrailsModel | None = None,
 ) -> ConverseApiRequest:
     """Compose arguments for Converse API.
     Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
     """
-    arg_messages = []
+    arg_messages = []    
     for message in messages:
         if message.role not in ["system", "instruction"]:
             content_blocks = []
             for c in message.content:
                 if c.content_type == "text":
                     if message.role == "user":
-                        if guardrail and guardrail["grounding_threshold"] > 0:
+                        if guardrail and getattr(guardrail, "grounding_threshold", 0) > 0:
                             content_blocks.append({"guardContent": grounding_source})
                         content_blocks.append(
                             {
@@ -228,7 +229,7 @@ def compose_args_for_converse_api_with_guardrail(
                         content_blocks.append(
                             {
                                 "text": (
-                                    {"content": c.body}
+                                    {"content": c.body}  # type: ignore
                                     if isinstance(c.body, str)
                                     else None
                                 )
@@ -246,9 +247,9 @@ def compose_args_for_converse_api_with_guardrail(
                     content_blocks.append(
                         {
                             "image": {
-                                "format": format,
+                                "format": format,  # type: ignore
                                 # decode base64 encoded image
-                                "source": {"bytes": base64.b64decode(c.body)},
+                                "source": {"bytes": base64.b64decode(c.body)},  # type: ignore
                             }
                         }
                     )
@@ -305,10 +306,13 @@ def compose_args_for_converse_api_with_guardrail(
     if instruction:
         args["system"].append({"text": instruction})
 
-    if guardrail and "guardrail_arn" in guardrail and "guardrail_version" in guardrail:
+    if (guardrail and 
+        hasattr(guardrail, "guardrail_arn") and guardrail.guardrail_arn and
+        hasattr(guardrail, "guardrail_version") and guardrail.guardrail_version):
+
         args["guardrailConfig"] = {  # Update the value
-            "guardrailIdentifier": guardrail["guardrail_arn"],
-            "guardrailVersion": guardrail["guardrail_version"],
+            "guardrailIdentifier": guardrail["guardrail_arn"],  # type: ignore
+            "guardrailVersion": guardrail["guardrail_version"],  # type: ignore
             "trace": "enabled",
             "streamProcessingMode": "async",
         }
@@ -318,30 +322,19 @@ def compose_args_for_converse_api_with_guardrail(
 
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     client = get_bedrock_runtime_client()
-    messages = args["messages"]
-    inference_config = args["inference_config"]
-    additional_model_request_fields = args["additional_model_request_fields"]
-    model_id = args["model_id"]
-    system = args["system"]
 
-    if args and "guardrailConfig" in args:
-        return client.converse(
-            modelId=model_id,
-            messages=messages,
-            inferenceConfig=inference_config,
-            system=system,
-            additionalModelRequestFields=additional_model_request_fields,
-            guardrailConfig=args["guardrailConfig"],
-        )
-    else:
-        return client.converse(
-            modelId=model_id,
-            messages=messages,
-            inferenceConfig=inference_config,
-            system=system,
-            additionalModelRequestFields=additional_model_request_fields,
-        )
+    base_args = { 
+        "modelId": args["model_id"], 
+        "messages": args["messages"], 
+        "inferenceConfig": args["inference_config"], 
+        "system": args["system"], 
+        "additionalModelRequestFields": args["additional_model_request_fields"]
+    }
 
+    if "guardrailConfig" in args: 
+        base_args["guardrailConfig"] = args["guardrailConfig"]  # type: ignore
+
+    return client.converse(**base_args)
 
 def calculate_price(
     model: type_model_name,

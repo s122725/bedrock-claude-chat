@@ -78,6 +78,9 @@ const violenceThreshold: number | undefined = guardrails.violence_threshold
 const misconductThreshold: number | undefined = guardrails.misconduct_threshold
   ? Number(guardrails.misconduct_threshold.N)
   : undefined;
+  const groundingThreshold: number | undefined = guardrails.grounding_threshold
+  ? Number(guardrails.grounding_threshold.N)
+  : undefined;
 const relevanceThreshold: number | undefined = guardrails.relevance_threshold
   ? Number(guardrails.relevance_threshold.N)
   : undefined;
@@ -132,14 +135,17 @@ const bedrockCustomBotStack = new BedrockCustomBotStack(
     instruction,
     analyzer,
     overlapPercentage,
-    is_guardrail_enabled,
-    hateThreshold,
-    insultsThreshold,
-    sexualThreshold,
-    violenceThreshold,
-    misconductThreshold,
-    relevanceThreshold,
-    guardrailArn,
-    guardrailVersion
+    guardrail: {
+      is_guardrail_enabled,
+      hateThreshold,
+      insultsThreshold,
+      sexualThreshold,
+      violenceThreshold,
+      misconductThreshold,
+      groundingThreshold,
+      relevanceThreshold,
+      guardrailArn,
+      guardrailVersion
+    }
   }
 );

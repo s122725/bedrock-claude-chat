@@ -37,7 +37,6 @@ from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
-from app.guardrails import get_guardrail_arn, delete_guardrail
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "")
 ENABLE_MISTRAL = os.environ.get("ENABLE_MISTRAL", "") == "true"
@@ -334,11 +333,9 @@ def update_guardrails_params(
         logger.info(f"Updated guardrails_arn for bot: {bot_id} successfully")
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            raise BotNotFoundException(f"Bot with id {bot_id} not found")
+            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
         else:
-            raise BotUpdateError(
-                f"Error updating guardrails_arn for bot: {bot_id}: {e}"
-            )
+            raise e
 
     return response
 
@@ -513,68 +510,11 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             if "BedrockKnowledgeBase" in item
             else None
         ),
-        bedrock_guardrails=BedrockGuardrailsModel(
-            is_guardrail_enabled=(
-                item["GuardrailsParams"]["is_guardrail_enabled"]
-                if "GuardrailsParams" in item
-                and "is_guardrail_enabled" in item["GuardrailsParams"]
-                else False
-            ),
-            hate_threshold=(
-                item["GuardrailsParams"]["hate_threshold"]
-                if "GuardrailsParams" in item
-                and "hate_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            insults_threshold=(
-                item["GuardrailsParams"]["insults_threshold"]
-                if "GuardrailsParams" in item
-                and "insults_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            sexual_threshold=(
-                item["GuardrailsParams"]["sexual_threshold"]
-                if "GuardrailsParams" in item
-                and "sexual_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            violence_threshold=(
-                item["GuardrailsParams"]["violence_threshold"]
-                if "GuardrailsParams" in item
-                and "violence_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            misconduct_threshold=(
-                item["GuardrailsParams"]["misconduct_threshold"]
-                if "GuardrailsParams" in item
-                and "misconduct_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            grounding_threshold=(
-                item["GuardrailsParams"]["grounding_threshold"]
-                if "GuardrailsParams" in item
-                and "grounding_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            relevance_threshold=(
-                item["GuardrailsParams"]["relevance_threshold"]
-                if "GuardrailsParams" in item
-                and "relevance_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            guardrail_arn=(
-                item["GuardrailsParams"]["guardrail_arn"]
-                if "GuardrailsParams" in item
-                and "guardrail_arn" in item["GuardrailsParams"]
-                else ""
-            ),
-            guardrail_version=(
-                item["GuardrailsParams"]["guardrail_version"]
-                if "GuardrailsParams" in item
-                and "guardrail_version" in item["GuardrailsParams"]
-                else ""
-            ),
-        ),
+        bedrock_guardrails=(
+            BedrockGuardrailsModel(**item["GuardrailsParams"])
+            if "GuardrailsParams" in item 
+            else None
+        )
     )
 
     logger.info(f"Found bot: {bot}")
@@ -852,14 +792,6 @@ def delete_bot_publication(user_id: str, bot_id: str):
 def delete_bot_by_id(user_id: str, bot_id: str):
     table = _get_table_client(user_id)
     logger.info(f"Deleting bot with id: {bot_id}")
-
-    # delete guardrail
-    try:
-        guardrail_arn = get_guardrail_arn(user_id, bot_id)
-        response = delete_guardrail(guardrail_id=guardrail_arn)
-
-    except ClientError as e:
-        logger.warn(e)
 
     try:
         response = table.delete_item(

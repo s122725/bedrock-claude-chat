@@ -1362,142 +1362,136 @@ const BotKbEditPage: React.FC = () => {
 
               <ExpandableDrawerGroup 
                 isDefaultShow={false}
-                label={t('guardrails.title')} 
+                label={t('guardrails.harmfulCategories.label')} 
                 className="py-2"
               >
-                <ExpandableDrawerGroup 
-                  isDefaultShow={false}
-                  label={t('guardrails.harmfulCategories.label')} 
-                  className="py-2"
-                >
-                  <div className="mt-2">
-                    <Slider
-                      value={hateThreshold}
-                      hint={t('guardrails.harmfulCategories.hate.hint')}
-                      label={t('guardrails.harmfulCategories.hate.label')}
-                      range={{ 
-                        min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
-                        max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
-                        step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
-                      }}
-                      onChange={(hateThreshold) => {
-                        setHateThreshold(hateThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['hateThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={insultsThreshold}
-                      hint={t('guardrails.harmfulCategories.insults.hint')}
-                      label={t('guardrails.harmfulCategories.insults.label')}
-                      range={{ 
-                        min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
-                        max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
-                        step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
-                      }}
-                      onChange={(insultsThreshold) => {
-                        setInsultsThreshold(insultsThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['insultsThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={sexualThreshold}
-                      hint={t('guardrails.harmfulCategories.sexual.hint')}
-                      label={t('guardrails.harmfulCategories.sexual.label')}
-                      range={{ 
-                        min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
-                        max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
-                        step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
-                      }}
-                      onChange={(sexualThreshold) => {
-                        setSexualThreshold(sexualThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['sexualThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={violenceThreshold}
-                      hint={t('guardrails.harmfulCategories.violence.hint')}
-                      label={t('guardrails.harmfulCategories.violence.label')}
-                      range={{ 
-                        min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
-                        max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
-                        step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
-                      }}
-                      onChange={(violenceThreshold) => {
-                        setViolenceThreshold(violenceThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['violenceThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={misconductThreshold}
-                      hint={t('guardrails.harmfulCategories.misconduct.hint')}
-                      label={t('guardrails.harmfulCategories.misconduct.label')}
-                      range={{ 
-                        min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
-                        max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
-                        step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
-                      }}
-                      onChange={(misconductThreshold) => {
-                        setMisconductThreshold(misconductThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['misconductThreshold']}
-                    />
-                  </div>
-                </ExpandableDrawerGroup>  
+                <div className="mt-2">
+                  <Slider
+                    value={hateThreshold}
+                    hint={t('guardrails.harmfulCategories.hate.hint')}
+                    label={t('guardrails.harmfulCategories.hate.label')}
+                    range={{ 
+                      min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
+                      max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
+                      step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
+                    }}
+                    onChange={(hateThreshold) => {
+                      setHateThreshold(hateThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['hateThreshold']}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Slider
+                    value={insultsThreshold}
+                    hint={t('guardrails.harmfulCategories.insults.hint')}
+                    label={t('guardrails.harmfulCategories.insults.label')}
+                    range={{ 
+                      min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
+                      max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
+                      step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
+                    }}
+                    onChange={(insultsThreshold) => {
+                      setInsultsThreshold(insultsThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['insultsThreshold']}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Slider
+                    value={sexualThreshold}
+                    hint={t('guardrails.harmfulCategories.sexual.hint')}
+                    label={t('guardrails.harmfulCategories.sexual.label')}
+                    range={{ 
+                      min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
+                      max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
+                      step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
+                    }}
+                    onChange={(sexualThreshold) => {
+                      setSexualThreshold(sexualThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['sexualThreshold']}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Slider
+                    value={violenceThreshold}
+                    hint={t('guardrails.harmfulCategories.violence.hint')}
+                    label={t('guardrails.harmfulCategories.violence.label')}
+                    range={{ 
+                      min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
+                      max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
+                      step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
+                    }}
+                    onChange={(violenceThreshold) => {
+                      setViolenceThreshold(violenceThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['violenceThreshold']}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Slider
+                    value={misconductThreshold}
+                    hint={t('guardrails.harmfulCategories.misconduct.hint')}
+                    label={t('guardrails.harmfulCategories.misconduct.label')}
+                    range={{ 
+                      min: GUARDRAILS_FILTERS_THRESHOLD.MIN,
+                      max: GUARDRAILS_FILTERS_THRESHOLD.MAX, 
+                      step: GUARDRAILS_FILTERS_THRESHOLD.STEP,
+                    }}
+                    onChange={(misconductThreshold) => {
+                      setMisconductThreshold(misconductThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['misconductThreshold']}
+                  />
+                </div>
+              </ExpandableDrawerGroup>  
 
 
-                <ExpandableDrawerGroup 
-                  isDefaultShow={false}
-                  label={t('guardrails.contextualGroundingCheck.label')} 
-                  className="py-2"
-                >
-                  <div className="mt-2">
-                    <Slider
-                      value={groundingThreshold}
-                      hint={t('guardrails.contextualGroundingCheck.groundingThreshold.hint')}
-                      label={t('guardrails.contextualGroundingCheck.groundingThreshold.label')}
-                      range={{ 
-                        min: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MIN,
-                        max: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MAX, 
-                        step: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.STEP,
-                      }}
-                      onChange={(groundingThreshold) => {
-                        setGroundingThreshold(groundingThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['groundingThreshold']}
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <Slider
-                      value={relevanceThreshold}
-                      hint={t('guardrails.contextualGroundingCheck.relevanceThreshold.hint')}
-                      label={t('guardrails.contextualGroundingCheck.relevanceThreshold.label')}
-                      range={{ 
-                        min: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MIN,
-                        max: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MAX, 
-                        step: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.STEP,
-                      }}
-                      onChange={(relevanceThreshold) => {
-                        setRelevanceThreshold(relevanceThreshold);
-                      }}
-                      enableDecimal={true}
-                      errorMessage={errorMessages['relevanceThreshold']}
-                    />
-                  </div>
-                </ExpandableDrawerGroup>
+              <ExpandableDrawerGroup 
+                isDefaultShow={false}
+                label={t('guardrails.contextualGroundingCheck.label')} 
+                className="py-2"
+              >
+                <div className="mt-2">
+                  <Slider
+                    value={groundingThreshold}
+                    hint={t('guardrails.contextualGroundingCheck.groundingThreshold.hint')}
+                    label={t('guardrails.contextualGroundingCheck.groundingThreshold.label')}
+                    range={{ 
+                      min: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MIN,
+                      max: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MAX, 
+                      step: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.STEP,
+                    }}
+                    onChange={(groundingThreshold) => {
+                      setGroundingThreshold(groundingThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['groundingThreshold']}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Slider
+                    value={relevanceThreshold}
+                    hint={t('guardrails.contextualGroundingCheck.relevanceThreshold.hint')}
+                    label={t('guardrails.contextualGroundingCheck.relevanceThreshold.label')}
+                    range={{ 
+                      min: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MIN,
+                      max: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.MAX, 
+                      step: GUARDRAILS_CONTECTUAL_GROUNDING_THRESHOLD.STEP,
+                    }}
+                    onChange={(relevanceThreshold) => {
+                      setRelevanceThreshold(relevanceThreshold);
+                    }}
+                    enableDecimal={true}
+                    errorMessage={errorMessages['relevanceThreshold']}
+                  />
+                </div>
               </ExpandableDrawerGroup>
 
               {errorMessages['syncChunkError'] && (

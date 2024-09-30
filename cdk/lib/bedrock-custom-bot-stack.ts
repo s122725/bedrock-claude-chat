@@ -16,6 +16,20 @@ import {
   aws_bedrock as bedrock
 } from "aws-cdk-lib";
 
+import { getThreshold} from './utils/bedrock-guardrails'
+
+interface BedrockGuardrailProps {
+  readonly is_guardrail_enabled?: boolean;
+  readonly hateThreshold?: number;
+  readonly insultsThreshold?: number;
+  readonly sexualThreshold?: number;
+  readonly violenceThreshold?: number;
+  readonly misconductThreshold?: number;
+  readonly groundingThreshold?: number;
+  readonly relevanceThreshold?: number;
+  readonly guardrailArn?: number;
+  readonly guardrailVersion?: number;
+}
 
 interface BedrockCustomBotStackProps extends StackProps {
   readonly ownerUserId: string;
@@ -28,38 +42,8 @@ interface BedrockCustomBotStackProps extends StackProps {
   readonly instruction?: string;
   readonly analyzer?: Analyzer;
   readonly overlapPercentage?: number;
-  readonly is_guardrail_enabled?: boolean;
-  readonly hateThreshold?: number;
-  readonly insultsThreshold?: number;
-  readonly sexualThreshold?: number;
-  readonly violenceThreshold?: number;
-  readonly misconductThreshold?: number;
-  readonly relevanceThreshold?: number;
-  readonly guardrailArn?: number;
-  readonly guardrailVersion?: number;
+  readonly guardrail?: BedrockGuardrailProps
 }
-
-enum Threshold {
-  NONE = 'NONE',
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH'
-}
-
-function getThreshold(inputParam: number | undefined): Threshold {
-  if ( inputParam === undefined) {
-    return Threshold.NONE;
-  }
-  const threshold: { [key: number]: Threshold } = {
-    0: Threshold.NONE,
-    1: Threshold.LOW,
-    2: Threshold.MEDIUM,
-    3: Threshold.HIGH
-  };Threshold
-
-  return threshold[inputParam] || Threshold.NONE;
-}
-
 
 export class BedrockCustomBotStack extends Stack {
   constructor(
@@ -115,48 +99,115 @@ export class BedrockCustomBotStack extends Stack {
       });
     });
 
-    if (props.is_guardrail_enabled==true){
-      const guardrail = new bedrock.CfnGuardrail(this, 'Guardrail', {
-        name: props.botId,
-        blockedInputMessaging: "this message is blocked",
-        blockedOutputsMessaging: "this message is blocked",
-        contentPolicyConfig: {
-          filtersConfig: [
-            {
-              inputStrength: getThreshold(props.hateThreshold),
-              outputStrength: getThreshold(props.hateThreshold),
-              type: 'HATE',
-            },
-            {
-              inputStrength: getThreshold(props.insultsThreshold),
-              outputStrength: getThreshold(props.insultsThreshold),
-              type: 'INSULTS',
-            },
-            {
-              inputStrength: getThreshold(props.sexualThreshold),
-              outputStrength: getThreshold(props.sexualThreshold),
-              type: 'SEXUAL',
-            },
-            {
-              inputStrength: getThreshold(props.violenceThreshold),
-              outputStrength: getThreshold(props.violenceThreshold),
-              type: 'VIOLENCE',
-            },
-            {
-              inputStrength: getThreshold(props.misconductThreshold),
-              outputStrength: getThreshold(props.misconductThreshold),
-              type: 'MISCONDUCT',
-            }
-          ]
-        }
-      })
+    if (props.guardrail?.is_guardrail_enabled==true){
 
-      new CfnOutput(this, "GuardrailArn", {
-        value: guardrail.attrGuardrailArn
-      })
-      new CfnOutput(this, "GuardrailVersion", {
-        value: guardrail.attrVersion
-      })
+      // Use only parameters with a value greater than or equal to 0
+      let contentPolicyConfigFiltersConfig = []
+      let contextualGroundingFiltersConfig = []
+      console.log("props.guardrail: ", props.guardrail)
+
+      if (props.guardrail.hateThreshold != undefined && props.guardrail.hateThreshold >0 ) {
+        contentPolicyConfigFiltersConfig.push(
+          {
+            inputStrength: getThreshold(props.guardrail.hateThreshold),
+            outputStrength: getThreshold(props.guardrail.hateThreshold),
+            type: 'HATE',
+          }
+        )
+      }
+
+      if (props.guardrail.insultsThreshold != undefined && props.guardrail.insultsThreshold >0 ) {  
+        contentPolicyConfigFiltersConfig.push(
+          {
+            inputStrength: getThreshold(props.guardrail.insultsThreshold),
+            outputStrength: getThreshold(props.guardrail.insultsThreshold),
+            type: 'INSULTS',
+          },
+        )
+      }
+
+      if (props.guardrail.sexualThreshold != undefined && props.guardrail.sexualThreshold >0 ) {
+        contentPolicyConfigFiltersConfig.push(
+          {
+            inputStrength: getThreshold(props.guardrail.sexualThreshold),
+            outputStrength: getThreshold(props.guardrail.sexualThreshold),
+            type: 'SEXUAL',
+          }
+        )
+      }
+
+      if (props.guardrail.violenceThreshold != undefined && props.guardrail.violenceThreshold >0 ) {
+        contentPolicyConfigFiltersConfig.push(
+          {
+            inputStrength: getThreshold(props.guardrail.violenceThreshold),
+            outputStrength: getThreshold(props.guardrail.violenceThreshold),
+            type: 'VIOLENCE',
+          },
+        )
+      }
+
+      if (props.guardrail.misconductThreshold != undefined && props.guardrail.misconductThreshold >0 ) {
+        contentPolicyConfigFiltersConfig.push(
+          {
+            inputStrength: getThreshold(props.guardrail.misconductThreshold),
+            outputStrength: getThreshold(props.guardrail.misconductThreshold),
+            type: 'MISCONDUCT',
+          }
+        )
+      }
+
+      if (props.guardrail.groundingThreshold != undefined && props.guardrail.groundingThreshold >0 ) {
+        contextualGroundingFiltersConfig.push(
+          {
+            threshold : props.guardrail.groundingThreshold!,
+            type : "GROUNDING"
+          }
+        )
+      }
+
+      if (props.guardrail.relevanceThreshold != undefined && props.guardrail.relevanceThreshold >0 ) {
+        contextualGroundingFiltersConfig.push(
+          {
+            threshold : props.guardrail.relevanceThreshold!,
+            type : "RELEVANCE"
+          }
+        )
+      }
+
+      console.log("contentPolicyConfigFiltersConfig: ", contentPolicyConfigFiltersConfig)
+      console.log("contextualGroundingFiltersConfig: ", contextualGroundingFiltersConfig)
+
+      // Deploy Guardrail if it contains at least one configuration value
+      if (contentPolicyConfigFiltersConfig.length > 0 || contextualGroundingFiltersConfig.length > 0){
+        const guardrail = new bedrock.CfnGuardrail(this, 'Guardrail', {
+          name: props.botId,
+          blockedInputMessaging: "this input message is blocked",
+          blockedOutputsMessaging: "this output message is blocked",
+          contentPolicyConfig: contentPolicyConfigFiltersConfig.length > 0 ? {
+            filtersConfig: contentPolicyConfigFiltersConfig
+          } : undefined,
+          contextualGroundingPolicyConfig: contextualGroundingFiltersConfig.length > 0 ? {
+            filtersConfig: contextualGroundingFiltersConfig
+          } : undefined
+        })
+        // if (contentPolicyConfigFiltersConfig.length > 0){
+        //   guardrail.contentPolicyConfig = {
+        //     filtersConfig: contentPolicyConfigFiltersConfig
+        //   }
+        // }
+        // if (contextualGroundingFiltersConfig.length > 0){
+        //   guardrail.contextualGroundingPolicyConfig = {
+        //     filtersConfig: contextualGroundingFiltersConfig
+        //   }
+        // }
+
+        new CfnOutput(this, "GuardrailArn", {
+          value: guardrail.attrGuardrailArn
+        })
+        new CfnOutput(this, "GuardrailVersion", {
+          value: guardrail.attrVersion
+        })
+      }
     }
       
 

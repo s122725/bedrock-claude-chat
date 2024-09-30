@@ -21,9 +21,9 @@ export class BedrockRegionResourcesStack extends Stack {
   ) {
     super(scope, id, props);
 
-    const prefix = 'BedrockRegion'
+    const prefix = Stack.of(this).region
 
-    const accessLogBucket = new Bucket(this, `${prefix}-AccessLogBucket`, {
+    const accessLogBucket = new Bucket(this, `${prefix}AccessLogBucket`, {
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
@@ -32,7 +32,7 @@ export class BedrockRegionResourcesStack extends Stack {
       autoDeleteObjects: true,
     });
 
-    this.documentBucket = new Bucket(this, `${prefix}-DocumentBucket`, {
+    this.documentBucket = new Bucket(this, `${prefix}DocumentBucket`, {
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,

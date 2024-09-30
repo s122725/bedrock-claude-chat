@@ -66,6 +66,9 @@ const waf = new FrontendWafStack(app, `FrontendWafStack`, {
   allowedIpV6AddressRanges: ALLOWED_IP_V6_ADDRESS_RANGES,
 });
 
+
+// The region of the model called by the convers API and the region of Guardrail must be in the same region.
+// Frontend and Bedrock may deploy in different regions, so the stack is separate.
 const bedrockRegionResources = new BedrockRegionResourcesStack(app, `BedrockRegionResourcesStack`, {
   env: {
     // account: process.env.CDK_DEFAULT_ACCOUNT,

@@ -56,22 +56,18 @@ class ConverseApiStreamHandler:
         client = get_bedrock_runtime_client()
         response = None
         try:
-            if args and "guardrailConfig" in args:
-                logger.info(f"args before converse_stream: {args}")
-                response = client.converse_stream(
-                    modelId=args["model_id"],
-                    messages=args["messages"],
-                    inferenceConfig=args["inference_config"],
-                    system=args["system"],
-                    guardrailConfig=args["guardrailConfig"],
-                )
-            else:
-                response = client.converse_stream(
-                    modelId=args["model_id"],
-                    messages=args["messages"],
-                    inferenceConfig=args["inference_config"],
-                    system=args["system"],
-                )
+            base_args = {
+                "model_id": get_model_id(self.model),
+                "messages": args["messages"],
+                "inference_config": args["inference_config"],
+                "system": args["system"],
+            }
+
+            if "guardrailConfig" in args:
+                base_args["guardrailConfig"] = args["guardrailConfig"]  # type: ignore
+
+            logger.info(f"args before converse_stream: {args}")
+            response = client.converse_stream(**base_args)
             logger.info(f"response of converse_stream: {response}")
         except Exception as e:
             logger.error(f"Error: {e}")

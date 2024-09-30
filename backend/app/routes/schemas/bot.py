@@ -136,7 +136,7 @@ class BotModifyInput(BaseSchema):
             or len(self.knowledge.deleted_filenames) > 0
         )
 
-    def is_guardrails_required(self, current_bot_model: BotModel) -> bool:
+    def guardrails_update_required(self, current_bot_model: BotModel) -> bool:
         # Check if self.bedrock_guardrails is None
         if not self.bedrock_guardrails:
             return False
@@ -147,6 +147,12 @@ class BotModifyInput(BaseSchema):
             and (
                 self.bedrock_guardrails.is_guardrail_enabled
                 != current_bot_model.bedrock_guardrails.is_guardrail_enabled
+                or self.bedrock_guardrails.hate_threshold
+                != current_bot_model.bedrock_guardrails.hate_threshold
+                or self.bedrock_guardrails.insults_threshold
+                != current_bot_model.bedrock_guardrails.insults_threshold
+                or self.bedrock_guardrails.sexual_threshold
+                != current_bot_model.bedrock_guardrails.sexual_threshold
                 or self.bedrock_guardrails.grounding_threshold
                 != current_bot_model.bedrock_guardrails.grounding_threshold
                 or self.bedrock_guardrails.relevance_threshold

@@ -25,7 +25,7 @@ from app.routes.schemas.conversation import ChatInput
 from app.stream import ConverseApiStreamHandler, OnStopInput
 from app.usecases.bot import modify_bot_last_used_time
 from app.usecases.chat import insert_knowledge, prepare_conversation, trace_to_root
-from app.utils import get_current_time, get_guardrail
+from app.utils import get_current_time
 from app.vector_search import filter_used_results, get_source_link, search_related_docs
 from boto3.dynamodb.conditions import Attr, Key
 from ulid import ULID
@@ -189,12 +189,14 @@ def process_chat_input(
     if not chat_input.continue_generate:
         messages.append(chat_input.message)  # type: ignore
 
-    # guardrailの情報をDynamodbから取得する
-    guardrail = get_guardrail(user_id=user_id, bot_id=chat_input.bot_id)
-    logger.info(f"guardrail: {guardrail}")
+    guardrail = None
+    if bot is not None:
+        guardrail = bot.bedrock_guardrails
+    else:
+        guardrail = None
 
     args: ConverseApiRequest
-    if guardrail and guardrail["is_guardrail_enabled"] == True:
+    if guardrail and getattr(guardrail, 'is_guardrail_enabled', False):
         grounding_source = {
             "text": {
                 "text": "\n\n".join(x.content for x in search_results),
