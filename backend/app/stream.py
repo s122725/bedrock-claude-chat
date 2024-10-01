@@ -27,8 +27,8 @@ class ConverseApiStreamHandler:
     def __init__(
         self,
         model: type_model_name,
-        on_stream: Callable[[str], GenerationChunk | None],
-        on_stop: Callable[[OnStopInput], GenerationChunk | None],
+        on_stream: Callable[[str], None],
+        on_stop: Callable[[OnStopInput], None],
     ):
         """Base class for stream handlers.
         :param model: Model name.
@@ -77,13 +77,16 @@ class ConverseApiStreamHandler:
         stop_reason = ""
         for event in response["stream"]:
             if "contentBlockDelta" in event:
+                print(f"event: {event}")
                 text = event["contentBlockDelta"]["delta"]["text"]
                 completions.append(text)
                 response = self.on_stream(text)
                 yield response
             elif "messageStop" in event:
+                print(f"event: {event}")
                 stop_reason = event["messageStop"]["stopReason"]
             elif "metadata" in event:
+                print(f"event: {event}")
                 metadata = event["metadata"]
                 usage = metadata["usage"]
                 input_token_count = usage["inputTokens"]
