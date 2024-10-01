@@ -310,9 +310,9 @@ def compose_args_for_converse_api_with_guardrail(
         hasattr(guardrail, "guardrail_arn") and guardrail.guardrail_arn and
         hasattr(guardrail, "guardrail_version") and guardrail.guardrail_version):
 
-        args["guardrailConfig"] = {  # Update the value
-            "guardrailIdentifier": guardrail["guardrail_arn"],  # type: ignore
-            "guardrailVersion": guardrail["guardrail_version"],  # type: ignore
+        args["guardrailConfig"] = {
+            "guardrailIdentifier": guardrail.guardrail_arn,
+            "guardrailVersion": guardrail.guardrail_version,
             "trace": "enabled",
             "streamProcessingMode": "async",
         }

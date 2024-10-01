@@ -57,9 +57,9 @@ class ConverseApiStreamHandler:
         response = None
         try:
             base_args = {
-                "model_id": get_model_id(self.model),
+                "modelId": get_model_id(self.model),
                 "messages": args["messages"],
-                "inference_config": args["inference_config"],
+                "inferenceConfig": args["inference_config"],
                 "system": args["system"],
             }
 
