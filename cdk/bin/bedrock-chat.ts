@@ -2,10 +2,9 @@
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { BedrockChatStack } from "../lib/bedrock-chat-stack";
-import { BedrockRegionResourcesStack} from "../lib/bedrock-region-resources";
-import  { FrontendWafStack } from "../lib/frontend-waf-stack";
+import { BedrockRegionResourcesStack } from "../lib/bedrock-region-resources";
+import { FrontendWafStack } from "../lib/frontend-waf-stack";
 import { TIdentityProvider } from "../lib/utils/identity-provider";
-import { CronScheduleProps } from "../lib/utils/cron-schedule";
 
 const app = new cdk.App();
 
@@ -35,20 +34,11 @@ const USER_POOL_DOMAIN_PREFIX: string = app.node.tryGetContext(
 const AUTO_JOIN_USER_GROUPS: string[] =
   app.node.tryGetContext("autoJoinUserGroups");
 
-const RDS_SCHEDULES: CronScheduleProps = app.node.tryGetContext("rdbSchedules");
 const ENABLE_MISTRAL: boolean = app.node.tryGetContext("enableMistral");
 const SELF_SIGN_UP_ENABLED: boolean =
   app.node.tryGetContext("selfSignUpEnabled");
 const ENABLE_KB: boolean = app.node.tryGetContext(
   "useBedrockKnowledgeBaseForRag"
-);
-
-// container size of embedding ecs tasks
-const EMBEDDING_CONTAINER_VCPU: number = app.node.tryGetContext(
-  "embeddingContainerVcpu"
-);
-const EMBEDDING_CONTAINER_MEMORY: number = app.node.tryGetContext(
-  "embeddingContainerMemory"
 );
 
 // how many nat gateways
@@ -66,16 +56,19 @@ const waf = new FrontendWafStack(app, `FrontendWafStack`, {
   allowedIpV6AddressRanges: ALLOWED_IP_V6_ADDRESS_RANGES,
 });
 
-
 // The region of the model called by the convers API and the region of Guardrail must be in the same region.
 // Frontend and Bedrock may deploy in different regions, so the stack is separate.
-const bedrockRegionResources = new BedrockRegionResourcesStack(app, `BedrockRegionResourcesStack`, {
-  env: {
-    // account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: BEDROCK_REGION,
-  },
-  crossRegionReferences: true,
-})
+const bedrockRegionResources = new BedrockRegionResourcesStack(
+  app,
+  `BedrockRegionResourcesStack`,
+  {
+    env: {
+      // account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: BEDROCK_REGION,
+    },
+    crossRegionReferences: true,
+  }
+);
 
 const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   env: {
@@ -97,11 +90,9 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   rdsSchedules: RDS_SCHEDULES,
   enableMistral: ENABLE_MISTRAL,
   enableKB: ENABLE_KB,
-  embeddingContainerVcpu: EMBEDDING_CONTAINER_VCPU,
-  embeddingContainerMemory: EMBEDDING_CONTAINER_MEMORY,
   selfSignUpEnabled: SELF_SIGN_UP_ENABLED,
   natgatewayCount: NATGATEWAY_COUNT,
   documentBucket: bedrockRegionResources.documentBucket,
 });
 chat.addDependency(waf);
-chat.addDependency(bedrockRegionResources)
+chat.addDependency(bedrockRegionResources);
