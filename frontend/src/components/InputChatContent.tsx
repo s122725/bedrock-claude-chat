@@ -187,17 +187,29 @@ const InputChatContent: React.FC<Props> = (props) => {
       if (!clipboardItems || clipboardItems.length === 0) {
         return;
       }
-
-      for (let i = 0; i < clipboardItems.length; i++) {
-        if (model?.supportMediaType.includes(clipboardItems[i].type)) {
-          const pastedFile = clipboardItems[i].getAsFile();
-          
-          const contentType = pastedFile?.type.split('/')[0];
-          console.log(contentType);
-
-          if (pastedFile && contentType === 'image') {
-            encodeAndPushImage(pastedFile);
-            e.preventDefault();
+    
+      const textItem = Array.from(clipboardItems).find(item => {
+        const contentType = item.type.split('/')[0];
+        return contentType === 'text/plain' || contentType === 'text/html';
+      });
+    
+      if (textItem) {
+        const pastedFile = textItem.getAsFile();
+        if (pastedFile) {
+          pastedFile.text().then(text => {
+            setContent((prevContent: string) => prevContent + text);
+          });
+          e.preventDefault();
+        }
+      } else {
+        for (let i = 0; i < clipboardItems.length; i++) {
+          if (model?.supportMediaType.includes(clipboardItems[i].type)) {
+            const pastedFile = clipboardItems[i].getAsFile();
+            const contentType = pastedFile?.type.split('/')[0];
+            if (pastedFile && contentType === 'image') {
+              encodeAndPushImage(pastedFile);
+              e.preventDefault();
+            }
           }
         }
       }
