@@ -13,13 +13,13 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.5.0"
+version = "4.6.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "anyio-4.5.0-py3-none-any.whl", hash = "sha256:fdeb095b7cc5a5563175eedd926ec4ae55413bb4be5770c424af0ba46ccb4a78"},
-    {file = "anyio-4.5.0.tar.gz", hash = "sha256:c5a275fe5ca0afd788001f58fca1e69e29ce706d746e317d660e21f70c530ef9"},
+    {file = "anyio-4.6.0-py3-none-any.whl", hash = "sha256:c7d2e9d63e31599eeb636c8c5c03a7e108d73b345f064f1c19fdc87b79036a9a"},
+    {file = "anyio-4.6.0.tar.gz", hash = "sha256:137b4559cbb034c477165047febb6ff83f390fc3b20bf181c1fc0a728cb8beeb"},
 ]
 
 [package.dependencies]
@@ -52,31 +52,6 @@ files = [
     {file = "asn1crypto-1.5.1-py2.py3-none-any.whl", hash = "sha256:db4e40728b728508912cbb3d44f19ce188f218e9eba635821bb4b68564f8fd67"},
     {file = "asn1crypto-1.5.1.tar.gz", hash = "sha256:13ae38502be632115abf8a24cbe5f4da52e3b5231990aff31123c805306ccb9c"},
 ]
-
-[[package]]
-name = "aws-lambda-powertools"
-version = "2.43.1"
-description = "Powertools for AWS Lambda (Python) is a developer toolkit to implement Serverless best practices and increase developer velocity."
-optional = false
-python-versions = "<4.0.0,>=3.8"
-files = [
-    {file = "aws_lambda_powertools-2.43.1-py3-none-any.whl", hash = "sha256:48116250c1771c7b8d4977ad2d475271074d86964107ccfd3fc6775e51984d88"},
-    {file = "aws_lambda_powertools-2.43.1.tar.gz", hash = "sha256:5c371a0c0430cf7bca1696748cb0d85079aac2c51056cbee10e5435029b35ca4"},
-]
-
-[package.dependencies]
-jmespath = ">=1.0.1,<2.0.0"
-typing-extensions = ">=4.11.0,<5.0.0"
-
-[package.extras]
-all = ["aws-xray-sdk (>=2.8.0,<3.0.0)", "fastjsonschema (>=2.14.5,<3.0.0)", "pydantic (>=1.8.2,<2.0.0)"]
-aws-sdk = ["boto3 (>=1.26.164,<2.0.0)"]
-datadog = ["datadog-lambda (>=4.77,<7.0)"]
-datamasking = ["aws-encryption-sdk (>=3.1.1,<4.0.0)", "jsonpath-ng (>=1.6.0,<2.0.0)"]
-parser = ["pydantic (>=1.8.2,<2.0.0)"]
-redis = ["redis (>=4.4,<6.0)"]
-tracer = ["aws-xray-sdk (>=2.8.0,<3.0.0)"]
-validation = ["fastjsonschema (>=2.14.5,<3.0.0)"]
 
 [[package]]
 name = "black"
@@ -124,17 +99,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.35.23"
+version = "1.35.31"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.35.23-py3-none-any.whl", hash = "sha256:ecba4362f82e23ef775c72b3e6fdef3ef68443629b79e88886d5088302ffc050"},
-    {file = "boto3-1.35.23.tar.gz", hash = "sha256:3fbf1d5b749c92ed43aa190650979dff9f83790a42522e1e9eefa54c8e44bc4b"},
+    {file = "boto3-1.35.31-py3-none-any.whl", hash = "sha256:2e9af74d10d8af7610a8d8468d2914961f116912a024fce17351825260385a52"},
+    {file = "boto3-1.35.31.tar.gz", hash = "sha256:8c593af260c4ea3eb6f079c09908f94494ca2222aa4e40a7ff490fab1cee8b39"},
 ]
 
 [package.dependencies]
-botocore = ">=1.35.23,<1.36.0"
+botocore = ">=1.35.31,<1.36.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -143,13 +118,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.35.23"
+version = "1.35.31"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.35.23-py3-none-any.whl", hash = "sha256:cab9ec4e0367b9f33f0bc02c5a29f587b0119ecffd6d125bacee085dcbc8817d"},
-    {file = "botocore-1.35.23.tar.gz", hash = "sha256:25b17a9ccba6ad32bb5bf7ba4f52656aa03c1cb29f6b4e438050ee4ad1967a3b"},
+    {file = "botocore-1.35.31-py3-none-any.whl", hash = "sha256:4cee814875bc78656aef4011d3d6b2231e96f53ea3661ee428201afb579d5c31"},
+    {file = "botocore-1.35.31.tar.gz", hash = "sha256:f7bfa910cf2cbcc8c2307c1cf7b93495d614c2d699883417893e0a337fe4eb63"},
 ]
 
 [package.dependencies]
@@ -308,18 +283,18 @@ files = [
 
 [[package]]
 name = "duckduckgo-search"
-version = "6.2.12"
+version = "6.2.13"
 description = "Search for words, documents, images, news, maps and text translation using the DuckDuckGo.com search engine."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "duckduckgo_search-6.2.12-py3-none-any.whl", hash = "sha256:0d379c1f845b632a41553efb13d571788f19ad289229e641a27b5710d92097a6"},
-    {file = "duckduckgo_search-6.2.12.tar.gz", hash = "sha256:04f9f1459763668d268344c7a32d943173d0e060dad53a5c2df4b4d3ca9a74cf"},
+    {file = "duckduckgo_search-6.2.13-py3-none-any.whl", hash = "sha256:a6618fb2744fa1d081b1bf2e47ef8051de993276a15c20f4e879a150726472de"},
+    {file = "duckduckgo_search-6.2.13.tar.gz", hash = "sha256:f89a9782f0f47d18c01a761c83453d0aef7a4335d1b6466fc47709652d5ca791"},
 ]
 
 [package.dependencies]
 click = ">=8.1.7"
-primp = ">=0.6.2"
+primp = ">=0.6.3"
 
 [package.extras]
 dev = ["mypy (>=1.11.1)", "pytest (>=8.3.1)", "pytest-asyncio (>=0.23.8)", "ruff (>=0.6.1)"]
@@ -375,13 +350,13 @@ files = [
 
 [[package]]
 name = "httpcore"
-version = "1.0.5"
+version = "1.0.6"
 description = "A minimal low-level HTTP client."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "httpcore-1.0.5-py3-none-any.whl", hash = "sha256:421f18bac248b25d310f3cacd198d55b8e6125c107797b609ff9b7a6ba7991b5"},
-    {file = "httpcore-1.0.5.tar.gz", hash = "sha256:34a38e2f9291467ee3b44e89dd52615370e152954ba21721378a87b2960f7a61"},
+    {file = "httpcore-1.0.6-py3-none-any.whl", hash = "sha256:27b59625743b85577a8c0e10e55b50b5368a4f2cfe8cc7bcfa9cf00829c2682f"},
+    {file = "httpcore-1.0.6.tar.gz", hash = "sha256:73f6dbd6eb8c21bbf7ef8efad555481853f5f6acdeaff1edb0694289269ee17f"},
 ]
 
 [package.dependencies]
@@ -392,7 +367,7 @@ h11 = ">=0.13,<0.15"
 asyncio = ["anyio (>=4.0,<5.0)"]
 http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
-trio = ["trio (>=0.22.0,<0.26.0)"]
+trio = ["trio (>=0.22.0,<1.0)"]
 
 [[package]]
 name = "httpx"
@@ -508,13 +483,13 @@ six = "*"
 
 [[package]]
 name = "langsmith"
-version = "0.1.124"
+version = "0.1.129"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.124-py3-none-any.whl", hash = "sha256:09825be802a780c7a1bae30cfc2905d9a04bb57932aaaab94ed5312493c23e6f"},
-    {file = "langsmith-0.1.124.tar.gz", hash = "sha256:6fce940ae6a85fea4ad18fbdc913c891beed75969a074fedbfe130397b243cd0"},
+    {file = "langsmith-0.1.129-py3-none-any.whl", hash = "sha256:31393fbbb17d6be5b99b9b22d530450094fab23c6c37281a6a6efb2143d05347"},
+    {file = "langsmith-0.1.129.tar.gz", hash = "sha256:6c3ba66471bef41b9f87da247cc0b493268b3f54656f73648a256a205261b6a0"},
 ]
 
 [package.dependencies]
@@ -704,19 +679,19 @@ type = ["mypy (>=1.11.2)"]
 
 [[package]]
 name = "primp"
-version = "0.6.2"
+version = "0.6.3"
 description = "HTTP client that can impersonate web browsers, mimicking their headers and `TLS/JA3/JA4/HTTP2` fingerprints"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "primp-0.6.2-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:4a35d441462a55d9a9525bf170e2ffd2fcb3db6039b23e802859fa22c18cdd51"},
-    {file = "primp-0.6.2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:f67ccade95bdbca3cf9b96b93aa53f9617d85ddbf988da4e9c523aa785fd2d54"},
-    {file = "primp-0.6.2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8074b93befaf36567e4cf3d4a1a8cd6ab9cc6e4dd4ff710650678daa405aee71"},
-    {file = "primp-0.6.2-cp38-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:7d3e2a3f8c6262e9b883651b79c4ff2b7677a76f47293a139f541c9ea333ce3b"},
-    {file = "primp-0.6.2-cp38-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:a460ea389371c6d04839b4b50b5805d99da8ebe281a2e8b534d27377c6d44f0e"},
-    {file = "primp-0.6.2-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:5b6b27e89d3c05c811aff0e4fde7a36d6957b15b3112f4ce28b6b99e8ca1e725"},
-    {file = "primp-0.6.2-cp38-abi3-win_amd64.whl", hash = "sha256:1006a40a85f88a4c5222094813a1ebc01f85a63e9a33d2c443288c0720bed321"},
-    {file = "primp-0.6.2.tar.gz", hash = "sha256:5a96a6b65195a8a989157e67d23bd171c49be238654e02bdf1b1fda36cbcc068"},
+    {file = "primp-0.6.3-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:bdbe6a7cdaaf5c9ed863432a941f4a75bd4c6ff626cbc8d32fc232793c70ba06"},
+    {file = "primp-0.6.3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:eeb53eb987bdcbcd85740633470255cab887d921df713ffa12a36a13366c9cdb"},
+    {file = "primp-0.6.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:78da53d3c92a8e3f05bd3286ac76c291f1b6fe5e08ea63b7ba92b0f9141800bb"},
+    {file = "primp-0.6.3-cp38-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:86337b44deecdac752bd8112909987fc9fa9b894f30191c80a164dc8f895da53"},
+    {file = "primp-0.6.3-cp38-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:d3cd9a22b97f3eae42b2a5fb99f00480daf4cd6d9b139e05b0ffb03f7cc037f3"},
+    {file = "primp-0.6.3-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:7732bec917e2d3c48a31cdb92e1250f4ad6203a1aa4f802bd9abd84f2286a1e0"},
+    {file = "primp-0.6.3-cp38-abi3-win_amd64.whl", hash = "sha256:1e4113c34b86c676ae321af185f03a372caef3ee009f1682c2d62e30ec87348c"},
+    {file = "primp-0.6.3.tar.gz", hash = "sha256:17d30ebe26864defad5232dbbe1372e80483940012356e1f68846bb182282039"},
 ]
 
 [package.extras]
@@ -1193,4 +1168,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "ce5d3ebd36a6355a6b9cc8039a5f556976a28b8f9560a99de9a7fe905adf401c"
+content-hash = "985daba034d55ec9e434df4208cf79d44604d273fdb73858e4404f68342904a4"
