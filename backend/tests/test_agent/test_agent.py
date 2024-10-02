@@ -11,14 +11,11 @@ from app.agents.handlers.token_count import get_token_count_callback
 from app.agents.handlers.used_chunk import get_used_chunk_callback
 from app.agents.langchain import BedrockLLM
 from app.agents.tools.knowledge import AnswerWithKnowledgeTool
-from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.custom_bot import (
     AgentModel,
     BotModel,
-    EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
-    SearchParamsModel,
 )
 
 
@@ -38,20 +35,12 @@ class TestReactAgent(unittest.TestCase):
             is_pinned=True,
             public_bot_id=None,
             owner_user_id="dummy",
-            embedding_params=EmbeddingParamsModel(
-                chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
-                chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-                enable_partition_pdf=False,
-            ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,
                 top_k=250,
                 top_p=0.999,
                 temperature=0.6,
                 stop_sequences=["Human: ", "Assistant: "],
-            ),
-            search_params=SearchParamsModel(
-                max_results=20,
             ),
             agent=AgentModel(tools=[]),
             knowledge=KnowledgeModel(

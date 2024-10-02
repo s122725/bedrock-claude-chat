@@ -3,7 +3,7 @@ import unittest
 
 sys.path.insert(0, ".")
 
-from app.config import DEFAULT_EMBEDDING_CONFIG
+
 from app.repositories.custom_bot import (
     delete_alias_by_id,
     delete_bot_by_id,
@@ -26,19 +26,15 @@ from app.repositories.models.custom_bot import (
     AgentToolModel,
     BotAliasModel,
     ConversationQuickStarterModel,
-    EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
-    SearchParamsModel,
 )
 from app.repositories.models.custom_bot_kb import (
     AnalyzerParamsModel,
     BedrockKnowledgeBaseModel,
     OpenSearchParamsModel,
 )
-from app.repositories.models.custom_bot_kb import (
-    SearchParamsModel as SearchParamsModelKB,
-)
+from app.repositories.models.custom_bot_kb import SearchParamsModel as SearchParamsModelKB
 from app.usecases.bot import fetch_all_bots_by_user_id
 from tests.test_repositories.utils.bot_factory import (
     create_test_private_bot,
@@ -88,18 +84,6 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.create_time, 1627984879.9)
         self.assertEqual(bot.last_used_time, 1627984879.9)
         self.assertEqual(bot.is_pinned, False)
-        self.assertEqual(
-            bot.embedding_params.chunk_size, DEFAULT_EMBEDDING_CONFIG["chunk_size"]
-        )
-        self.assertEqual(
-            bot.embedding_params.chunk_overlap,
-            DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-        )
-
-        self.assertEqual(
-            bot.embedding_params.enable_partition_pdf,
-            DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
-        )
         self.assertEqual(bot.generation_params.max_tokens, 2000)
         self.assertEqual(bot.generation_params.top_k, 250)
         self.assertEqual(bot.generation_params.top_p, 0.999)
@@ -223,18 +207,12 @@ class TestCustomBotRepository(unittest.TestCase):
             title="Updated Title",
             description="Updated Description",
             instruction="Updated Instruction",
-            embedding_params=EmbeddingParamsModel(
-                chunk_size=500, chunk_overlap=100, enable_partition_pdf=False
-            ),
             generation_params=GenerationParamsModel(
                 max_tokens=2500,
                 top_k=250,
                 top_p=0.99,
                 temperature=0.2,
                 stop_sequences=["Human: ", "Assistant: "],
-            ),
-            search_params=SearchParamsModel(
-                max_results=20,
             ),
             agent=AgentModel(
                 tools=[
@@ -278,10 +256,6 @@ class TestCustomBotRepository(unittest.TestCase):
         self.assertEqual(bot.title, "Updated Title")
         self.assertEqual(bot.description, "Updated Description")
         self.assertEqual(bot.instruction, "Updated Instruction")
-        self.assertEqual(bot.embedding_params.chunk_size, 500)
-        self.assertEqual(bot.embedding_params.chunk_overlap, 100)
-
-        self.assertEqual(bot.embedding_params.enable_partition_pdf, False)
 
         self.assertEqual(bot.generation_params.max_tokens, 2500)
         self.assertEqual(bot.generation_params.top_k, 250)
@@ -416,9 +390,7 @@ class TestUpdateBotVisibility(unittest.TestCase):
     def setUp(self) -> None:
         bot1 = create_test_private_bot("1", is_pinned=True, owner_user_id="user1")
         bot2 = create_test_private_bot("2", is_pinned=True, owner_user_id="user1")
-        public1 = create_test_public_bot(
-            "public1", is_pinned=True, owner_user_id="user2"
-        )
+        public1 = create_test_public_bot("public1", is_pinned=True, owner_user_id="user2")
         alias1 = BotAliasModel(
             id="4",
             title="Test Alias",
@@ -454,20 +426,12 @@ class TestUpdateBotVisibility(unittest.TestCase):
             title="Updated Title",
             description="",
             instruction="",
-            embedding_params=EmbeddingParamsModel(
-                chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
-                chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-                enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
-            ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,
                 top_k=250,
                 top_p=0.999,
                 temperature=0.6,
                 stop_sequences=["Human: ", "Assistant: "],
-            ),
-            search_params=SearchParamsModel(
-                max_results=20,
             ),
             agent=AgentModel(tools=[]),
             knowledge=KnowledgeModel(

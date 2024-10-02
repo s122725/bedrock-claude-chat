@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import TypedDict, no_type_check
 
-from app.config import BEDROCK_PRICING, DEFAULT_EMBEDDING_CONFIG
+from app.config import BEDROCK_PRICING
 from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CONFIG
 from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
@@ -78,9 +78,7 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
+    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
@@ -209,7 +207,7 @@ def compose_args_for_converse_api_with_guardrail(
     """Compose arguments for Converse API.
     Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
     """
-    arg_messages = []    
+    arg_messages = []
     for message in messages:
         if message.role not in ["system", "instruction"]:
             content_blocks = []
@@ -306,9 +304,13 @@ def compose_args_for_converse_api_with_guardrail(
     if instruction:
         args["system"].append({"text": instruction})
 
-    if (guardrail and 
-        hasattr(guardrail, "guardrail_arn") and guardrail.guardrail_arn and
-        hasattr(guardrail, "guardrail_version") and guardrail.guardrail_version):
+    if (
+        guardrail
+        and hasattr(guardrail, "guardrail_arn")
+        and guardrail.guardrail_arn
+        and hasattr(guardrail, "guardrail_version")
+        and guardrail.guardrail_version
+    ):
 
         args["guardrailConfig"] = {
             "guardrailIdentifier": guardrail.guardrail_arn,
@@ -323,18 +325,19 @@ def compose_args_for_converse_api_with_guardrail(
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     client = get_bedrock_runtime_client()
 
-    base_args = { 
-        "modelId": args["model_id"], 
-        "messages": args["messages"], 
-        "inferenceConfig": args["inference_config"], 
-        "system": args["system"], 
-        "additionalModelRequestFields": args["additional_model_request_fields"]
+    base_args = {
+        "modelId": args["model_id"],
+        "messages": args["messages"],
+        "inferenceConfig": args["inference_config"],
+        "system": args["system"],
+        "additionalModelRequestFields": args["additional_model_request_fields"],
     }
 
-    if "guardrailConfig" in args: 
+    if "guardrailConfig" in args:
         base_args["guardrailConfig"] = args["guardrailConfig"]  # type: ignore
 
     return client.converse(**base_args)
+
 
 def calculate_price(
     model: type_model_name,
@@ -376,51 +379,3 @@ def get_model_id(model: type_model_name) -> str:
         return "mistral.mixtral-8x7b-instruct-v0:1"
     elif model == "mistral-large":
         return "mistral.mistral-large-2402-v1:0"
-
-
-def calculate_query_embedding(question: str) -> list[float]:
-    model_id = DEFAULT_EMBEDDING_CONFIG["model_id"]
-
-    # Currently only supports "cohere.embed-multilingual-v3"
-    assert model_id == "cohere.embed-multilingual-v3"
-
-    payload = json.dumps({"texts": [question], "input_type": "search_query"})
-    accept = "application/json"
-    content_type = "application/json"
-
-    response = client.invoke_model(
-        accept=accept, contentType=content_type, body=payload, modelId=model_id
-    )
-    output = json.loads(response.get("body").read())
-    embedding = output.get("embeddings")[0]
-
-    return embedding
-
-
-def calculate_document_embeddings(documents: list[str]) -> list[list[float]]:
-    def _calculate_document_embeddings(documents: list[str]) -> list[list[float]]:
-        payload = json.dumps({"texts": documents, "input_type": "search_document"})
-        accept = "application/json"
-        content_type = "application/json"
-
-        response = client.invoke_model(
-            accept=accept, contentType=content_type, body=payload, modelId=model_id
-        )
-        output = json.loads(response.get("body").read())
-        embeddings = output.get("embeddings")
-
-        return embeddings
-
-    BATCH_SIZE = 10
-    model_id = DEFAULT_EMBEDDING_CONFIG["model_id"]
-
-    # Currently only supports "cohere.embed-multilingual-v3"
-    assert model_id == "cohere.embed-multilingual-v3"
-
-    embeddings = []
-    for i in range(0, len(documents), BATCH_SIZE):
-        # Split documents into batches to avoid exceeding the payload size limit
-        batch = documents[i : i + BATCH_SIZE]
-        embeddings += _calculate_document_embeddings(batch)
-
-    return embeddings

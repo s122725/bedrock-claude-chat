@@ -4,16 +4,13 @@ import unittest
 sys.path.append(".")
 
 from app.agents.tools.internet_search import internet_search_tool
-from app.config import DEFAULT_EMBEDDING_CONFIG
 from app.repositories.models.custom_bot import (
     AgentModel,
     AgentToolModel,
     BotAliasModel,
     BotModel,
-    EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
-    SearchParamsModel,
 )
 
 
@@ -38,20 +35,12 @@ def create_test_private_bot(
         is_pinned=is_pinned,
         public_bot_id=None,
         owner_user_id=owner_user_id,
-        embedding_params=EmbeddingParamsModel(
-            chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
-            chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-            enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
-        ),
         generation_params=GenerationParamsModel(
             max_tokens=2000,
             top_k=250,
             top_p=0.999,
             temperature=0.6,
             stop_sequences=["Human: ", "Assistant: "],
-        ),
-        search_params=SearchParamsModel(
-            max_results=20,
         ),
         agent=AgentModel(
             tools=(
@@ -73,9 +62,7 @@ def create_test_private_bot(
                 s3_urls=["s3://example/doc/"],
             )
             if set_dummy_knowledge
-            else KnowledgeModel(
-                source_urls=[], sitemap_urls=[], filenames=[], s3_urls=[]
-            )
+            else KnowledgeModel(source_urls=[], sitemap_urls=[], filenames=[], s3_urls=[])
         ),
         sync_status=sync_status,
         sync_status_reason="reason",
@@ -107,20 +94,12 @@ def create_test_public_bot(
         is_pinned=is_pinned,
         public_bot_id=public_bot_id,
         owner_user_id=owner_user_id,
-        embedding_params=EmbeddingParamsModel(
-            chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
-            chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-            enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
-        ),
         generation_params=GenerationParamsModel(
             max_tokens=2000,
             top_k=250,
             top_p=0.999,
             temperature=0.6,
             stop_sequences=["Human: ", "Assistant: "],
-        ),
-        search_params=SearchParamsModel(
-            max_results=20,
         ),
         agent=AgentModel(
             # tools=[

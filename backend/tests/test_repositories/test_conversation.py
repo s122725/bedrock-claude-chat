@@ -3,7 +3,7 @@ import unittest
 
 sys.path.append(".")
 
-from app.config import DEFAULT_EMBEDDING_CONFIG
+
 from app.repositories.conversation import (
     ContentModel,
     ConversationModel,
@@ -28,10 +28,8 @@ from app.repositories.models.custom_bot import (
     AgentToolModel,
     BotModel,
     ConversationQuickStarterModel,
-    EmbeddingParamsModel,
     GenerationParamsModel,
     KnowledgeModel,
-    SearchParamsModel,
 )
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
@@ -170,9 +168,7 @@ class TestConversationRepository(unittest.TestCase):
         self.assertEqual(len(conversations), 1)
 
         # Test finding conversation by id
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         self.assertEqual(found_conversation.id, "1")
         message_map = found_conversation.message_map
         # Assert whether the message map is correctly reconstructed
@@ -204,9 +200,7 @@ class TestConversationRepository(unittest.TestCase):
             conversation_id="1",
             new_title="Updated title",
         )
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         self.assertEqual(found_conversation.title, "Updated title")
 
         # Test give a feedback
@@ -219,9 +213,7 @@ class TestConversationRepository(unittest.TestCase):
                 thumbs_up=True, category="Good", comment="The response is pretty good."
             ),
         )
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         feedback = found_conversation.message_map["a"].feedback
         self.assertIsNotNone(feedback)
         self.assertEqual(feedback.thumbs_up, True)  # type: ignore
@@ -280,9 +272,7 @@ class TestConversationRepository(unittest.TestCase):
         self.assertIsNotNone(response)
 
         # Test finding large conversation by id
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="2"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="2")
         self.assertEqual(found_conversation.id, "2")
         self.assertEqual(found_conversation.title, "Large Conversation")
         self.assertEqual(found_conversation.total_price, 200)
@@ -400,20 +390,12 @@ class TestConversationBotRepository(unittest.TestCase):
             public_bot_id="1",
             is_pinned=False,
             owner_user_id="user",
-            embedding_params=EmbeddingParamsModel(
-                chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
-                chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-                enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
-            ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,
                 top_k=250,
                 top_p=0.999,
                 temperature=0.6,
                 stop_sequences=["Human: ", "Assistant: "],
-            ),
-            search_params=SearchParamsModel(
-                max_results=20,
             ),
             agent=AgentModel(
                 tools=[
@@ -449,20 +431,12 @@ class TestConversationBotRepository(unittest.TestCase):
             public_bot_id="2",
             is_pinned=False,
             owner_user_id="user",
-            embedding_params=EmbeddingParamsModel(
-                chunk_size=DEFAULT_EMBEDDING_CONFIG["chunk_size"],
-                chunk_overlap=DEFAULT_EMBEDDING_CONFIG["chunk_overlap"],
-                enable_partition_pdf=DEFAULT_EMBEDDING_CONFIG["enable_partition_pdf"],
-            ),
             generation_params=GenerationParamsModel(
                 max_tokens=2000,
                 top_k=250,
                 top_p=0.999,
                 temperature=0.6,
                 stop_sequences=["Human: ", "Assistant: "],
-            ),
-            search_params=SearchParamsModel(
-                max_results=20,
             ),
             agent=AgentModel(
                 tools=[

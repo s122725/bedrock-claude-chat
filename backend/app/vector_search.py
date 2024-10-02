@@ -3,7 +3,6 @@ import logging
 import re
 from typing import Any, Literal
 
-from app.bedrock import calculate_query_embedding
 from app.repositories.custom_bot import find_public_bot_by_id
 from app.repositories.models.custom_bot import BotModel
 from app.utils import generate_presigned_url, get_bedrock_agent_client

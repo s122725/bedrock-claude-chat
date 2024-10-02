@@ -9,6 +9,7 @@ from app.repositories.custom_bot import (
 from app.routes.schemas.bot import (
     Agent,
     AgentTool,
+    BedrockGuardrailsOutput,
     BedrockKnowledgeBaseOutput,
     BotInput,
     BotMetaOutput,
@@ -19,11 +20,8 @@ from app.routes.schemas.bot import (
     BotSummaryOutput,
     BotSwitchVisibilityInput,
     ConversationQuickStarter,
-    EmbeddingParams,
     GenerationParams,
     Knowledge,
-    SearchParams,
-    BedrockGuardrailsOutput,
 )
 from app.usecases.bot import (
     create_new_bot,
@@ -97,9 +95,7 @@ def get_all_bots(
     if kind == "private":
         bots = find_private_bots_by_user_id(current_user.id, limit=limit)
     elif kind == "mixed":
-        bots = fetch_all_bots_by_user_id(
-            current_user.id, limit=limit, only_pinned=pinned
-        )
+        bots = fetch_all_bots_by_user_id(current_user.id, limit=limit, only_pinned=pinned)
     else:
         raise ValueError(f"Invalid kind: {kind}")
 
@@ -138,11 +134,6 @@ def get_private_bot(request: Request, bot_id: str):
         is_public=True if bot.public_bot_id else False,
         is_pinned=bot.is_pinned,
         owned=True,
-        embedding_params=EmbeddingParams(
-            chunk_size=bot.embedding_params.chunk_size,
-            chunk_overlap=bot.embedding_params.chunk_overlap,
-            enable_partition_pdf=bot.embedding_params.enable_partition_pdf,
-        ),
         agent=Agent(
             tools=[
                 AgentTool(name=tool.name, description=tool.description)
@@ -161,9 +152,6 @@ def get_private_bot(request: Request, bot_id: str):
             top_p=bot.generation_params.top_p,
             temperature=bot.generation_params.temperature,
             stop_sequences=bot.generation_params.stop_sequences,
-        ),
-        search_params=SearchParams(
-            max_results=bot.search_params.max_results,
         ),
         sync_status=bot.sync_status,
         sync_status_reason=bot.sync_status_reason,
@@ -208,9 +196,7 @@ def delete_bot(request: Request, bot_id: str):
 
 
 @router.get("/bot/{bot_id}/presigned-url", response_model=BotPresignedUrlOutput)
-def get_bot_presigned_url(
-    request: Request, bot_id: str, filename: str, contentType: str
-):
+def get_bot_presigned_url(request: Request, bot_id: str, filename: str, contentType: str):
     """Get presigned url for bot"""
     current_user: User = request.state.current_user
     url = issue_presigned_url(current_user.id, bot_id, filename, contentType)
