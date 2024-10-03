@@ -15,8 +15,8 @@ from app.agents.tools.knowledge import AnswerWithKnowledgeTool
 from app.agents.utils import get_tool_by_name
 from app.auth import verify_token
 from app.bedrock import (
-    compose_args_for_converse_api,
     ConverseApiRequest,
+    compose_args_for_converse_api,
     compose_args_for_converse_api_with_guardrail,
 )
 from app.repositories.conversation import RecordNotFoundError, store_conversation
@@ -151,9 +151,7 @@ def process_chat_input(
         last_data_to_send = json.dumps(
             dict(status="STREAMING_END", completion="", stop_reason="agent_finish")
         ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
+        gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
         return {"statusCode": 200, "body": "Message sent."}
 
@@ -189,14 +187,10 @@ def process_chat_input(
     if not chat_input.continue_generate:
         messages.append(chat_input.message)  # type: ignore
 
-    guardrail = None
-    if bot is not None:
-        guardrail = bot.bedrock_guardrails
-    else:
-        guardrail = None
+    guardrail = bot.bedrock_guardrails if bot else None
 
     args: ConverseApiRequest
-    if guardrail and getattr(guardrail, 'is_guardrail_enabled', False):
+    if guardrail and guardrail.is_guardrail_enabled:
         grounding_source = {
             "text": {
                 "text": "\n\n".join(x.content for x in search_results),
@@ -296,9 +290,7 @@ def process_chat_input(
         last_data_to_send = json.dumps(
             dict(status="STREAMING_END", completion="", stop_reason=arg.stop_reason)
         ).encode("utf-8")
-        gatewayapi.post_to_connection(
-            ConnectionId=connection_id, Data=last_data_to_send
-        )
+        gatewayapi.post_to_connection(ConnectionId=connection_id, Data=last_data_to_send)
 
     stream_handler = ConverseApiStreamHandler(
         model=chat_input.message.model,
