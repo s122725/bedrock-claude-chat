@@ -41,6 +41,8 @@ In v1.4, [Guardrails for Amazon Bedrock](https://aws.amazon.com/jp/bedrock/guard
 
 The steps differ depending on whether you are using v1.2 or earlier, or v1.3.
 
+![](../imgs/v1_to_v2_arch.png)
+
 ### Steps for users of v1.2 or earlier
 
 1. **Backup your existing document bucket (optional but recommended).** If your system is already in operation, we strongly recommend this step. Back up the bucket named `bedrockchatstack-documentbucketxxxx-yyyy`.
