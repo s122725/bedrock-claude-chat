@@ -31,6 +31,7 @@ from app.repositories.models.custom_bot import (
     KnowledgeModel,
     SearchParamsModel,
 )
+from app.repositories.models.custom_bot_guardrails import BedrockGuardrailsModel
 from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
@@ -48,6 +49,18 @@ DEFAULT_GENERATION_CONFIG = (
 
 logger = logging.getLogger(__name__)
 sts_client = boto3.client("sts")
+
+
+class BotNotFoundException(Exception):
+    """Exception raised when a bot is not found."""
+
+    pass
+
+
+class BotUpdateError(Exception):
+    """Exception raised when there's an error updating a bot."""
+
+    pass
 
 
 def store_bot(user_id: str, custom_bot: BotModel):
@@ -81,6 +94,8 @@ def store_bot(user_id: str, custom_bot: BotModel):
     }
     if custom_bot.bedrock_knowledge_base:
         item["BedrockKnowledgeBase"] = custom_bot.bedrock_knowledge_base.model_dump()
+    if custom_bot.bedrock_guardrails:
+        item["GuardrailsParams"] = custom_bot.bedrock_guardrails.model_dump()
 
     response = table.put_item(Item=item)
     return response
@@ -102,6 +117,7 @@ def update_bot(
     display_retrieved_chunks: bool,
     conversation_quick_starters: list[ConversationQuickStarterModel],
     bedrock_knowledge_base: BedrockKnowledgeBaseModel | None = None,
+    bedrock_guardrails: BedrockGuardrailsModel | None = None,
 ):
     """Update bot title, description, and instruction.
     NOTE: Use `update_bot_visibility` to update visibility.
@@ -144,6 +160,12 @@ def update_bot(
         update_expression += ", BedrockKnowledgeBase = :bedrock_knowledge_base"
         expression_attribute_values[":bedrock_knowledge_base"] = (
             bedrock_knowledge_base.model_dump()
+        )
+
+    if bedrock_guardrails:
+        update_expression += ", GuardrailsParams = :bedrock_guardrails"
+        expression_attribute_values[":bedrock_guardrails"] = (
+            bedrock_guardrails.model_dump()
         )
 
     try:
@@ -291,9 +313,34 @@ def update_knowledge_base_id(
     return response
 
 
-def find_private_bots_by_user_id(
-    user_id: str, limit: int | None = None
-) -> list[BotMeta]:
+def update_guardrails_params(
+    user_id: str, bot_id: str, guardrail_arn: str, guardrail_version: str
+):
+    logger.info("update_guardrails_params")
+    table = _get_table_client(user_id)
+
+    try:
+        response = table.update_item(
+            Key={"PK": user_id, "SK": compose_bot_id(user_id, bot_id)},
+            UpdateExpression="SET GuardrailsParams.guardrail_arn = :guardrail_arn, GuardrailsParams.guardrail_version = :guardrail_version",
+            ExpressionAttributeValues={
+                ":guardrail_arn": guardrail_arn,
+                ":guardrail_version": guardrail_version,
+            },
+            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
+            ReturnValues="ALL_NEW",
+        )
+        logger.info(f"Updated guardrails_arn for bot: {bot_id} successfully")
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            raise RecordNotFoundError(f"Bot with id {bot_id} not found")
+        else:
+            raise e
+
+    return response
+
+
+def find_private_bots_by_user_id(user_id: str, limit: int | None = None) -> list[BotMeta]:
     """Find all private bots owned by user.
     This does not include public bots.
     The order is descending by `last_used_time`.
@@ -450,15 +497,18 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
         ),
         published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
+            None if "ApiPublishCodeBuildId" not in item else item["ApiPublishCodeBuildId"]
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"])
             if "BedrockKnowledgeBase" in item
+            else None
+        ),
+        bedrock_guardrails=(
+            BedrockGuardrailsModel(**item["GuardrailsParams"])
+            if "GuardrailsParams" in item
             else None
         ),
     )
@@ -543,15 +593,18 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
         ),
         published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
+            None if "ApiPublishCodeBuildId" not in item else item["ApiPublishCodeBuildId"]
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
         bedrock_knowledge_base=(
             BedrockKnowledgeBaseModel(**item["BedrockKnowledgeBase"])
             if "BedrockKnowledgeBase" in item
+            else None
+        ),
+        bedrock_guardrails=(
+            BedrockGuardrailsModel(**item["GuardrailsParams"])
+            if "GuardrailsParams" in item
             else None
         ),
     )

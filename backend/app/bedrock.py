@@ -10,8 +10,9 @@ from app.config import DEFAULT_GENERATION_CONFIG as DEFAULT_CLAUDE_GENERATION_CO
 from app.config import DEFAULT_MISTRAL_GENERATION_CONFIG
 from app.repositories.models.conversation import MessageModel
 from app.repositories.models.custom_bot import GenerationParamsModel
+from app.repositories.models.custom_bot_guardrails import BedrockGuardrailsModel
 from app.routes.schemas.conversation import type_model_name
-from app.utils import convert_dict_keys_to_camel_case, get_bedrock_client
+from app.utils import convert_dict_keys_to_camel_case, get_bedrock_runtime_client
 from typing_extensions import NotRequired, TypedDict, no_type_check
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,36 @@ DEFAULT_GENERATION_CONFIG = (
     else DEFAULT_CLAUDE_GENERATION_CONFIG
 )
 
-client = get_bedrock_client()
+client = get_bedrock_runtime_client()
+
+
+class GuardrailConfig(TypedDict):
+    guardrailIdentifier: str
+    guardrailVersion: str
+    trace: str
+    streamProcessingMode: str
+
+
+class ConverseApiToolSpec(TypedDict):
+    name: str
+    description: str
+    inputSchema: dict
+
+
+class ConverseApiToolConfig(TypedDict):
+    tools: list[ConverseApiToolSpec]
+    toolChoice: dict
+
+
+class ConverseApiToolResultContent(TypedDict):
+    json: NotRequired[dict]
+    text: NotRequired[str]
+
+
+class ConverseApiToolResult(TypedDict):
+    toolUseId: str
+    content: ConverseApiToolResultContent
+    status: NotRequired[str]
 
 
 class ConverseApiToolSpec(TypedDict):
@@ -63,6 +93,7 @@ class ConverseApiToolUseContent(TypedDict):
     toolUseId: str
     name: str
     input: dict
+    guardrailConfig: GuardrailConfig | None
 
 
 class ConverseApiResponseMessageContent(TypedDict):
@@ -99,9 +130,7 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
+    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
@@ -218,23 +247,148 @@ def compose_args_for_converse_api(
     return args
 
 
+def compose_args_for_converse_api_with_guardrail(
+    messages: list[MessageModel],
+    model: type_model_name,
+    instruction: str | None = None,
+    stream: bool = False,
+    generation_params: GenerationParamsModel | None = None,
+    grounding_source: dict | None = None,
+    guardrail: BedrockGuardrailsModel | None = None,
+) -> ConverseApiRequest:
+    """Compose arguments for Converse API.
+    Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
+    """
+    arg_messages = []
+    for message in messages:
+        if message.role not in ["system", "instruction"]:
+            content_blocks = []
+            for c in message.content:
+                if c.content_type == "text":
+                    if message.role == "user":
+                        if guardrail and getattr(guardrail, "grounding_threshold", 0) > 0:
+                            content_blocks.append({"guardContent": grounding_source})
+                        content_blocks.append(
+                            {
+                                "guardContent": {
+                                    "text": {"text": c.body, "qualifiers": ["query"]},
+                                }
+                            }
+                        )
+                    elif message.role == "assistant":
+                        content_blocks.append(
+                            {
+                                "text": (
+                                    {"content": c.body}  # type: ignore
+                                    if isinstance(c.body, str)
+                                    else None
+                                )
+                            }
+                        )
+
+                elif c.content_type == "image":
+                    # e.g. "image/png" -> "png"
+                    format = (
+                        c.media_type.split("/")[1]
+                        if c.media_type is not None
+                        else "unknown"
+                    )
+
+                    content_blocks.append(
+                        {
+                            "image": {
+                                "format": format,  # type: ignore
+                                # decode base64 encoded image
+                                "source": {"bytes": base64.b64decode(c.body)},  # type: ignore
+                            }
+                        }
+                    )
+
+                elif c.content_type == "attachment":
+                    content_blocks.append(
+                        {
+                            "document": {
+                                "format": _get_converse_supported_format(
+                                    Path(c.file_name).suffix[
+                                        1:
+                                    ],  # e.g. "document.txt" -> "txt"
+                                ),
+                                "name": Path(
+                                    c.file_name
+                                ).stem,  # e.g. "document.txt" -> "document"
+                                # encode text attachment body
+                                "source": {"bytes": c.body.encode("utf-8")},
+                            }
+                        }
+                    )
+                else:
+                    raise NotImplementedError()
+            arg_messages.append({"role": message.role, "content": content_blocks})
+
+    inference_config = {
+        **DEFAULT_GENERATION_CONFIG,
+        **(
+            {
+                "maxTokens": generation_params.max_tokens,
+                "temperature": generation_params.temperature,
+                "topP": generation_params.top_p,
+                "stopSequences": generation_params.stop_sequences,
+            }
+            if generation_params
+            else {}
+        ),
+    }
+
+    # `top_k` is configured in `additional_model_request_fields` instead of `inference_config`
+    additional_model_request_fields = {"top_k": inference_config["top_k"]}
+    del inference_config["top_k"]
+
+    args: ConverseApiRequest = {
+        "inference_config": convert_dict_keys_to_camel_case(inference_config),
+        "additional_model_request_fields": additional_model_request_fields,
+        "model_id": get_model_id(model),
+        "messages": arg_messages,
+        "stream": stream,
+        "system": [],
+        "guardrailConfig": None,  # Initialize with None
+    }
+
+    if instruction:
+        args["system"].append({"text": instruction})
+
+    if (
+        guardrail
+        and hasattr(guardrail, "guardrail_arn")
+        and guardrail.guardrail_arn
+        and hasattr(guardrail, "guardrail_version")
+        and guardrail.guardrail_version
+    ):
+
+        args["guardrailConfig"] = {
+            "guardrailIdentifier": guardrail.guardrail_arn,
+            "guardrailVersion": guardrail.guardrail_version,
+            "trace": "enabled",
+            "streamProcessingMode": "async",
+        }
+
+    return args
+
+
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
-    client = get_bedrock_client()
-    messages = args["messages"]
-    inference_config = args["inference_config"]
-    additional_model_request_fields = args["additional_model_request_fields"]
-    model_id = args["model_id"]
-    system = args["system"]
+    client = get_bedrock_runtime_client()
 
-    response = client.converse(
-        modelId=model_id,
-        messages=messages,
-        inferenceConfig=inference_config,
-        system=system,
-        additionalModelRequestFields=additional_model_request_fields,
-    )
+    base_args = {
+        "modelId": args["model_id"],
+        "messages": args["messages"],
+        "inferenceConfig": args["inference_config"],
+        "system": args["system"],
+        "additionalModelRequestFields": args["additional_model_request_fields"],
+    }
 
-    return response
+    if "guardrailConfig" in args:
+        base_args["guardrailConfig"] = args["guardrailConfig"]  # type: ignore
+
+    return client.converse(**base_args)
 
 
 def calculate_price(
