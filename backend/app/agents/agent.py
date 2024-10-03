@@ -9,7 +9,6 @@ from app.bedrock import (
     ConverseApiToolResult,
     ConverseApiToolUseContent,
     calculate_price,
-    get_bedrock_client,
     get_model_id,
 )
 from app.repositories.models.conversation import (
@@ -21,7 +20,7 @@ from app.repositories.models.conversation import (
 )
 from app.repositories.models.custom_bot import BotModel
 from app.routes.schemas.conversation import type_model_name
-from app.utils import convert_dict_keys_to_camel_case
+from app.utils import convert_dict_keys_to_camel_case, get_bedrock_runtime_client
 from pydantic import BaseModel
 
 
@@ -46,7 +45,7 @@ class AgentRunner:
     ):
         self.bot = bot
         self.tools = {tool.name: tool for tool in tools}
-        self.client = get_bedrock_client()
+        self.client = get_bedrock_runtime_client()
         self.model: type_model_name = model
         self.model_id = get_model_id(model)
         self.on_thinking = on_thinking
