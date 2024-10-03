@@ -73,6 +73,7 @@ class TestReactAgent(unittest.TestCase):
             published_api_codebuild_id=None,
             conversation_quick_starters=[],
             bedrock_knowledge_base=None,
+            bedrock_guardrails=None,
         )
         answer_with_knowledge_tool = AnswerWithKnowledgeTool.from_bot(
             bot=bot,

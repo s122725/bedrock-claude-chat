@@ -170,9 +170,7 @@ class TestConversationRepository(unittest.TestCase):
         self.assertEqual(len(conversations), 1)
 
         # Test finding conversation by id
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         self.assertEqual(found_conversation.id, "1")
         message_map = found_conversation.message_map
         # Assert whether the message map is correctly reconstructed
@@ -204,9 +202,7 @@ class TestConversationRepository(unittest.TestCase):
             conversation_id="1",
             new_title="Updated title",
         )
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         self.assertEqual(found_conversation.title, "Updated title")
 
         # Test give a feedback
@@ -219,9 +215,7 @@ class TestConversationRepository(unittest.TestCase):
                 thumbs_up=True, category="Good", comment="The response is pretty good."
             ),
         )
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="1"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="1")
         feedback = found_conversation.message_map["a"].feedback
         self.assertIsNotNone(feedback)
         self.assertEqual(feedback.thumbs_up, True)  # type: ignore
@@ -280,9 +274,7 @@ class TestConversationRepository(unittest.TestCase):
         self.assertIsNotNone(response)
 
         # Test finding large conversation by id
-        found_conversation = find_conversation_by_id(
-            user_id="user", conversation_id="2"
-        )
+        found_conversation = find_conversation_by_id(user_id="user", conversation_id="2")
         self.assertEqual(found_conversation.id, "2")
         self.assertEqual(found_conversation.title, "Large Conversation")
         self.assertEqual(found_conversation.total_price, 200)
@@ -438,6 +430,7 @@ class TestConversationBotRepository(unittest.TestCase):
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
             bedrock_knowledge_base=None,
+            bedrock_guardrails=None,
         )
         bot2 = BotModel(
             id="2",
@@ -487,6 +480,7 @@ class TestConversationBotRepository(unittest.TestCase):
                 ConversationQuickStarterModel(title="QS title", example="QS example")
             ],
             bedrock_knowledge_base=None,
+            bedrock_guardrails=None,
         )
 
         store_conversation("user", conversation1)
