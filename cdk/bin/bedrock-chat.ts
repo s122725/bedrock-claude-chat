@@ -2,8 +2,8 @@
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { BedrockChatStack } from "../lib/bedrock-chat-stack";
-import { BedrockRegionResourcesStack} from "../lib/bedrock-region-resources";
-import  { FrontendWafStack } from "../lib/frontend-waf-stack";
+import { BedrockRegionResourcesStack } from "../lib/bedrock-region-resources";
+import { FrontendWafStack } from "../lib/frontend-waf-stack";
 import { TIdentityProvider } from "../lib/utils/identity-provider";
 import { CronScheduleProps } from "../lib/utils/cron-schedule";
 
@@ -66,16 +66,21 @@ const waf = new FrontendWafStack(app, `FrontendWafStack`, {
   allowedIpV6AddressRanges: ALLOWED_IP_V6_ADDRESS_RANGES,
 });
 
-
-// The region of the model called by the convers API and the region of Guardrail must be in the same region.
-// Frontend and Bedrock may deploy in different regions, so the stack is separate.
-const bedrockRegionResources = new BedrockRegionResourcesStack(app, `BedrockRegionResourcesStack`, {
-  env: {
-    // account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: BEDROCK_REGION,
-  },
-  crossRegionReferences: true,
-})
+// The region of the LLM model called by the converse API and the region of Guardrail must be in the same region.
+// CustomBotStack contains Knowledge Bases is deployed in the same region as the LLM model, and source bucket must be in the same region as Knowledge Bases.
+// Therefore, define BedrockRegionResourcesStack containing the source bucket in the same region as the LLM model.
+// Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/s3-data-source-connector.html
+const bedrockRegionResources = new BedrockRegionResourcesStack(
+  app,
+  `BedrockRegionResourcesStack`,
+  {
+    env: {
+      // account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: BEDROCK_REGION,
+    },
+    crossRegionReferences: true,
+  }
+);
 
 const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   env: {
@@ -104,4 +109,4 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   documentBucket: bedrockRegionResources.documentBucket,
 });
 chat.addDependency(waf);
-chat.addDependency(bedrockRegionResources)
+chat.addDependency(bedrockRegionResources);

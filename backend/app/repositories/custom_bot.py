@@ -31,8 +31,8 @@ from app.repositories.models.custom_bot import (
     KnowledgeModel,
     SearchParamsModel,
 )
-from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.repositories.models.custom_bot_guardrails import BedrockGuardrailsModel
+from app.repositories.models.custom_bot_kb import BedrockKnowledgeBaseModel
 from app.routes.schemas.bot import type_sync_status
 from app.utils import get_current_time
 from boto3.dynamodb.conditions import Attr, Key
@@ -340,9 +340,7 @@ def update_guardrails_params(
     return response
 
 
-def find_private_bots_by_user_id(
-    user_id: str, limit: int | None = None
-) -> list[BotMeta]:
+def find_private_bots_by_user_id(user_id: str, limit: int | None = None) -> list[BotMeta]:
     """Find all private bots owned by user.
     This does not include public bots.
     The order is descending by `last_used_time`.
@@ -499,9 +497,7 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
             None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
         ),
         published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
+            None if "ApiPublishCodeBuildId" not in item else item["ApiPublishCodeBuildId"]
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
@@ -512,9 +508,9 @@ def find_private_bot_by_id(user_id: str, bot_id: str) -> BotModel:
         ),
         bedrock_guardrails=(
             BedrockGuardrailsModel(**item["GuardrailsParams"])
-            if "GuardrailsParams" in item 
+            if "GuardrailsParams" in item
             else None
-        )
+        ),
     )
 
     logger.info(f"Found bot: {bot}")
@@ -597,9 +593,7 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             None if "ApiPublishedDatetime" not in item else item["ApiPublishedDatetime"]
         ),
         published_api_codebuild_id=(
-            None
-            if "ApiPublishCodeBuildId" not in item
-            else item["ApiPublishCodeBuildId"]
+            None if "ApiPublishCodeBuildId" not in item else item["ApiPublishCodeBuildId"]
         ),
         display_retrieved_chunks=item.get("DisplayRetrievedChunks", False),
         conversation_quick_starters=item.get("ConversationQuickStarters", []),
@@ -608,67 +602,10 @@ def find_public_bot_by_id(bot_id: str) -> BotModel:
             if "BedrockKnowledgeBase" in item
             else None
         ),
-        bedrock_guardrails=BedrockGuardrailsModel(
-            is_guardrail_enabled=(
-                item["GuardrailsParams"]["is_guardrail_enabled"]
-                if "GuardrailsParams" in item
-                and "is_guardrail_enabled" in item["GuardrailsParams"]
-                else False
-            ),
-            hate_threshold=(
-                item["GuardrailsParams"]["hate_threshold"]
-                if "GuardrailsParams" in item
-                and "hate_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            insults_threshold=(
-                item["GuardrailsParams"]["insults_threshold"]
-                if "GuardrailsParams" in item
-                and "insults_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            sexual_threshold=(
-                item["GuardrailsParams"]["sexual_threshold"]
-                if "GuardrailsParams" in item
-                and "sexual_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            violence_threshold=(
-                item["GuardrailsParams"]["violence_threshold"]
-                if "GuardrailsParams" in item
-                and "violence_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            misconduct_threshold=(
-                item["GuardrailsParams"]["misconduct_threshold"]
-                if "GuardrailsParams" in item
-                and "misconduct_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            grounding_threshold=(
-                item["GuardrailsParams"]["grounding_threshold"]
-                if "GuardrailsParams" in item
-                and "grounding_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            relevance_threshold=(
-                item["GuardrailsParams"]["relevance_threshold"]
-                if "GuardrailsParams" in item
-                and "relevance_threshold" in item["GuardrailsParams"]
-                else 0
-            ),
-            guardrail_arn=(
-                item["GuardrailsParams"]["guardrail_arn"]
-                if "GuardrailsParams" in item
-                and "guardrail_arn" in item["GuardrailsParams"]
-                else ""
-            ),
-            guardrail_version=(
-                item["GuardrailsParams"]["guardrail_version"]
-                if "GuardrailsParams" in item
-                and "guardrail_version" in item["GuardrailsParams"]
-                else ""
-            ),
+        bedrock_guardrails=(
+            BedrockGuardrailsModel(**item["GuardrailsParams"])
+            if "GuardrailsParams" in item
+            else None
         ),
     )
     logger.info(f"Found public bot: {bot}")

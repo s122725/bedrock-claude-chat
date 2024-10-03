@@ -130,9 +130,7 @@ def compose_args(
     stream: bool = False,
     generation_params: GenerationParamsModel | None = None,
 ) -> dict:
-    logger.warn(
-        "compose_args is deprecated. Use compose_args_for_converse_api instead."
-    )
+    logger.warn("compose_args is deprecated. Use compose_args_for_converse_api instead.")
     return dict(
         compose_args_for_converse_api(
             messages, model, instruction, stream, generation_params
@@ -261,7 +259,7 @@ def compose_args_for_converse_api_with_guardrail(
     """Compose arguments for Converse API.
     Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-runtime/client/converse_stream.html
     """
-    arg_messages = []    
+    arg_messages = []
     for message in messages:
         if message.role not in ["system", "instruction"]:
             content_blocks = []
@@ -306,7 +304,7 @@ def compose_args_for_converse_api_with_guardrail(
                         }
                     )
 
-                elif c.content_type == "textAttachment":
+                elif c.content_type == "attachment":
                     content_blocks.append(
                         {
                             "document": {
@@ -358,9 +356,13 @@ def compose_args_for_converse_api_with_guardrail(
     if instruction:
         args["system"].append({"text": instruction})
 
-    if (guardrail and 
-        hasattr(guardrail, "guardrail_arn") and guardrail.guardrail_arn and
-        hasattr(guardrail, "guardrail_version") and guardrail.guardrail_version):
+    if (
+        guardrail
+        and hasattr(guardrail, "guardrail_arn")
+        and guardrail.guardrail_arn
+        and hasattr(guardrail, "guardrail_version")
+        and guardrail.guardrail_version
+    ):
 
         args["guardrailConfig"] = {
             "guardrailIdentifier": guardrail.guardrail_arn,
@@ -375,18 +377,19 @@ def compose_args_for_converse_api_with_guardrail(
 def call_converse_api(args: ConverseApiRequest) -> ConverseApiResponse:
     client = get_bedrock_runtime_client()
 
-    base_args = { 
-        "modelId": args["model_id"], 
-        "messages": args["messages"], 
-        "inferenceConfig": args["inference_config"], 
-        "system": args["system"], 
-        "additionalModelRequestFields": args["additional_model_request_fields"]
+    base_args = {
+        "modelId": args["model_id"],
+        "messages": args["messages"],
+        "inferenceConfig": args["inference_config"],
+        "system": args["system"],
+        "additionalModelRequestFields": args["additional_model_request_fields"],
     }
 
-    if "guardrailConfig" in args: 
+    if "guardrailConfig" in args:
         base_args["guardrailConfig"] = args["guardrailConfig"]  # type: ignore
 
     return client.converse(**base_args)
+
 
 def calculate_price(
     model: type_model_name,
